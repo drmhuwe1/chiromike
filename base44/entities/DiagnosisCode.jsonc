@@ -1,0 +1,32 @@
+{
+  "name": "DiagnosisCode",
+  "type": "object",
+  "properties": {
+    "code": {
+      "type": "string",
+      "title": "ICD-10 Code"
+    },
+    "description": {
+      "type": "string",
+      "title": "Description"
+    },
+    "payer_notes": {
+      "type": "string",
+      "title": "Payer Notes"
+    },
+    "active": {
+      "type": "boolean",
+      "title": "Active",
+      "default": true
+    },
+    "is_favorite": {
+      "type": "boolean",
+      "title": "Favorite",
+      "default": true
+    }
+  },
+  "required": [
+    "code",
+    "description"
+  ]
+}

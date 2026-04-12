@@ -1,0 +1,86 @@
+{
+  "name": "OfficeSettings",
+  "type": "object",
+  "properties": {
+    "practice_name": {
+      "type": "string",
+      "title": "Practice Name"
+    },
+    "billing_address_line1": {
+      "type": "string",
+      "title": "Billing Address Line 1"
+    },
+    "billing_address_line2": {
+      "type": "string",
+      "title": "Billing Address Line 2"
+    },
+    "billing_city": {
+      "type": "string",
+      "title": "City"
+    },
+    "billing_state": {
+      "type": "string",
+      "title": "State"
+    },
+    "billing_zip": {
+      "type": "string",
+      "title": "ZIP"
+    },
+    "phone": {
+      "type": "string",
+      "title": "Phone"
+    },
+    "fax": {
+      "type": "string",
+      "title": "Fax"
+    },
+    "rendering_provider": {
+      "type": "string",
+      "title": "Rendering Provider Name"
+    },
+    "rendering_npi": {
+      "type": "string",
+      "title": "Rendering NPI"
+    },
+    "billing_provider": {
+      "type": "string",
+      "title": "Billing Provider Name"
+    },
+    "billing_npi": {
+      "type": "string",
+      "title": "Billing NPI"
+    },
+    "ein_tax_id": {
+      "type": "string",
+      "title": "EIN / Tax ID"
+    },
+    "taxonomy_code": {
+      "type": "string",
+      "title": "Taxonomy Code"
+    },
+    "default_place_of_service": {
+      "type": "string",
+      "title": "Default Place of Service",
+      "default": "11"
+    },
+    "default_claim_notes": {
+      "type": "string",
+      "title": "Default Claim Notes"
+    },
+    "receipt_header": {
+      "type": "string",
+      "title": "Receipt Header Text"
+    },
+    "receipt_footer": {
+      "type": "string",
+      "title": "Receipt Footer Text"
+    },
+    "superbill_notes": {
+      "type": "string",
+      "title": "Superbill Notes"
+    }
+  },
+  "required": [
+    "practice_name"
+  ]
+}

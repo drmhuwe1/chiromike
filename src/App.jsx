@@ -5,7 +5,18 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
-// Add page imports here
+import Layout from './components/Layout';
+import Dashboard from './pages/Dashboard';
+import Patients from './pages/Patients';
+import ClaimBuilder from './pages/ClaimBuilder';
+import SavedClaims from './pages/SavedClaims';
+import ProcedureLibrary from './pages/ProcedureLibrary';
+import DiagnosisFavorites from './pages/DiagnosisFavorites';
+import QuickTemplates from './pages/QuickTemplates';
+import Reports from './pages/Reports';
+import OfficeSettings from './pages/OfficeSettings';
+import PrintClaim from './pages/PrintClaim';
+import PrintReceipt from './pages/PrintReceipt';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -33,8 +44,20 @@ const AuthenticatedApp = () => {
   // Render the main app
   return (
     <Routes>
-      {/* Add your page Route elements here */}
-      <Route path="*" element={<PageNotFound />} />
+      <Route element={<Layout />}>
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/patients" element={<Patients />} />
+        <Route path="/claim-builder" element={<ClaimBuilder />} />
+        <Route path="/saved-claims" element={<SavedClaims />} />
+        <Route path="/procedures" element={<ProcedureLibrary />} />
+        <Route path="/diagnoses" element={<DiagnosisFavorites />} />
+        <Route path="/templates" element={<QuickTemplates />} />
+        <Route path="/reports" element={<Reports />} />
+        <Route path="/settings" element={<OfficeSettings />} />
+        <Route path="/print-claim" element={<PrintClaim />} />
+        <Route path="/print-receipt" element={<PrintReceipt />} />
+        <Route path="*" element={<PageNotFound />} />
+      </Route>
     </Routes>
   );
 };

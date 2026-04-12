@@ -1,0 +1,180 @@
+import { useState, useEffect } from "react";
+import { base44 } from "@/api/base44Client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Save, Building } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
+import PayerProfilesTab from "../components/settings/PayerProfilesTab";
+
+export default function OfficeSettings() {
+  const [settings, setSettings] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+
+  const loadSettings = async () => {
+    const all = await base44.entities.OfficeSettings.list("-updated_date", 1);
+    setSettings(all[0] || {
+      practice_name: "Huwe Chiropractic",
+      billing_address_line1: "", billing_address_line2: "",
+      billing_city: "", billing_state: "", billing_zip: "",
+      phone: "", fax: "",
+      rendering_provider: "", rendering_npi: "",
+      billing_provider: "", billing_npi: "",
+      ein_tax_id: "", taxonomy_code: "",
+      default_place_of_service: "11",
+      default_claim_notes: "",
+      receipt_header: "Huwe Chiropractic",
+      receipt_footer: "Thank you for your visit!",
+      superbill_notes: "",
+    });
+    setLoading(false);
+  };
+
+  useEffect(() => { loadSettings(); }, []);
+
+  const set = (field, value) => setSettings(prev => ({ ...prev, [field]: value }));
+
+  const handleSave = async () => {
+    if (settings.id) {
+      await base44.entities.OfficeSettings.update(settings.id, settings);
+    } else {
+      const created = await base44.entities.OfficeSettings.create(settings);
+      setSettings(created);
+    }
+    toast({ title: "Settings saved" });
+  };
+
+  if (loading) return (
+    <div className="flex justify-center py-12">
+      <div className="w-8 h-8 border-4 border-muted border-t-primary rounded-full animate-spin" />
+    </div>
+  );
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold tracking-tight">Office Settings</h1>
+        <Button onClick={handleSave}>
+          <Save className="w-4 h-4 mr-2" /> Save Settings
+        </Button>
+      </div>
+
+      <Tabs defaultValue="practice">
+        <TabsList className="mb-4">
+          <TabsTrigger value="practice">Practice Info</TabsTrigger>
+          <TabsTrigger value="billing">Billing Provider</TabsTrigger>
+          <TabsTrigger value="payers">Payer Profiles</TabsTrigger>
+          <TabsTrigger value="receipts">Receipts & Superbills</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="practice">
+          <div className="bg-card border border-border rounded-xl p-6 space-y-4">
+            <div className="flex items-center gap-3 mb-2">
+              <Building className="w-5 h-5 text-primary" />
+              <h2 className="text-lg font-semibold">Practice Information</h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label>Practice Name</Label>
+                <Input value={settings.practice_name || ""} onChange={e => set("practice_name", e.target.value)} />
+              </div>
+              <div>
+                <Label>Phone</Label>
+                <Input value={settings.phone || ""} onChange={e => set("phone", e.target.value)} />
+              </div>
+              <div>
+                <Label>Fax</Label>
+                <Input value={settings.fax || ""} onChange={e => set("fax", e.target.value)} />
+              </div>
+              <div>
+                <Label>Default Place of Service</Label>
+                <Input value={settings.default_place_of_service || ""} onChange={e => set("default_place_of_service", e.target.value)} />
+              </div>
+              <div className="md:col-span-2">
+                <Label>Address Line 1</Label>
+                <Input value={settings.billing_address_line1 || ""} onChange={e => set("billing_address_line1", e.target.value)} />
+              </div>
+              <div>
+                <Label>Address Line 2</Label>
+                <Input value={settings.billing_address_line2 || ""} onChange={e => set("billing_address_line2", e.target.value)} />
+              </div>
+              <div>
+                <Label>City</Label>
+                <Input value={settings.billing_city || ""} onChange={e => set("billing_city", e.target.value)} />
+              </div>
+              <div>
+                <Label>State</Label>
+                <Input value={settings.billing_state || ""} onChange={e => set("billing_state", e.target.value)} />
+              </div>
+              <div>
+                <Label>ZIP</Label>
+                <Input value={settings.billing_zip || ""} onChange={e => set("billing_zip", e.target.value)} />
+              </div>
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="billing">
+          <div className="bg-card border border-border rounded-xl p-6 space-y-4">
+            <h2 className="text-lg font-semibold">Billing / Rendering Provider</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label>Rendering Provider Name</Label>
+                <Input value={settings.rendering_provider || ""} onChange={e => set("rendering_provider", e.target.value)} />
+              </div>
+              <div>
+                <Label>Rendering NPI</Label>
+                <Input value={settings.rendering_npi || ""} onChange={e => set("rendering_npi", e.target.value)} />
+              </div>
+              <div>
+                <Label>Billing Provider Name</Label>
+                <Input value={settings.billing_provider || ""} onChange={e => set("billing_provider", e.target.value)} />
+              </div>
+              <div>
+                <Label>Billing NPI</Label>
+                <Input value={settings.billing_npi || ""} onChange={e => set("billing_npi", e.target.value)} />
+              </div>
+              <div>
+                <Label>EIN / Tax ID</Label>
+                <Input value={settings.ein_tax_id || ""} onChange={e => set("ein_tax_id", e.target.value)} />
+              </div>
+              <div>
+                <Label>Taxonomy Code</Label>
+                <Input value={settings.taxonomy_code || ""} onChange={e => set("taxonomy_code", e.target.value)} />
+              </div>
+            </div>
+            <div>
+              <Label>Default Claim Notes</Label>
+              <Textarea value={settings.default_claim_notes || ""} onChange={e => set("default_claim_notes", e.target.value)} rows={3} />
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="payers">
+          <PayerProfilesTab />
+        </TabsContent>
+
+        <TabsContent value="receipts">
+          <div className="bg-card border border-border rounded-xl p-6 space-y-4">
+            <h2 className="text-lg font-semibold">Receipts & Superbills</h2>
+            <div>
+              <Label>Receipt Header Text</Label>
+              <Textarea value={settings.receipt_header || ""} onChange={e => set("receipt_header", e.target.value)} rows={2} />
+            </div>
+            <div>
+              <Label>Receipt Footer Text</Label>
+              <Textarea value={settings.receipt_footer || ""} onChange={e => set("receipt_footer", e.target.value)} rows={2} />
+            </div>
+            <div>
+              <Label>Superbill Notes</Label>
+              <Textarea value={settings.superbill_notes || ""} onChange={e => set("superbill_notes", e.target.value)} rows={3} />
+            </div>
+          </div>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}

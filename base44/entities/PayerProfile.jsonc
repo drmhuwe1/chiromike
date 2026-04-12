@@ -1,0 +1,68 @@
+{
+  "name": "PayerProfile",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "title": "Payer Name"
+    },
+    "payer_type": {
+      "type": "string",
+      "enum": [
+        "Medicare",
+        "BCBS",
+        "Auto/PI",
+        "Cash",
+        "Other Commercial"
+      ],
+      "title": "Payer Type"
+    },
+    "enabled_codes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Enabled Codes"
+    },
+    "disabled_codes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Disabled Codes"
+    },
+    "default_modifiers": {
+      "type": "string",
+      "title": "Default Modifiers"
+    },
+    "warning_notes": {
+      "type": "string",
+      "title": "Warning Notes"
+    },
+    "billing_notes": {
+      "type": "string",
+      "title": "Office Billing Notes"
+    },
+    "documentation_reminders": {
+      "type": "string",
+      "title": "Documentation Reminders"
+    },
+    "plan_comments": {
+      "type": "string",
+      "title": "Plan-Specific Comments"
+    },
+    "claim_type_default": {
+      "type": "string",
+      "title": "Default Claim Type"
+    },
+    "active": {
+      "type": "boolean",
+      "title": "Active",
+      "default": true
+    }
+  },
+  "required": [
+    "name",
+    "payer_type"
+  ]
+}

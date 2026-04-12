@@ -1,0 +1,139 @@
+{
+  "name": "Patient",
+  "type": "object",
+  "properties": {
+    "first_name": {
+      "type": "string",
+      "title": "First Name"
+    },
+    "last_name": {
+      "type": "string",
+      "title": "Last Name"
+    },
+    "dob": {
+      "type": "string",
+      "format": "date",
+      "title": "Date of Birth"
+    },
+    "sex": {
+      "type": "string",
+      "enum": [
+        "Male",
+        "Female",
+        "Other"
+      ],
+      "title": "Sex"
+    },
+    "address_line1": {
+      "type": "string",
+      "title": "Address Line 1"
+    },
+    "address_line2": {
+      "type": "string",
+      "title": "Address Line 2"
+    },
+    "city": {
+      "type": "string",
+      "title": "City"
+    },
+    "state": {
+      "type": "string",
+      "title": "State"
+    },
+    "zip": {
+      "type": "string",
+      "title": "ZIP Code"
+    },
+    "phone": {
+      "type": "string",
+      "title": "Phone"
+    },
+    "email": {
+      "type": "string",
+      "title": "Email"
+    },
+    "relationship_to_insured": {
+      "type": "string",
+      "enum": [
+        "Self",
+        "Spouse",
+        "Child",
+        "Other"
+      ],
+      "title": "Relationship to Insured"
+    },
+    "is_accident_related": {
+      "type": "boolean",
+      "title": "Accident Related"
+    },
+    "accident_date": {
+      "type": "string",
+      "format": "date",
+      "title": "Date of Accident"
+    },
+    "accident_type": {
+      "type": "string",
+      "enum": [
+        "Auto",
+        "Work",
+        "Other",
+        "None"
+      ],
+      "title": "Accident Type"
+    },
+    "insurance_company": {
+      "type": "string",
+      "title": "Insurance Company"
+    },
+    "insurance_plan": {
+      "type": "string",
+      "title": "Insurance Plan"
+    },
+    "insurance_id": {
+      "type": "string",
+      "title": "Insurance ID"
+    },
+    "insurance_group": {
+      "type": "string",
+      "title": "Group Number"
+    },
+    "insured_name": {
+      "type": "string",
+      "title": "Insured Name (if different)"
+    },
+    "insured_dob": {
+      "type": "string",
+      "format": "date",
+      "title": "Insured DOB"
+    },
+    "insured_id": {
+      "type": "string",
+      "title": "Insured ID"
+    },
+    "insured_employer": {
+      "type": "string",
+      "title": "Insured Employer"
+    },
+    "attorney_name": {
+      "type": "string",
+      "title": "Attorney Name"
+    },
+    "attorney_phone": {
+      "type": "string",
+      "title": "Attorney Phone"
+    },
+    "notes": {
+      "type": "string",
+      "title": "Notes"
+    },
+    "active": {
+      "type": "boolean",
+      "title": "Active",
+      "default": true
+    }
+  },
+  "required": [
+    "first_name",
+    "last_name"
+  ]
+}

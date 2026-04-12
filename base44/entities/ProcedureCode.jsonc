@@ -1,0 +1,72 @@
+{
+  "name": "ProcedureCode",
+  "type": "object",
+  "properties": {
+    "code": {
+      "type": "string",
+      "title": "CPT/HCPCS Code"
+    },
+    "description": {
+      "type": "string",
+      "title": "Description"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "Chiropractic Manipulation",
+        "Office Visit",
+        "Therapy/Modality",
+        "Auto Claim",
+        "Cash Service",
+        "Custom"
+      ],
+      "title": "Category"
+    },
+    "default_charge": {
+      "type": "number",
+      "title": "Default Charge"
+    },
+    "default_units": {
+      "type": "number",
+      "title": "Default Units",
+      "default": 1
+    },
+    "default_modifier": {
+      "type": "string",
+      "title": "Default Modifier"
+    },
+    "is_timed": {
+      "type": "boolean",
+      "title": "Timed Service"
+    },
+    "payer_applicability": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Applicable Payers"
+    },
+    "documentation_reminder": {
+      "type": "string",
+      "title": "Documentation Reminder"
+    },
+    "warning_notes": {
+      "type": "string",
+      "title": "Warning Notes"
+    },
+    "active": {
+      "type": "boolean",
+      "title": "Active",
+      "default": true
+    },
+    "is_favorite": {
+      "type": "boolean",
+      "title": "Favorite",
+      "default": false
+    }
+  },
+  "required": [
+    "code",
+    "description"
+  ]
+}

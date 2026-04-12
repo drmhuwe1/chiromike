@@ -1,0 +1,88 @@
+{
+  "name": "QuickTemplate",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "title": "Template Name"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "Office Visit",
+        "Insurance Treatment",
+        "Cash Treatment",
+        "Auto Claim",
+        "Custom"
+      ],
+      "title": "Category"
+    },
+    "payer_type": {
+      "type": "string",
+      "enum": [
+        "Medicare",
+        "BCBS",
+        "Auto/PI",
+        "Cash",
+        "Other Commercial",
+        "Any"
+      ],
+      "title": "Applicable Payer Type"
+    },
+    "procedures": {
+      "type": "array",
+      "title": "Included Procedures",
+      "items": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "charge": {
+            "type": "number"
+          },
+          "units": {
+            "type": "number"
+          },
+          "modifier": {
+            "type": "string"
+          },
+          "diagnosis_pointers": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "default_diagnoses": {
+      "type": "array",
+      "title": "Default Diagnoses",
+      "items": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "notes": {
+      "type": "string",
+      "title": "Template Notes"
+    },
+    "active": {
+      "type": "boolean",
+      "title": "Active",
+      "default": true
+    }
+  },
+  "required": [
+    "title",
+    "category"
+  ]
+}

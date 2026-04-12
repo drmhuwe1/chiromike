@@ -1,0 +1,176 @@
+{
+  "name": "Claim",
+  "type": "object",
+  "properties": {
+    "patient_id": {
+      "type": "string",
+      "title": "Patient ID"
+    },
+    "patient_name": {
+      "type": "string",
+      "title": "Patient Name"
+    },
+    "visit_type": {
+      "type": "string",
+      "enum": [
+        "Insurance",
+        "Auto",
+        "Cash",
+        "Cash Office Visit",
+        "Cash Package"
+      ],
+      "title": "Visit Type"
+    },
+    "payer_type": {
+      "type": "string",
+      "enum": [
+        "Medicare",
+        "BCBS",
+        "Auto/PI",
+        "Cash",
+        "Other Commercial"
+      ],
+      "title": "Payer Type"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "Draft",
+        "Saved",
+        "Printed",
+        "Submitted",
+        "Paid",
+        "Denied"
+      ],
+      "title": "Status",
+      "default": "Draft"
+    },
+    "date_of_service": {
+      "type": "string",
+      "format": "date",
+      "title": "Date of Service"
+    },
+    "diagnoses": {
+      "type": "array",
+      "title": "Diagnoses",
+      "items": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "pointer": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "service_lines": {
+      "type": "array",
+      "title": "Service Lines",
+      "items": {
+        "type": "object",
+        "properties": {
+          "date_of_service": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "modifier": {
+            "type": "string"
+          },
+          "diagnosis_pointers": {
+            "type": "string"
+          },
+          "charge": {
+            "type": "number"
+          },
+          "units": {
+            "type": "number"
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "total_charge": {
+      "type": "number",
+      "title": "Total Charge"
+    },
+    "amount_paid": {
+      "type": "number",
+      "title": "Amount Paid"
+    },
+    "insurance_company": {
+      "type": "string",
+      "title": "Insurance Company"
+    },
+    "insurance_id": {
+      "type": "string",
+      "title": "Insurance ID"
+    },
+    "insurance_group": {
+      "type": "string",
+      "title": "Group Number"
+    },
+    "insured_name": {
+      "type": "string",
+      "title": "Insured Name"
+    },
+    "insured_dob": {
+      "type": "string",
+      "title": "Insured DOB"
+    },
+    "referring_provider": {
+      "type": "string",
+      "title": "Referring Provider"
+    },
+    "referring_npi": {
+      "type": "string",
+      "title": "Referring NPI"
+    },
+    "authorization_number": {
+      "type": "string",
+      "title": "Authorization Number"
+    },
+    "place_of_service": {
+      "type": "string",
+      "title": "Place of Service",
+      "default": "11"
+    },
+    "claim_notes": {
+      "type": "string",
+      "title": "Claim Notes"
+    },
+    "accident_related": {
+      "type": "boolean",
+      "title": "Accident Related"
+    },
+    "accident_date": {
+      "type": "string",
+      "format": "date",
+      "title": "Accident Date"
+    },
+    "accident_type": {
+      "type": "string",
+      "title": "Accident Type"
+    },
+    "template_used": {
+      "type": "string",
+      "title": "Template Used"
+    }
+  },
+  "required": [
+    "patient_id",
+    "visit_type",
+    "date_of_service"
+  ]
+}
