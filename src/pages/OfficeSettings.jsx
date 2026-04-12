@@ -63,7 +63,7 @@ export default function OfficeSettings() {
       </div>
 
       <Tabs defaultValue="practice">
-        <TabsList className="mb-4">
+        <TabsList className="mb-4 flex flex-wrap h-auto gap-1">
           <TabsTrigger value="practice">Practice Info</TabsTrigger>
           <TabsTrigger value="billing">Billing Provider</TabsTrigger>
           <TabsTrigger value="payers">Payer Profiles</TabsTrigger>
