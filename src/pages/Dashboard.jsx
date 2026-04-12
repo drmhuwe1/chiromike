@@ -23,19 +23,19 @@ export default function Dashboard() {
         <p className="text-muted-foreground mt-1">Fast chiropractic claim entry for Huwe Chiropractic</p>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
         {quickActions.map((action) => {
           const Icon = action.icon;
           return (
             <Link
               key={action.label}
               to={action.path}
-              className="group relative flex flex-col items-center justify-center p-6 rounded-xl bg-card border border-border hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200"
+              className="group flex items-center gap-3 px-4 py-3 rounded-xl bg-card border border-border hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 md:flex-col md:items-center md:justify-center md:p-6 md:text-center"
             >
-              <div className={`w-14 h-14 rounded-xl ${action.color} flex items-center justify-center mb-3 group-hover:scale-105 transition-transform`}>
-                <Icon className="w-7 h-7 text-white" />
+              <div className={`w-10 h-10 md:w-14 md:h-14 rounded-xl ${action.color} flex items-center justify-center flex-shrink-0 md:mb-3 group-hover:scale-105 transition-transform`}>
+                <Icon className="w-5 h-5 md:w-7 md:h-7 text-white" />
               </div>
-              <span className="text-sm font-semibold text-center">{action.label}</span>
+              <span className="text-sm font-semibold">{action.label}</span>
             </Link>
           );
         })}
