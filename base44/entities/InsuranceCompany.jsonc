@@ -1,0 +1,90 @@
+{
+  "name": "InsuranceCompany",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "title": "Insurance Company Name"
+    },
+    "edi_payer_id": {
+      "type": "string",
+      "title": "EDI Payer ID"
+    },
+    "payer_type": {
+      "type": "string",
+      "enum": [
+        "Medicare",
+        "Medicaid",
+        "BCBS",
+        "Auto/PI",
+        "Other Commercial",
+        "Workers Comp"
+      ],
+      "title": "Payer Type"
+    },
+    "claims_address_line1": {
+      "type": "string",
+      "title": "Claims Address Line 1"
+    },
+    "claims_address_line2": {
+      "type": "string",
+      "title": "Claims Address Line 2"
+    },
+    "claims_city": {
+      "type": "string",
+      "title": "City"
+    },
+    "claims_state": {
+      "type": "string",
+      "title": "State"
+    },
+    "claims_zip": {
+      "type": "string",
+      "title": "ZIP"
+    },
+    "phone": {
+      "type": "string",
+      "title": "Provider Services Phone"
+    },
+    "fax": {
+      "type": "string",
+      "title": "Fax"
+    },
+    "website": {
+      "type": "string",
+      "title": "Website"
+    },
+    "provider_portal": {
+      "type": "string",
+      "title": "Provider Portal URL"
+    },
+    "contact_name": {
+      "type": "string",
+      "title": "Contact Name"
+    },
+    "contact_phone": {
+      "type": "string",
+      "title": "Contact Direct Phone"
+    },
+    "contact_email": {
+      "type": "string",
+      "title": "Contact Email"
+    },
+    "timely_filing_days": {
+      "type": "number",
+      "title": "Timely Filing (days)"
+    },
+    "notes": {
+      "type": "string",
+      "title": "Notes / Special Instructions"
+    },
+    "active": {
+      "type": "boolean",
+      "title": "Active",
+      "default": true
+    }
+  },
+  "required": [
+    "name"
+  ]
+}
