@@ -1,7 +1,7 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { 
   LayoutDashboard, Users, FileText, Settings, BookOpen, 
-  Heart, Zap, BarChart3, Menu, X 
+  Library, Zap, BarChart3, Menu, X 
 } from "lucide-react";
 import { useState } from "react";
 
@@ -10,8 +10,7 @@ const navItems = [
   { path: "/patients", label: "Patients", icon: Users },
   { path: "/claim-builder", label: "New Claim", icon: FileText },
   { path: "/saved-claims", label: "Saved Claims", icon: BookOpen },
-  { path: "/procedures", label: "Procedures", icon: Zap },
-  { path: "/diagnoses", label: "Diagnoses", icon: Heart },
+  { path: "/code-library", label: "Code Library", icon: Library },
   { path: "/templates", label: "Quick Templates", icon: Zap },
   { path: "/reports", label: "Reports", icon: BarChart3 },
   { path: "/settings", label: "Office Settings", icon: Settings },
