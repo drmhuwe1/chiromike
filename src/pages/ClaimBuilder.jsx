@@ -4,18 +4,11 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
-import { Save, Printer, Copy, CalendarDays, Zap } from "lucide-react";
-import PatientSelector from "../components/claim/PatientSelector";
-import DiagnosisPanel from "../components/claim/DiagnosisPanel";
-import ServiceLineGrid from "../components/claim/ServiceLineGrid";
-import QuickPanel from "../components/claim/QuickPanel";
+import { Save, Printer, Copy, CalendarDays, Search, User, Plus, Trash2, Star, Zap } from "lucide-react";
 
 const visitTypes = ["Insurance", "Auto", "Cash", "Cash Office Visit", "Cash Package"];
-const payerTypes = ["Medicare", "BCBS", "Auto/PI", "Cash", "Other Commercial"];
-
 const today = new Date().toISOString().split("T")[0];
 
 export default function ClaimBuilder() {
@@ -39,17 +32,32 @@ export default function ClaimBuilder() {
     accident_date: "", accident_type: "",
   });
 
-  const [officeSettings, setOfficeSettings] = useState(null);
-  const [showQuickPanel, setShowQuickPanel] = useState(false);
+  const [patients, setPatients] = useState([]);
+  const [patientSearch, setPatientSearch] = useState("");
+  const [showPatientDrop, setShowPatientDrop] = useState(false);
+  const [templates, setTemplates] = useState([]);
+  const [favCodes, setFavCodes] = useState([]);
+  const [favDx, setFavDx] = useState([]);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
     const init = async () => {
-      const settings = await base44.entities.OfficeSettings.list("-updated_date", 1);
+      const [settings, pts, tmpl, codes, dx] = await Promise.all([
+        base44.entities.OfficeSettings.list("-updated_date", 1),
+        base44.entities.Patient.list("-updated_date", 300),
+        base44.entities.QuickTemplate.filter({ active: true }, "-updated_date", 100),
+        base44.entities.ProcedureCode.filter({ is_favorite: true, active: true }, "-updated_date", 50),
+        base44.entities.DiagnosisCode.filter({ is_favorite: true, active: true }, "-updated_date", 50),
+      ]);
+
+      setPatients(pts);
+      setTemplates(tmpl);
+      setFavCodes(codes);
+      setFavDx(dx);
+
       if (settings[0]) {
-        setOfficeSettings(settings[0]);
         setClaim(prev => ({
           ...prev,
           place_of_service: settings[0].default_place_of_service || "11",
@@ -58,8 +66,8 @@ export default function ClaimBuilder() {
       }
 
       if (presetPatientId) {
-        const patients = await base44.entities.Patient.filter({ id: presetPatientId });
-        if (patients[0]) selectPatient(patients[0]);
+        const p = pts.find(p => p.id === presetPatientId);
+        if (p) applyPatient(p);
       }
 
       if (duplicateId) {
@@ -73,7 +81,7 @@ export default function ClaimBuilder() {
     init();
   }, []);
 
-  const selectPatient = (patient) => {
+  const applyPatient = (patient) => {
     setClaim(prev => ({
       ...prev,
       patient_id: patient.id,
@@ -87,24 +95,26 @@ export default function ClaimBuilder() {
       accident_date: patient.accident_date || "",
       accident_type: patient.accident_type || "",
     }));
+    setPatientSearch("");
+    setShowPatientDrop(false);
   };
 
   const set = (field, value) => setClaim(prev => ({ ...prev, [field]: value }));
 
-  const totalCharge = useMemo(() => {
-    return claim.service_lines.reduce((sum, l) => sum + ((l.charge || 0) * (l.units || 1)), 0);
-  }, [claim.service_lines]);
+  const totalCharge = useMemo(() =>
+    claim.service_lines.reduce((sum, l) => sum + ((l.charge || 0) * (l.units || 1)), 0),
+    [claim.service_lines]
+  );
 
   const handleApplyTemplate = (template) => {
     const newLines = (template.procedures || []).map(p => ({
       date_of_service: claim.date_of_service,
       code: p.code, description: p.description,
       charge: p.charge, units: p.units || 1,
-      modifier: p.modifier || "", diagnosis_pointers: p.diagnosis_pointers || "1",
-      notes: "",
+      modifier: p.modifier || "", diagnosis_pointers: p.diagnosis_pointers || "1", notes: "",
     }));
-    const newDx = (template.default_diagnoses || []).map(d => ({
-      code: d.code, description: d.description, pointer: "",
+    const newDx = (template.default_diagnoses || []).map((d, i) => ({
+      code: d.code, description: d.description, pointer: String(i + 1),
     }));
     setClaim(prev => ({
       ...prev,
@@ -112,15 +122,68 @@ export default function ClaimBuilder() {
       diagnoses: prev.diagnoses.length > 0 ? prev.diagnoses : newDx,
       template_used: template.title,
     }));
-    setShowQuickPanel(false);
   };
+
+  const addFavCode = (proc) => {
+    setClaim(prev => ({
+      ...prev,
+      service_lines: [...prev.service_lines, {
+        date_of_service: prev.date_of_service,
+        code: proc.code, description: proc.description,
+        modifier: proc.default_modifier || "", diagnosis_pointers: "1",
+        charge: proc.default_charge || 0, units: proc.default_units || 1, notes: "",
+      }],
+    }));
+  };
+
+  const addFavDx = (dx) => {
+    setClaim(prev => {
+      if (prev.diagnoses.find(d => d.code === dx.code)) return prev;
+      return {
+        ...prev,
+        diagnoses: [...prev.diagnoses, { code: dx.code, description: dx.description, pointer: String(prev.diagnoses.length + 1) }],
+      };
+    });
+  };
+
+  const addBlankLine = () => {
+    setClaim(prev => ({
+      ...prev,
+      service_lines: [...prev.service_lines, {
+        date_of_service: prev.date_of_service,
+        code: "", description: "", modifier: "", diagnosis_pointers: "1", charge: 0, units: 1, notes: "",
+      }],
+    }));
+  };
+
+  const updateLine = (idx, field, value) => {
+    setClaim(prev => {
+      const lines = [...prev.service_lines];
+      lines[idx] = { ...lines[idx], [field]: value };
+      return { ...prev, service_lines: lines };
+    });
+  };
+
+  const removeLine = (idx) => setClaim(prev => ({ ...prev, service_lines: prev.service_lines.filter((_, i) => i !== idx) }));
+
+  const updateDx = (idx, field, value) => {
+    setClaim(prev => {
+      const dx = [...prev.diagnoses];
+      dx[idx] = { ...dx[idx], [field]: value };
+      return { ...prev, diagnoses: dx };
+    });
+  };
+
+  const removeDx = (idx) => setClaim(prev => ({
+    ...prev,
+    diagnoses: prev.diagnoses.filter((_, i) => i !== idx).map((d, i) => ({ ...d, pointer: String(i + 1) })),
+  }));
 
   const handleSameDateAll = () => {
     setClaim(prev => ({
       ...prev,
       service_lines: prev.service_lines.map(l => ({ ...l, date_of_service: prev.date_of_service })),
     }));
-    toast({ title: "Date applied to all lines" });
   };
 
   const handleDuplicateLastVisit = async () => {
@@ -135,7 +198,7 @@ export default function ClaimBuilder() {
         payer_type: prev.payer_type || c.payer_type,
         visit_type: prev.visit_type || c.visit_type,
       }));
-      toast({ title: "Previous visit duplicated" });
+      toast({ title: "Last visit loaded" });
     } else {
       toast({ title: "No previous visit found", variant: "destructive" });
     }
@@ -144,18 +207,16 @@ export default function ClaimBuilder() {
   const handleSave = async () => {
     if (!claim.patient_id) { toast({ title: "Select a patient", variant: "destructive" }); return; }
     setLoading(true);
-    const data = { ...claim, total_charge: totalCharge, status: "Saved" };
-    const saved = await base44.entities.Claim.create(data);
+    await base44.entities.Claim.create({ ...claim, total_charge: totalCharge, status: "Saved" });
     setLoading(false);
-    toast({ title: "Claim saved" });
-    navigate(`/saved-claims`);
+    toast({ title: "Claim saved!" });
+    navigate("/saved-claims");
   };
 
   const handleSaveAndPrint = async () => {
     if (!claim.patient_id) { toast({ title: "Select a patient", variant: "destructive" }); return; }
     setLoading(true);
-    const data = { ...claim, total_charge: totalCharge, status: "Saved" };
-    const saved = await base44.entities.Claim.create(data);
+    const saved = await base44.entities.Claim.create({ ...claim, total_charge: totalCharge, status: "Saved" });
     setLoading(false);
     const isCash = claim.visit_type?.includes("Cash");
     navigate(isCash ? `/print-receipt?id=${saved.id}` : `/print-claim?id=${saved.id}`);
@@ -163,135 +224,276 @@ export default function ClaimBuilder() {
 
   const isCash = claim.visit_type?.includes("Cash");
 
+  const filteredPatients = patientSearch
+    ? patients.filter(p => {
+        const q = patientSearch.toLowerCase();
+        return p.first_name?.toLowerCase().includes(q) || p.last_name?.toLowerCase().includes(q) || p.phone?.includes(q);
+      }).slice(0, 8)
+    : patients.slice(0, 8);
+
+  const groupedTemplates = templates.reduce((acc, t) => {
+    const cat = t.category || "Custom";
+    if (!acc[cat]) acc[cat] = [];
+    acc[cat].push(t);
+    return acc;
+  }, {});
+
   return (
-    <div className="space-y-4">
+    <div className="max-w-5xl mx-auto space-y-4 pb-10">
+      {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight">
-          {isCash ? "Cash Visit" : claim.visit_type === "Auto" ? "Auto Claim" : "Insurance Claim"}
-        </h1>
+        <h1 className="text-xl font-bold tracking-tight">New Visit</h1>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => setShowQuickPanel(!showQuickPanel)}>
-            <Zap className="w-4 h-4 mr-1" /> Quick Panel
-          </Button>
           <Button variant="outline" size="sm" onClick={handleDuplicateLastVisit}>
-            <Copy className="w-4 h-4 mr-1" /> Dup Last Visit
+            <Copy className="w-3.5 h-3.5 mr-1" /> Last Visit
           </Button>
           <Button variant="outline" size="sm" onClick={handleSameDateAll}>
-            <CalendarDays className="w-4 h-4 mr-1" /> Same Date All
+            <CalendarDays className="w-3.5 h-3.5 mr-1" /> Same Date All
           </Button>
         </div>
       </div>
 
-      {showQuickPanel && (
-        <QuickPanel 
-          onApply={handleApplyTemplate} 
-          onClose={() => setShowQuickPanel(false)}
-          payerType={claim.payer_type}
-        />
-      )}
-
-      {/* Patient & Visit Type Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <PatientSelector selected={claim.patient_name} onSelect={selectPatient} />
-        <div className="bg-card border border-border rounded-xl p-4">
-          <Label>Visit Type</Label>
-          <Select value={claim.visit_type} onValueChange={v => { set("visit_type", v); if (v.includes("Cash")) set("payer_type", "Cash"); }}>
-            <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {visitTypes.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Label className="mt-3 block">Payer Type</Label>
-          <Select value={claim.payer_type} onValueChange={v => set("payer_type", v)}>
-            <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {payerTypes.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-            </SelectContent>
-          </Select>
+      {/* Row 1: Patient + Date + Visit Type */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        {/* Patient */}
+        <div className="bg-card border border-border rounded-xl p-3 relative">
+          <Label className="text-xs text-muted-foreground uppercase tracking-wide">Patient</Label>
+          {claim.patient_name ? (
+            <div className="flex items-center gap-2 mt-1">
+              <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <User className="w-3.5 h-3.5 text-primary" />
+              </div>
+              <span className="font-semibold flex-1">{claim.patient_name}</span>
+              <button className="text-xs text-primary hover:underline" onClick={() => set("patient_name", "")}>Change</button>
+            </div>
+          ) : (
+            <div className="relative mt-1">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+              <Input
+                placeholder="Search patient..."
+                className="pl-8 h-9"
+                value={patientSearch}
+                onChange={e => { setPatientSearch(e.target.value); setShowPatientDrop(true); }}
+                onFocus={() => setShowPatientDrop(true)}
+                autoFocus
+              />
+              {showPatientDrop && (
+                <div className="absolute z-30 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-xl max-h-56 overflow-y-auto">
+                  {filteredPatients.map(p => (
+                    <button key={p.id} className="w-full text-left px-3 py-2 hover:bg-muted text-sm flex justify-between items-center"
+                      onMouseDown={() => applyPatient(p)}>
+                      <span className="font-medium">{p.first_name} {p.last_name}</span>
+                      <span className="text-xs text-muted-foreground">{p.phone || ""}</span>
+                    </button>
+                  ))}
+                  {filteredPatients.length === 0 && (
+                    <div className="px-3 py-4 text-sm text-muted-foreground text-center">No patients found</div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </div>
-        <div className="bg-card border border-border rounded-xl p-4">
-          <Label>Date of Service</Label>
-          <Input type="date" className="mt-1" value={claim.date_of_service} onChange={e => set("date_of_service", e.target.value)} />
-          <Label className="mt-3 block">Place of Service</Label>
-          <Input className="mt-1" value={claim.place_of_service} onChange={e => set("place_of_service", e.target.value)} />
+
+        {/* Date */}
+        <div className="bg-card border border-border rounded-xl p-3">
+          <Label className="text-xs text-muted-foreground uppercase tracking-wide">Date of Service</Label>
+          <Input type="date" className="mt-1 text-base font-semibold h-9" value={claim.date_of_service}
+            onChange={e => set("date_of_service", e.target.value)} />
+        </div>
+
+        {/* Place of Service (small) + Amount Paid */}
+        <div className="bg-card border border-border rounded-xl p-3 flex gap-3">
+          <div className="flex-1">
+            <Label className="text-xs text-muted-foreground uppercase tracking-wide">Place of Service</Label>
+            <Input className="mt-1 h-9" value={claim.place_of_service} onChange={e => set("place_of_service", e.target.value)} />
+          </div>
+          {!isCash && (
+            <div className="flex-1">
+              <Label className="text-xs text-muted-foreground uppercase tracking-wide">Amt Paid</Label>
+              <Input className="mt-1 h-9" type="number" step="0.01" value={claim.amount_paid}
+                onChange={e => set("amount_paid", parseFloat(e.target.value) || 0)} />
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Insurance Details (non-cash only) */}
+      {/* Visit Type Buttons */}
+      <div className="flex flex-wrap gap-2">
+        {visitTypes.map(t => (
+          <button key={t} onClick={() => { set("visit_type", t); if (t.includes("Cash")) set("payer_type", "Cash"); if (t === "Auto") set("payer_type", "Auto/PI"); }}
+            className={`px-4 py-2 rounded-lg border text-sm font-medium transition-colors ${
+              claim.visit_type === t
+                ? "bg-primary text-primary-foreground border-primary"
+                : "bg-card border-border hover:bg-muted"
+            }`}>
+            {t}
+          </button>
+        ))}
+      </div>
+
+      {/* Insurance strip (non-cash) */}
       {!isCash && (
-        <div className="bg-card border border-border rounded-xl p-4">
-          <h3 className="text-sm font-medium text-muted-foreground mb-3">Insurance Details</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="bg-card border border-border rounded-xl p-3">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
             <div>
-              <Label className="text-xs">Insurance Company</Label>
-              <Input className="h-8 text-sm" value={claim.insurance_company} onChange={e => set("insurance_company", e.target.value)} />
+              <Label className="text-xs text-muted-foreground">Insurance Co.</Label>
+              <Input className="h-8 text-sm mt-0.5" value={claim.insurance_company} onChange={e => set("insurance_company", e.target.value)} />
             </div>
             <div>
-              <Label className="text-xs">Insurance ID</Label>
-              <Input className="h-8 text-sm" value={claim.insurance_id} onChange={e => set("insurance_id", e.target.value)} />
+              <Label className="text-xs text-muted-foreground">Member ID</Label>
+              <Input className="h-8 text-sm mt-0.5" value={claim.insurance_id} onChange={e => set("insurance_id", e.target.value)} />
             </div>
             <div>
-              <Label className="text-xs">Group #</Label>
-              <Input className="h-8 text-sm" value={claim.insurance_group} onChange={e => set("insurance_group", e.target.value)} />
+              <Label className="text-xs text-muted-foreground">Group #</Label>
+              <Input className="h-8 text-sm mt-0.5" value={claim.insurance_group} onChange={e => set("insurance_group", e.target.value)} />
             </div>
             <div>
-              <Label className="text-xs">Insured Name</Label>
-              <Input className="h-8 text-sm" value={claim.insured_name} onChange={e => set("insured_name", e.target.value)} />
-            </div>
-            <div>
-              <Label className="text-xs">Authorization #</Label>
-              <Input className="h-8 text-sm" value={claim.authorization_number} onChange={e => set("authorization_number", e.target.value)} />
-            </div>
-            <div>
-              <Label className="text-xs">Referring Provider</Label>
-              <Input className="h-8 text-sm" value={claim.referring_provider} onChange={e => set("referring_provider", e.target.value)} />
-            </div>
-            <div>
-              <Label className="text-xs">Referring NPI</Label>
-              <Input className="h-8 text-sm" value={claim.referring_npi} onChange={e => set("referring_npi", e.target.value)} />
+              <Label className="text-xs text-muted-foreground">Auth #</Label>
+              <Input className="h-8 text-sm mt-0.5" value={claim.authorization_number} onChange={e => set("authorization_number", e.target.value)} />
             </div>
           </div>
         </div>
       )}
 
+      {/* Quick Panel - always visible */}
+      <div className="bg-card border border-border rounded-xl p-3">
+        <div className="flex items-center gap-2 mb-2">
+          <Zap className="w-4 h-4 text-primary" />
+          <span className="text-sm font-semibold">Quick Panel</span>
+        </div>
+        <div className="space-y-2">
+          {Object.entries(groupedTemplates).map(([cat, tmpls]) => (
+            <div key={cat} className="flex flex-wrap gap-1.5">
+              <span className="text-xs text-muted-foreground w-full">{cat}</span>
+              {tmpls.map(t => (
+                <button key={t.id} onClick={() => handleApplyTemplate(t)}
+                  className="px-3 py-1.5 bg-muted hover:bg-primary hover:text-primary-foreground border border-border rounded-md text-xs font-medium transition-colors">
+                  {t.title}
+                </button>
+              ))}
+            </div>
+          ))}
+          {templates.length === 0 && <p className="text-xs text-muted-foreground">No templates yet. Add them in Quick Templates.</p>}
+        </div>
+      </div>
+
       {/* Diagnoses */}
-      <DiagnosisPanel 
-        diagnoses={claim.diagnoses} 
-        onChange={dx => set("diagnoses", dx)} 
-      />
+      <div className="bg-card border border-border rounded-xl p-3">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm font-semibold">Diagnoses (ICD-10)</span>
+        </div>
+        {/* Fav Dx chips */}
+        {favDx.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mb-2">
+            {favDx.map(d => (
+              <button key={d.id} onClick={() => addFavDx(d)}
+                className="px-2 py-1 text-xs bg-muted hover:bg-primary hover:text-primary-foreground border border-border rounded-md transition-colors">
+                <Star className="inline w-3 h-3 mr-0.5 opacity-60" />{d.code}
+              </button>
+            ))}
+          </div>
+        )}
+        <div className="space-y-1.5">
+          {claim.diagnoses.map((dx, idx) => (
+            <div key={idx} className="flex gap-2 items-center">
+              <span className="text-xs font-mono text-muted-foreground w-4">{idx + 1}.</span>
+              <Input className="h-8 text-sm w-28 font-mono" placeholder="Code" value={dx.code} onChange={e => updateDx(idx, "code", e.target.value)} />
+              <Input className="h-8 text-sm flex-1" placeholder="Description" value={dx.description} onChange={e => updateDx(idx, "description", e.target.value)} />
+              <button onClick={() => removeDx(idx)} className="text-destructive hover:opacity-70">
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ))}
+        </div>
+        <button onClick={() => setClaim(prev => ({ ...prev, diagnoses: [...prev.diagnoses, { code: "", description: "", pointer: String(prev.diagnoses.length + 1) }] }))}
+          className="mt-2 text-xs text-primary hover:underline flex items-center gap-1">
+          <Plus className="w-3 h-3" /> Add diagnosis
+        </button>
+      </div>
 
       {/* Service Lines */}
-      <ServiceLineGrid
-        lines={claim.service_lines}
-        onChange={lines => set("service_lines", lines)}
-        defaultDate={claim.date_of_service}
-      />
-
-      {/* Notes & Totals */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className="bg-card border border-border rounded-xl p-4">
-          <Label>Claim Notes</Label>
-          <Textarea value={claim.claim_notes} onChange={e => set("claim_notes", e.target.value)} rows={3} className="mt-1" />
+      <div className="bg-card border border-border rounded-xl p-3">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm font-semibold">Service Lines</span>
+          <span className="text-lg font-bold">${totalCharge.toFixed(2)}</span>
         </div>
-        <div className="bg-card border border-border rounded-xl p-4 flex flex-col justify-between">
-          <div>
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-sm text-muted-foreground">Total Charges</span>
-              <span className="text-2xl font-bold">${totalCharge.toFixed(2)}</span>
-            </div>
-            {!isCash && (
-              <div className="flex items-center gap-2">
-                <Label className="text-xs">Amount Paid</Label>
-                <Input className="h-8 text-sm w-32" type="number" step="0.01" value={claim.amount_paid} onChange={e => set("amount_paid", parseFloat(e.target.value) || 0)} />
-              </div>
-            )}
+        {/* Fav codes */}
+        {favCodes.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mb-2">
+            {favCodes.map(c => (
+              <button key={c.id} onClick={() => addFavCode(c)}
+                className="px-2 py-1 text-xs bg-muted hover:bg-primary hover:text-primary-foreground border border-border rounded-md transition-colors">
+                <Star className="inline w-3 h-3 mr-0.5 opacity-60" />{c.code} ${c.default_charge?.toFixed(0)}
+              </button>
+            ))}
           </div>
-          <div className="flex gap-2 mt-4">
-            <Button onClick={handleSave} disabled={loading} className="flex-1">
+        )}
+        {/* Column headers */}
+        <div className="hidden md:grid grid-cols-12 gap-1.5 mb-1 text-xs font-medium text-muted-foreground px-1">
+          <div className="col-span-2">Date</div>
+          <div className="col-span-1">Code</div>
+          <div className="col-span-3">Description</div>
+          <div className="col-span-1">Mod</div>
+          <div className="col-span-1">Dx</div>
+          <div className="col-span-2">Charge</div>
+          <div className="col-span-1">Units</div>
+          <div className="col-span-1"></div>
+        </div>
+        <div className="space-y-1.5">
+          {claim.service_lines.map((line, idx) => (
+            <div key={idx} className="grid grid-cols-6 md:grid-cols-12 gap-1.5 items-center">
+              <div className="col-span-2 hidden md:block">
+                <Input className="h-8 text-xs" type="date" value={line.date_of_service} onChange={e => updateLine(idx, "date_of_service", e.target.value)} />
+              </div>
+              <div className="col-span-2 md:col-span-1">
+                <Input className="h-8 text-xs font-mono" placeholder="Code" value={line.code} onChange={e => updateLine(idx, "code", e.target.value)} />
+              </div>
+              <div className="col-span-4 md:col-span-3">
+                <Input className="h-8 text-xs" placeholder="Description" value={line.description} onChange={e => updateLine(idx, "description", e.target.value)} />
+              </div>
+              <div className="hidden md:block md:col-span-1">
+                <Input className="h-8 text-xs" placeholder="Mod" value={line.modifier} onChange={e => updateLine(idx, "modifier", e.target.value)} />
+              </div>
+              <div className="hidden md:block md:col-span-1">
+                <Input className="h-8 text-xs" placeholder="1,2" value={line.diagnosis_pointers} onChange={e => updateLine(idx, "diagnosis_pointers", e.target.value)} />
+              </div>
+              <div className="col-span-2 md:col-span-2">
+                <Input className="h-8 text-xs" type="number" step="0.01" value={line.charge} onChange={e => updateLine(idx, "charge", parseFloat(e.target.value) || 0)} />
+              </div>
+              <div className="col-span-1">
+                <Input className="h-8 text-xs" type="number" value={line.units} onChange={e => updateLine(idx, "units", parseInt(e.target.value) || 1)} />
+              </div>
+              <div className="col-span-1 flex justify-end">
+                <button onClick={() => removeLine(idx)} className="text-destructive hover:opacity-70">
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+        <button onClick={addBlankLine} className="mt-2 text-xs text-primary hover:underline flex items-center gap-1">
+          <Plus className="w-3 h-3" /> Add line
+        </button>
+      </div>
+
+      {/* Notes + Save */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="bg-card border border-border rounded-xl p-3">
+          <Label className="text-xs text-muted-foreground">Claim Notes</Label>
+          <Textarea value={claim.claim_notes} onChange={e => set("claim_notes", e.target.value)} rows={2} className="mt-1 text-sm" />
+        </div>
+        <div className="bg-card border border-border rounded-xl p-3 flex flex-col justify-between gap-3">
+          <div className="flex justify-between items-center">
+            <span className="text-muted-foreground text-sm">Total</span>
+            <span className="text-3xl font-bold">${totalCharge.toFixed(2)}</span>
+          </div>
+          <div className="flex gap-2">
+            <Button onClick={handleSave} disabled={loading} className="flex-1 h-11 text-base">
               <Save className="w-4 h-4 mr-2" /> Save
             </Button>
-            <Button onClick={handleSaveAndPrint} disabled={loading} variant="outline" className="flex-1">
-              <Printer className="w-4 h-4 mr-2" /> {isCash ? "Save & Receipt" : "Save & Print"}
+            <Button onClick={handleSaveAndPrint} disabled={loading} variant="outline" className="flex-1 h-11 text-base">
+              <Printer className="w-4 h-4 mr-2" /> {isCash ? "Receipt" : "Print"}
             </Button>
           </div>
         </div>
