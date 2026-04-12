@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import InsurersTab from "../components/codelibrary/InsurersTab";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,16 +6,11 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 import { Plus, Edit2, Trash2, Star, X, Save, Search } from "lucide-react";
+import InsurersTab from "../components/codelibrary/InsurersTab";
 
 const procCategories = ["Chiropractic Manipulation", "Office Visit", "Therapy/Modality", "Auto Claim", "Cash Service", "Custom"];
 const emptyProc = { code: "", description: "", category: "Chiropractic Manipulation", default_charge: 0, default_units: 1, default_modifier: "", is_timed: false, active: true, is_favorite: false, documentation_reminder: "", warning_notes: "" };
 const emptyDx = { code: "", description: "", payer_notes: "", active: true, is_favorite: true };
-
-const TABS = [
-  ["procedures", "Procedure Codes"],
-  ["diagnoses", "Diagnosis Codes (ICD-10)"],
-  ["insurers", "Insurers"],
-];
 
 export default function CodeLibrary() {
   const [tab, setTab] = useState("procedures");
@@ -44,33 +38,39 @@ export default function CodeLibrary() {
   const saveProc = async () => {
     if (editingProc.id) await base44.entities.ProcedureCode.update(editingProc.id, editingProc);
     else await base44.entities.ProcedureCode.create(editingProc);
-    setEditingProc(null); load();
+    setEditingProc(null);
+    load();
     toast({ title: "Procedure saved" });
   };
 
   const deleteProc = async (id) => {
     if (!confirm("Delete this procedure?")) return;
-    await base44.entities.ProcedureCode.delete(id); load();
+    await base44.entities.ProcedureCode.delete(id);
+    load();
   };
 
   const toggleFavProc = async (proc) => {
-    await base44.entities.ProcedureCode.update(proc.id, { is_favorite: !proc.is_favorite }); load();
+    await base44.entities.ProcedureCode.update(proc.id, { is_favorite: !proc.is_favorite });
+    load();
   };
 
   const saveDx = async () => {
     if (editingDx.id) await base44.entities.DiagnosisCode.update(editingDx.id, editingDx);
     else await base44.entities.DiagnosisCode.create(editingDx);
-    setEditingDx(null); load();
+    setEditingDx(null);
+    load();
     toast({ title: "Diagnosis saved" });
   };
 
   const deleteDx = async (id) => {
     if (!confirm("Delete this diagnosis?")) return;
-    await base44.entities.DiagnosisCode.delete(id); load();
+    await base44.entities.DiagnosisCode.delete(id);
+    load();
   };
 
   const toggleFavDx = async (dx) => {
-    await base44.entities.DiagnosisCode.update(dx.id, { is_favorite: !dx.is_favorite }); load();
+    await base44.entities.DiagnosisCode.update(dx.id, { is_favorite: !dx.is_favorite });
+    load();
   };
 
   const setP = (f, v) => setEditingProc(p => ({ ...p, [f]: v }));
@@ -87,9 +87,9 @@ export default function CodeLibrary() {
         <p className="text-sm text-muted-foreground">Your office's standard procedures, diagnoses, and insurers used in billing</p>
       </div>
 
-      {/* Tab bar */}
-      <div className="flex gap-1 bg-muted rounded-lg p-1 w-fit">
-        {TABS.map(([key, label]) => (
+      {/* Tabs */}
+      <div className="flex gap-1 bg-muted rounded-lg p-1 w-fit flex-wrap">
+        {[["procedures", "Procedure Codes"], ["diagnoses", "Diagnosis Codes (ICD-10)"], ["insurers", "Insurers"]].map(([key, label]) => (
           <button key={key}
             onClick={() => { setTab(key); setSearch(""); setEditingProc(null); setEditingDx(null); }}
             className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${tab === key ? "bg-card shadow text-foreground" : "text-muted-foreground hover:text-foreground"}`}>
@@ -98,25 +98,33 @@ export default function CodeLibrary() {
         ))}
       </div>
 
-      {/* ===== INSURERS ===== */}
+      {/* Insurers */}
       {tab === "insurers" && <InsurersTab />}
 
-      {/* ===== PROCEDURES ===== */}
-      {tab === "procedures" && (
-        <>
+      {/* Procedures & Diagnoses */}
+      {tab !== "insurers" && (
+        <div className="space-y-4">
+          {/* Search + Add */}
           <div className="flex gap-2">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input placeholder="Search procedures..." className="pl-9" value={search} onChange={e => setSearch(e.target.value)} />
+              <Input placeholder={tab === "procedures" ? "Search procedures..." : "Search diagnoses..."}
+                className="pl-9" value={search} onChange={e => setSearch(e.target.value)} />
             </div>
-            {!editingProc && (
+            {tab === "procedures" && !editingProc && (
               <Button size="sm" onClick={() => setEditingProc({ ...emptyProc })}>
                 <Plus className="w-4 h-4 mr-1" /> Add Procedure
               </Button>
             )}
+            {tab === "diagnoses" && !editingDx && (
+              <Button size="sm" onClick={() => setEditingDx({ ...emptyDx })}>
+                <Plus className="w-4 h-4 mr-1" /> Add Diagnosis
+              </Button>
+            )}
           </div>
 
-          {editingProc && (
+          {/* Procedure Edit Form */}
+          {tab === "procedures" && editingProc && (
             <div className="bg-card border border-border rounded-xl p-4 space-y-3">
               <div className="flex justify-between items-center">
                 <h3 className="font-semibold">{editingProc.id ? "Edit Procedure" : "New Procedure"}</h3>
@@ -152,7 +160,7 @@ export default function CodeLibrary() {
                 </div>
                 <div className="flex items-center gap-2 pt-5">
                   <input type="checkbox" id="fav" checked={editingProc.is_favorite} onChange={e => setP("is_favorite", e.target.checked)} className="w-4 h-4" />
-                  <Label htmlFor="fav" className="text-xs cursor-pointer">Favorite in billing</Label>
+                  <Label htmlFor="fav" className="text-xs cursor-pointer">Show as favorite in billing</Label>
                 </div>
                 <div className="col-span-2 md:col-span-4">
                   <Label className="text-xs">Documentation Reminder (optional)</Label>
@@ -166,68 +174,8 @@ export default function CodeLibrary() {
             </div>
           )}
 
-          <div className="bg-card border border-border rounded-xl overflow-hidden">
-            {loading ? (
-              <div className="flex justify-center py-10"><div className="w-6 h-6 border-2 border-muted border-t-primary rounded-full animate-spin" /></div>
-            ) : (
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b bg-muted/40">
-                    <th className="text-left py-2.5 px-3 font-medium text-xs">⭐</th>
-                    <th className="text-left py-2.5 px-3 font-medium text-xs">Code</th>
-                    <th className="text-left py-2.5 px-3 font-medium text-xs">Description</th>
-                    <th className="text-left py-2.5 px-3 font-medium text-xs hidden md:table-cell">Category</th>
-                    <th className="text-left py-2.5 px-3 font-medium text-xs hidden md:table-cell">Charge</th>
-                    <th className="text-left py-2.5 px-3 font-medium text-xs hidden md:table-cell">Modifier</th>
-                    <th className="py-2.5 px-3"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredProcs.map(p => (
-                    <tr key={p.id} className="border-b last:border-0 hover:bg-muted/20">
-                      <td className="py-2 px-3">
-                        <button onClick={() => toggleFavProc(p)}>
-                          <Star className={`w-4 h-4 ${p.is_favorite ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground"}`} />
-                        </button>
-                      </td>
-                      <td className="py-2 px-3 font-mono font-semibold">{p.code}</td>
-                      <td className="py-2 px-3">{p.description}</td>
-                      <td className="py-2 px-3 text-muted-foreground hidden md:table-cell">{p.category}</td>
-                      <td className="py-2 px-3 hidden md:table-cell">${p.default_charge?.toFixed(2)}</td>
-                      <td className="py-2 px-3 font-mono hidden md:table-cell">{p.default_modifier || "—"}</td>
-                      <td className="py-2 px-3 text-right">
-                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setEditingProc(p)}><Edit2 className="w-3.5 h-3.5" /></Button>
-                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => deleteProc(p.id)}><Trash2 className="w-3.5 h-3.5 text-destructive" /></Button>
-                      </td>
-                    </tr>
-                  ))}
-                  {filteredProcs.length === 0 && (
-                    <tr><td colSpan={7} className="py-10 text-center text-muted-foreground">No procedures found</td></tr>
-                  )}
-                </tbody>
-              </table>
-            )}
-          </div>
-          <p className="text-xs text-muted-foreground">⭐ Starred items appear as quick-tap favorites in the claim builder.</p>
-        </>
-      )}
-
-      {/* ===== DIAGNOSES ===== */}
-      {tab === "diagnoses" && (
-        <>
-          <div className="flex gap-2">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input placeholder="Search diagnoses..." className="pl-9" value={search} onChange={e => setSearch(e.target.value)} />
-            </div>
-            {!editingDx && (
-              <Button size="sm" onClick={() => setEditingDx({ ...emptyDx })}>
-                <Plus className="w-4 h-4 mr-1" /> Add Diagnosis
-              </Button>
-            )}
-          </div>
-
-          {editingDx && (
+          {/* Diagnosis Edit Form */}
+          {tab === "diagnoses" && editingDx && (
             <div className="bg-card border border-border rounded-xl p-4 space-y-3">
               <div className="flex justify-between items-center">
                 <h3 className="font-semibold">{editingDx.id ? "Edit Diagnosis" : "New Diagnosis"}</h3>
@@ -248,7 +196,7 @@ export default function CodeLibrary() {
                 </div>
                 <div className="flex items-center gap-2 pt-5">
                   <input type="checkbox" id="dxfav" checked={editingDx.is_favorite} onChange={e => setD("is_favorite", e.target.checked)} className="w-4 h-4" />
-                  <Label htmlFor="dxfav" className="text-xs cursor-pointer">Favorite in billing</Label>
+                  <Label htmlFor="dxfav" className="text-xs cursor-pointer">Show as favorite in billing</Label>
                 </div>
               </div>
               <div className="flex gap-2">
@@ -258,46 +206,96 @@ export default function CodeLibrary() {
             </div>
           )}
 
-          <div className="bg-card border border-border rounded-xl overflow-hidden">
-            {loading ? (
-              <div className="flex justify-center py-10"><div className="w-6 h-6 border-2 border-muted border-t-primary rounded-full animate-spin" /></div>
-            ) : (
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b bg-muted/40">
-                    <th className="text-left py-2.5 px-3 font-medium text-xs">⭐</th>
-                    <th className="text-left py-2.5 px-3 font-medium text-xs">Code</th>
-                    <th className="text-left py-2.5 px-3 font-medium text-xs">Description</th>
-                    <th className="text-left py-2.5 px-3 font-medium text-xs hidden md:table-cell">Payer Notes</th>
-                    <th className="py-2.5 px-3"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredDx.map(d => (
-                    <tr key={d.id} className="border-b last:border-0 hover:bg-muted/20">
-                      <td className="py-2 px-3">
-                        <button onClick={() => toggleFavDx(d)}>
-                          <Star className={`w-4 h-4 ${d.is_favorite ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground"}`} />
-                        </button>
-                      </td>
-                      <td className="py-2 px-3 font-mono font-semibold">{d.code}</td>
-                      <td className="py-2 px-3">{d.description}</td>
-                      <td className="py-2 px-3 text-muted-foreground hidden md:table-cell">{d.payer_notes || "—"}</td>
-                      <td className="py-2 px-3 text-right">
-                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setEditingDx(d)}><Edit2 className="w-3.5 h-3.5" /></Button>
-                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => deleteDx(d.id)}><Trash2 className="w-3.5 h-3.5 text-destructive" /></Button>
-                      </td>
+          {/* Procedure Table */}
+          {tab === "procedures" && (
+            <div className="bg-card border border-border rounded-xl overflow-hidden">
+              {loading ? (
+                <div className="flex justify-center py-10"><div className="w-6 h-6 border-2 border-muted border-t-primary rounded-full animate-spin" /></div>
+              ) : (
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b bg-muted/40">
+                      <th className="text-left py-2.5 px-3 font-medium text-xs">⭐</th>
+                      <th className="text-left py-2.5 px-3 font-medium text-xs">Code</th>
+                      <th className="text-left py-2.5 px-3 font-medium text-xs">Description</th>
+                      <th className="text-left py-2.5 px-3 font-medium text-xs hidden md:table-cell">Category</th>
+                      <th className="text-left py-2.5 px-3 font-medium text-xs hidden md:table-cell">Charge</th>
+                      <th className="text-left py-2.5 px-3 font-medium text-xs hidden md:table-cell">Modifier</th>
+                      <th className="py-2.5 px-3"></th>
                     </tr>
-                  ))}
-                  {filteredDx.length === 0 && (
-                    <tr><td colSpan={5} className="py-10 text-center text-muted-foreground">No diagnoses found</td></tr>
-                  )}
-                </tbody>
-              </table>
-            )}
-          </div>
+                  </thead>
+                  <tbody>
+                    {filteredProcs.map(p => (
+                      <tr key={p.id} className="border-b last:border-0 hover:bg-muted/20">
+                        <td className="py-2 px-3">
+                          <button onClick={() => toggleFavProc(p)}>
+                            <Star className={`w-4 h-4 ${p.is_favorite ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground"}`} />
+                          </button>
+                        </td>
+                        <td className="py-2 px-3 font-mono font-semibold">{p.code}</td>
+                        <td className="py-2 px-3">{p.description}</td>
+                        <td className="py-2 px-3 text-muted-foreground hidden md:table-cell">{p.category}</td>
+                        <td className="py-2 px-3 hidden md:table-cell">${p.default_charge?.toFixed(2)}</td>
+                        <td className="py-2 px-3 font-mono hidden md:table-cell">{p.default_modifier || "—"}</td>
+                        <td className="py-2 px-3 text-right">
+                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setEditingProc(p)}><Edit2 className="w-3.5 h-3.5" /></Button>
+                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => deleteProc(p.id)}><Trash2 className="w-3.5 h-3.5 text-destructive" /></Button>
+                        </td>
+                      </tr>
+                    ))}
+                    {filteredProcs.length === 0 && (
+                      <tr><td colSpan={7} className="py-10 text-center text-muted-foreground">No procedures found</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          )}
+
+          {/* Diagnosis Table */}
+          {tab === "diagnoses" && (
+            <div className="bg-card border border-border rounded-xl overflow-hidden">
+              {loading ? (
+                <div className="flex justify-center py-10"><div className="w-6 h-6 border-2 border-muted border-t-primary rounded-full animate-spin" /></div>
+              ) : (
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b bg-muted/40">
+                      <th className="text-left py-2.5 px-3 font-medium text-xs">⭐</th>
+                      <th className="text-left py-2.5 px-3 font-medium text-xs">Code</th>
+                      <th className="text-left py-2.5 px-3 font-medium text-xs">Description</th>
+                      <th className="text-left py-2.5 px-3 font-medium text-xs hidden md:table-cell">Payer Notes</th>
+                      <th className="py-2.5 px-3"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredDx.map(d => (
+                      <tr key={d.id} className="border-b last:border-0 hover:bg-muted/20">
+                        <td className="py-2 px-3">
+                          <button onClick={() => toggleFavDx(d)}>
+                            <Star className={`w-4 h-4 ${d.is_favorite ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground"}`} />
+                          </button>
+                        </td>
+                        <td className="py-2 px-3 font-mono font-semibold">{d.code}</td>
+                        <td className="py-2 px-3">{d.description}</td>
+                        <td className="py-2 px-3 text-muted-foreground hidden md:table-cell">{d.payer_notes || "—"}</td>
+                        <td className="py-2 px-3 text-right">
+                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setEditingDx(d)}><Edit2 className="w-3.5 h-3.5" /></Button>
+                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => deleteDx(d.id)}><Trash2 className="w-3.5 h-3.5 text-destructive" /></Button>
+                        </td>
+                      </tr>
+                    ))}
+                    {filteredDx.length === 0 && (
+                      <tr><td colSpan={5} className="py-10 text-center text-muted-foreground">No diagnoses found</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          )}
+
           <p className="text-xs text-muted-foreground">⭐ Starred items appear as quick-tap favorites in the claim builder.</p>
-        </>
+        </div>
       )}
     </div>
   );
