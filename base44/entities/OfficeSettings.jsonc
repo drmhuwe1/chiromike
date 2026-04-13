@@ -67,6 +67,13 @@
       "type": "string",
       "title": "Default Claim Notes"
     },
+    "custom_canned_notes": {
+      "type": "array",
+      "title": "Custom Quick Notes",
+      "items": {
+        "type": "string"
+      }
+    },
     "receipt_header": {
       "type": "string",
       "title": "Receipt Header Text"

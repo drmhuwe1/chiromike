@@ -12,6 +12,8 @@ import SoapNoteModal from "../components/claim/SoapNoteModal";
 import VoiceDictation from "../components/VoiceDictation";
 import PaymentModal from "../components/payment/PaymentModal";
 import ScheduleNextVisitModal from "../components/claim/ScheduleNextVisitModal";
+import ProcedureCodeSearchModal from "../components/claim/ProcedureCodeSearchModal";
+import DiagnosisCodeSearchModal from "../components/claim/DiagnosisCodeSearchModal";
 
 const CANNED_NOTES = [
   "Patient presents for follow-up chiropractic care. Responding well to treatment with gradual improvement in pain and function. Continue current treatment plan.",
@@ -63,6 +65,8 @@ export default function ClaimBuilder() {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState(null);
+  const [showProcCodeModal, setShowProcCodeModal] = useState(null); // null or line index
+  const [showDxCodeModal, setShowDxCodeModal] = useState(null); // null or diagnosis index
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -82,11 +86,23 @@ export default function ClaimBuilder() {
       setFavDx(dx);
 
       if (settings[0]) {
+        window.claimBuilderSettings = settings[0];
         setClaim(prev => ({
           ...prev,
           place_of_service: settings[0].default_place_of_service || "11",
           claim_notes: settings[0].default_claim_notes || "",
         }));
+      }
+
+      // Load persisted diagnoses from localStorage
+      const persistedDx = localStorage.getItem('persistedDiagnoses');
+      if (persistedDx) {
+        try {
+          const diagList = JSON.parse(persistedDx);
+          setClaim(prev => ({ ...prev, diagnoses: diagList }));
+        } catch (e) {
+          console.error('Failed to load persisted diagnoses', e);
+        }
       }
 
       if (presetPatientId) {
@@ -188,9 +204,11 @@ export default function ClaimBuilder() {
   const addFavDx = (dx) => {
     setClaim(prev => {
       if (prev.diagnoses.find(d => d.code === dx.code)) return prev;
+      const updated = [...prev.diagnoses, { code: dx.code, description: dx.description, pointer: String(prev.diagnoses.length + 1) }];
+      localStorage.setItem('persistedDiagnoses', JSON.stringify(updated));
       return {
         ...prev,
-        diagnoses: [...prev.diagnoses, { code: dx.code, description: dx.description, pointer: String(prev.diagnoses.length + 1) }],
+        diagnoses: updated,
       };
     });
   };
@@ -223,10 +241,11 @@ export default function ClaimBuilder() {
     });
   };
 
-  const removeDx = (idx) => setClaim(prev => ({
-    ...prev,
-    diagnoses: prev.diagnoses.filter((_, i) => i !== idx).map((d, i) => ({ ...d, pointer: String(i + 1) })),
-  }));
+  const removeDx = (idx) => {
+    const updated = claim.diagnoses.filter((_, i) => i !== idx).map((d, i) => ({ ...d, pointer: String(i + 1) }));
+    localStorage.setItem('persistedDiagnoses', JSON.stringify(updated));
+    setClaim(prev => ({ ...prev, diagnoses: updated }));
+  };
 
   const handleSameDateAll = () => {
     setClaim(prev => ({
@@ -471,6 +490,19 @@ export default function ClaimBuilder() {
           <span className="text-sm font-semibold">Quick Panel</span>
         </div>
         <div className="space-y-2">
+          {/* Custom Canned Notes */}
+          {(window.claimBuilderSettings?.custom_canned_notes?.length > 0 || CANNED_NOTES.length > 0) && (
+            <div className="flex flex-wrap gap-1.5 pb-2 border-b border-border">
+              <span className="text-xs text-muted-foreground w-full">Quick Notes</span>
+              {(window.claimBuilderSettings?.custom_canned_notes || []).map((note, i) => (
+                <button key={`custom-${i}`} onClick={() => set("claim_notes", note)}
+                  className="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-md text-xs font-medium transition-colors text-amber-900">
+                  {note.substring(0, 30)}...
+                </button>
+              ))}
+            </div>
+          )}
+          {/* Templates */}
           {Object.entries(groupedTemplates).map(([cat, tmpls]) => (
             <div key={cat} className="flex flex-wrap gap-1.5">
               <span className="text-xs text-muted-foreground w-full">{cat}</span>
@@ -490,6 +522,9 @@ export default function ClaimBuilder() {
       <div className="bg-card border border-border rounded-xl p-3">
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm font-semibold">Diagnoses (ICD-10)</span>
+          <button onClick={() => setShowDxCodeModal(claim.diagnoses.length)} className="text-xs text-primary hover:underline">
+            + Search Library
+          </button>
         </div>
         {/* Fav Dx chips */}
         {favDx.length > 0 && (
@@ -504,9 +539,16 @@ export default function ClaimBuilder() {
         )}
         <div className="space-y-1.5">
           {claim.diagnoses.map((dx, idx) => (
-            <div key={idx} className="flex gap-2 items-center">
+            <div key={idx} className="flex gap-2 items-center group">
               <span className="text-xs font-mono text-muted-foreground w-4">{idx + 1}.</span>
-              <Input className="h-8 text-sm w-28 font-mono" placeholder="Code" value={dx.code} onChange={e => updateDx(idx, "code", e.target.value)} />
+              <button
+                type="button"
+                onClick={() => setShowDxCodeModal(idx)}
+                className="h-8 w-28 font-mono text-sm px-2 rounded border border-input hover:bg-muted bg-white text-left truncate"
+                title="Click to search diagnosis codes"
+              >
+                {dx.code || '⊕ Search'}
+              </button>
               <Input className="h-8 text-sm flex-1" placeholder="Description" value={dx.description} onChange={e => updateDx(idx, "description", e.target.value)} />
               <button onClick={() => removeDx(idx)} className="text-destructive hover:opacity-70">
                 <Trash2 className="w-3.5 h-3.5" />
@@ -514,7 +556,11 @@ export default function ClaimBuilder() {
             </div>
           ))}
         </div>
-        <button onClick={() => setClaim(prev => ({ ...prev, diagnoses: [...prev.diagnoses, { code: "", description: "", pointer: String(prev.diagnoses.length + 1) }] }))}
+        <button onClick={() => {
+          const updated = [...claim.diagnoses, { code: "", description: "", pointer: String(claim.diagnoses.length + 1) }];
+          localStorage.setItem('persistedDiagnoses', JSON.stringify(updated));
+          setClaim(prev => ({ ...prev, diagnoses: updated }));
+        }}
           className="mt-2 text-xs text-primary hover:underline flex items-center gap-1">
           <Plus className="w-3 h-3" /> Add diagnosis
         </button>
@@ -523,7 +569,12 @@ export default function ClaimBuilder() {
       {/* Service Lines */}
       <div className="bg-card border border-border rounded-xl p-3">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-semibold">Service Lines</span>
+          <div>
+            <span className="text-sm font-semibold">Service Lines</span>
+            <button onClick={() => setShowProcCodeModal(-1)} className="ml-2 text-xs text-primary hover:underline">
+              + Search Library
+            </button>
+          </div>
           <span className="text-lg font-bold">${totalCharge.toFixed(2)}</span>
         </div>
         {/* Fav codes */}
@@ -555,7 +606,14 @@ export default function ClaimBuilder() {
                 <Input className="h-8 text-xs" type="date" value={line.date_of_service} onChange={e => updateLine(idx, "date_of_service", e.target.value)} />
               </div>
               <div className="col-span-2 md:col-span-1">
-                <Input className="h-8 text-xs font-mono" placeholder="Code" value={line.code} onChange={e => updateLine(idx, "code", e.target.value)} />
+                <button
+                  type="button"
+                  onClick={() => setShowProcCodeModal(idx)}
+                  className="h-8 w-full font-mono text-xs px-2 rounded border border-input hover:bg-muted bg-white text-left truncate"
+                  title="Click to search procedure codes"
+                >
+                  {line.code || '⊕ Search'}
+                </button>
               </div>
               <div className="col-span-4 md:col-span-3">
                 <Input className="h-8 text-xs" placeholder="Description" value={line.description} onChange={e => updateLine(idx, "description", e.target.value)} />
@@ -641,6 +699,33 @@ export default function ClaimBuilder() {
               {includeHcfa ? 'Email Superbill + CMS-1500' : 'Email Superbill to Patient'}
             </Button>
             {savedClaim && (
+              <Button 
+                onClick={async () => {
+                  if (!selectedPatient?.email) {
+                    toast({ title: "Patient email required", variant: "destructive" });
+                    return;
+                  }
+                  setEmailing(true);
+                  try {
+                    await base44.functions.invoke('sendReceiptEmail', { 
+                      claim_id: savedClaim.id, 
+                      patient_email: selectedPatient.email 
+                    });
+                    toast({ title: `Receipt emailed to ${selectedPatient.email}` });
+                  } catch (e) {
+                    toast({ title: e.message || 'Failed to email receipt', variant: 'destructive' });
+                  }
+                  setEmailing(false);
+                }}
+                disabled={emailing || loading}
+                variant="outline" 
+                className="w-full h-10 text-sm text-green-600 border-green-200 hover:bg-green-50"
+              >
+                {emailing ? <div className="w-4 h-4 border-2 border-green-200 border-t-green-600 rounded-full animate-spin mr-2" /> : <Mail className="w-4 h-4 mr-2" />}
+                Email Receipt Only
+              </Button>
+            )}
+            {savedClaim && (
               <>
                 <Button variant="outline" className="w-full h-10 text-sm text-purple-600 border-purple-200 hover:bg-purple-50" onClick={() => setShowSoapModal(true)}>
                   <Sparkles className="w-4 h-4 mr-2" /> Generate SOAP Note
@@ -677,6 +762,59 @@ export default function ClaimBuilder() {
           claim={savedClaim}
           onClose={() => setShowScheduleModal(false)}
           onSuccess={() => setShowScheduleModal(false)}
+        />
+      )}
+
+      {showProcCodeModal !== null && (
+        <ProcedureCodeSearchModal
+          onSelect={(code) => {
+            if (showProcCodeModal === -1) {
+              // Add new line
+              setClaim(prev => ({
+                ...prev,
+                service_lines: [...prev.service_lines, {
+                  date_of_service: prev.date_of_service,
+                  code: code.code,
+                  description: code.description,
+                  modifier: code.default_modifier || "",
+                  diagnosis_pointers: "1",
+                  charge: code.default_charge || 0,
+                  units: code.default_units || 1,
+                  notes: ""
+                }]
+              }));
+            } else {
+              // Update existing line
+              updateLine(showProcCodeModal, "code", code.code);
+              updateLine(showProcCodeModal, "description", code.description);
+              updateLine(showProcCodeModal, "charge", code.default_charge || 0);
+              updateLine(showProcCodeModal, "units", code.default_units || 1);
+              if (code.default_modifier) updateLine(showProcCodeModal, "modifier", code.default_modifier);
+            }
+            setShowProcCodeModal(null);
+          }}
+          onClose={() => setShowProcCodeModal(null)}
+        />
+      )}
+
+      {showDxCodeModal !== null && (
+        <DiagnosisCodeSearchModal
+          onSelect={(code) => {
+            if (showDxCodeModal === claim.diagnoses.length) {
+              // Add new diagnosis
+              const updated = [...claim.diagnoses, { code: code.code, description: code.description, pointer: String(claim.diagnoses.length + 1) }];
+              localStorage.setItem('persistedDiagnoses', JSON.stringify(updated));
+              setClaim(prev => ({ ...prev, diagnoses: updated }));
+            } else {
+              // Update existing diagnosis
+              updateDx(showDxCodeModal, "code", code.code);
+              updateDx(showDxCodeModal, "description", code.description);
+              const updated = claim.diagnoses.map((d, i) => i === showDxCodeModal ? { ...d, code: code.code, description: code.description } : d);
+              localStorage.setItem('persistedDiagnoses', JSON.stringify(updated));
+            }
+            setShowDxCodeModal(null);
+          }}
+          onClose={() => setShowDxCodeModal(null)}
         />
       )}
     </div>

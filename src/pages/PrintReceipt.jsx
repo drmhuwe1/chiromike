@@ -120,21 +120,17 @@ export default function PrintReceipt() {
         {/* Total */}
         <div className="border-t-2 border-black pt-2 mt-2">
           <div className="flex justify-between font-bold text-lg">
-            <span>TOTAL</span>
+            <span>TOTAL CHARGE</span>
             <span>${total.toFixed(2)}</span>
           </div>
-          {(claim.amount_paid || 0) > 0 && (
-            <>
-              <div className="flex justify-between text-[11px]">
-                <span>Amount Paid</span>
-                <span>${(claim.amount_paid || 0).toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between font-bold">
-                <span>Balance</span>
-                <span>${(total - (claim.amount_paid || 0)).toFixed(2)}</span>
-              </div>
-            </>
-          )}
+          <div className="flex justify-between text-[11px] mt-1">
+            <span>Amount Paid</span>
+            <span>${(claim.amount_paid || 0).toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between font-bold border-t border-black pt-1 mt-1">
+            <span>Balance Due</span>
+            <span>${(total - (claim.amount_paid || 0)).toFixed(2)}</span>
+          </div>
         </div>
 
         {/* Provider */}
