@@ -269,23 +269,31 @@ export default function Calendar() {
                 <>
                   {getEventsForDay(parseInt(selectedDayView.split("-")[2])).appts.map((a, i) => (
                     <div key={`day-appt-${i}`} className="bg-green-50 border border-green-200 rounded-lg p-4">
-                      <div className="flex items-start justify-between">
+                      <div className="flex items-start justify-between mb-3">
                         <div>
                           <h3 className="font-semibold text-lg">{a.patient_name}</h3>
                           <div className="text-sm text-muted-foreground space-y-1 mt-2">
                             <div><span className="font-medium">Type:</span> {a.appointment_type}</div>
                             <div><span className="font-medium">Duration:</span> {a.duration_minutes} min</div>
-                            {a.notes && <div><span className="font-medium">Notes:</span> {a.notes}</div>}
                           </div>
                         </div>
-                        <div className="flex gap-2">
-                          <Button size="sm" onClick={() => { handleEditAppointment(a); setSelectedDayView(null); }} variant="outline" className="gap-1">
-                            <Edit2 className="w-3 h-3" /> Edit
-                          </Button>
-                          <Button size="sm" onClick={() => { handleDeleteAppointment(a.id); setSelectedDayView(null); }} variant="destructive" className="gap-1">
-                            <Trash2 className="w-3 h-3" /> Delete
-                          </Button>
+                      </div>
+                      {a.notes && (
+                        <div className="mb-3 p-2 bg-white rounded border border-green-100">
+                          <p className="text-xs font-medium text-muted-foreground">Notes:</p>
+                          <p className="text-sm">{a.notes}</p>
                         </div>
+                      )}
+                      <div className="flex flex-wrap gap-2">
+                        <Button size="sm" onClick={() => { handleEditAppointment(a); setSelectedDayView(null); }} variant="outline" className="gap-1 flex-1">
+                          <Edit2 className="w-3 h-3" /> Edit
+                        </Button>
+                        <Button size="sm" onClick={() => { handleEditAppointment(a); setSelectedDayView(null); }} className="gap-1 flex-1 bg-blue-600 hover:bg-blue-700">
+                          📅 Reschedule
+                        </Button>
+                        <Button size="sm" onClick={() => { handleDeleteAppointment(a.id); setSelectedDayView(null); }} variant="destructive" className="gap-1">
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
                       </div>
                     </div>
                   ))}
