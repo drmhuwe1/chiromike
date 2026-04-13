@@ -1,7 +1,7 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { 
   LayoutDashboard, Users, FileText, Settings, BookOpen, 
-  Library, Zap, BarChart3, Menu, X, Wallet, HelpCircle, ShieldCheck
+  Library, Zap, BarChart3, Menu, X, Wallet, HelpCircle, ShieldCheck, ClipboardList
 } from "lucide-react";
 import { useState } from "react";
 
@@ -13,6 +13,7 @@ const navItems = [
   { path: "/code-library", label: "Code Library", icon: Library },
   { path: "/templates", label: "Quick Templates", icon: Zap },
   { path: "/billing", label: "Billing Dashboard", icon: Wallet },
+  { path: "/soap-notes", label: "SOAP Notes", icon: ClipboardList },
   { path: "/reports", label: "Reports", icon: BarChart3 },
   { path: "/guide", label: "Feature Guide", icon: HelpCircle },
   { path: "/compliance", label: "HIPAA Compliance", icon: ShieldCheck },

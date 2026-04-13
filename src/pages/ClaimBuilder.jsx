@@ -6,8 +6,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
-import { Save, Printer, Copy, CalendarDays, Search, User, Plus, Trash2, Star, Zap, Mail } from "lucide-react";
+import { Save, Printer, Copy, CalendarDays, Search, User, Plus, Trash2, Star, Zap, Mail, Sparkles, ChevronDown } from "lucide-react";
 import PayerAlertBanner from "../components/claim/PayerAlertBanner";
+import SoapNoteModal from "../components/claim/SoapNoteModal";
+
+const CANNED_NOTES = [
+  "Patient presents for follow-up chiropractic care. Responding well to treatment with gradual improvement in pain and function. Continue current treatment plan.",
+  "Patient presents with acute symptoms. Treatment plan: 3x/week for 4 weeks, then reassess. Goals: reduce pain, restore ROM, return to normal ADLs.",
+  "Patient presents for maintenance care. Condition stable. Treatment rendered to maintain functional status and prevent exacerbation.",
+  "Auto accident patient presents for continued care. Symptoms causally related to MVA. Treatment medically necessary to address accident-related injuries. Treatment plan: 2–3x/week for 6–8 weeks.",
+  "Work injury patient presents for continued care. Symptoms causally related to work incident. Modified duty restrictions in place. Treatment plan ongoing per clinical progress.",
+  "Patient reports significant improvement. Pain reduced by 50%. Continue care 1–2x/week for 4 more weeks then discharge evaluation.",
+];
 
 const visitTypes = ["Insurance", "Auto", "Cash", "Cash Office Visit", "Cash Package"];
 const today = new Date().toISOString().split("T")[0];
@@ -43,6 +53,9 @@ export default function ClaimBuilder() {
   const [loading, setLoading] = useState(false);
   const [emailing, setEmailing] = useState(false);
   const [includeHcfa, setIncludeHcfa] = useState(false);
+  const [savedClaim, setSavedClaim] = useState(null);
+  const [showSoapModal, setShowSoapModal] = useState(false);
+  const [showCannedNotes, setShowCannedNotes] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -215,9 +228,10 @@ export default function ClaimBuilder() {
   const handleSave = async () => {
     if (!claim.patient_id) { toast({ title: "Select a patient", variant: "destructive" }); return; }
     setLoading(true);
-    await base44.entities.Claim.create({ ...claim, total_charge: totalCharge, status: "Saved" });
+    const saved = await base44.entities.Claim.create({ ...claim, total_charge: totalCharge, status: "Saved" });
     setLoading(false);
-    toast({ title: "Claim saved!" });
+    setSavedClaim(saved);
+    toast({ title: "Claim saved! Generate a SOAP note?" });
     navigate("/saved-claims");
   };
 
@@ -506,8 +520,27 @@ export default function ClaimBuilder() {
       {/* Notes + Save */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div className="bg-card border border-border rounded-xl p-3">
-          <Label className="text-xs text-muted-foreground">Claim Notes</Label>
-          <Textarea value={claim.claim_notes} onChange={e => set("claim_notes", e.target.value)} rows={2} className="mt-1 text-sm" />
+          <div className="flex items-center justify-between mb-1">
+            <Label className="text-xs text-muted-foreground">Claim Notes</Label>
+            <button
+              className="text-xs text-primary hover:underline flex items-center gap-1"
+              onClick={() => setShowCannedNotes(v => !v)}
+            >
+              Quick Notes <ChevronDown className="w-3 h-3" />
+            </button>
+          </div>
+          {showCannedNotes && (
+            <div className="mb-2 space-y-1 max-h-40 overflow-y-auto border border-border rounded-lg p-2 bg-muted/30">
+              {CANNED_NOTES.map((note, i) => (
+                <button key={i}
+                  className="w-full text-left text-xs px-2 py-1.5 rounded hover:bg-primary hover:text-primary-foreground transition-colors border border-transparent hover:border-primary"
+                  onClick={() => { set("claim_notes", note); setShowCannedNotes(false); }}>
+                  {note.substring(0, 80)}...
+                </button>
+              ))}
+            </div>
+          )}
+          <Textarea value={claim.claim_notes} onChange={e => set("claim_notes", e.target.value)} rows={2} className="mt-1 text-sm" placeholder="Select a quick note above or type your own..." />
         </div>
         <div className="bg-card border border-border rounded-xl p-3 flex flex-col justify-between gap-3">
           <div className="flex justify-between items-center">
@@ -531,9 +564,22 @@ export default function ClaimBuilder() {
               {emailing ? <div className="w-4 h-4 border-2 border-blue-200 border-t-blue-600 rounded-full animate-spin mr-2" /> : <Mail className="w-4 h-4 mr-2" />}
               {includeHcfa ? 'Email Superbill + CMS-1500' : 'Email Superbill to Patient'}
             </Button>
+            {savedClaim && (
+              <Button variant="outline" className="w-full h-10 text-sm text-purple-600 border-purple-200 hover:bg-purple-50" onClick={() => setShowSoapModal(true)}>
+                <Sparkles className="w-4 h-4 mr-2" /> Generate SOAP Note
+              </Button>
+            )}
           </div>
         </div>
       </div>
+
+      {showSoapModal && savedClaim && (
+        <SoapNoteModal
+          claim={savedClaim}
+          onClose={() => setShowSoapModal(false)}
+          onGenerated={() => setShowSoapModal(false)}
+        />
+      )}
     </div>
   );
 }

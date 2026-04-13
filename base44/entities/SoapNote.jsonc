@@ -1,0 +1,89 @@
+{
+  "name": "SoapNote",
+  "type": "object",
+  "properties": {
+    "patient_id": {
+      "type": "string",
+      "title": "Patient ID"
+    },
+    "patient_name": {
+      "type": "string",
+      "title": "Patient Name"
+    },
+    "claim_id": {
+      "type": "string",
+      "title": "Claim ID"
+    },
+    "date_of_service": {
+      "type": "string",
+      "format": "date",
+      "title": "Date of Service"
+    },
+    "visit_type": {
+      "type": "string",
+      "title": "Visit Type"
+    },
+    "provider_name": {
+      "type": "string",
+      "title": "Provider Name"
+    },
+    "subjective": {
+      "type": "string",
+      "title": "Subjective"
+    },
+    "objective": {
+      "type": "string",
+      "title": "Objective"
+    },
+    "assessment": {
+      "type": "string",
+      "title": "Assessment"
+    },
+    "plan": {
+      "type": "string",
+      "title": "Plan"
+    },
+    "diagnoses": {
+      "type": "array",
+      "title": "Diagnoses",
+      "items": {
+        "type": "object"
+      }
+    },
+    "procedures": {
+      "type": "array",
+      "title": "Procedures",
+      "items": {
+        "type": "object"
+      }
+    },
+    "accident_related": {
+      "type": "boolean",
+      "title": "Accident Related"
+    },
+    "accident_date": {
+      "type": "string",
+      "title": "Accident Date"
+    },
+    "accident_type": {
+      "type": "string",
+      "title": "Accident Type"
+    },
+    "pain_scale_current": {
+      "type": "number",
+      "title": "Current Pain Scale (0-10)"
+    },
+    "functional_limitations": {
+      "type": "string",
+      "title": "Functional Limitations"
+    },
+    "doctor_signature": {
+      "type": "string",
+      "title": "Doctor Signature / Name"
+    }
+  },
+  "required": [
+    "patient_id",
+    "date_of_service"
+  ]
+}
