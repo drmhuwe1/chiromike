@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
-import { Search, Plus, Save, ChevronDown, ChevronUp, Mic } from "lucide-react";
+import { Search, Plus, Save, ChevronDown, ChevronUp, Mic, Upload } from "lucide-react";
 import NotePolishModal from "../components/claim/NotePolishModal";
 import VoiceDictation from "../components/VoiceDictation";
 
@@ -33,7 +33,8 @@ export default function NewPatientExamPage() {
     examiner_name: "", vital_signs: {}, posture_gait: "",
     cervical_rom: {}, lumbar_rom: {}, orthopedic_tests: [],
     neurological_findings: {}, palpation_findings: {},
-    imaging_findings: "", clinical_impression: "", treatment_plan: "", notes: ""
+    imaging_findings: "", imaging_photos: [], pain_scale: "", pain_areas: "",
+    clinical_impression: "", treatment_plan: "", notes: ""
   });
   const [treatmentPlans, setTreatmentPlans] = useState([]);
   const [generatingPlans, setGeneratingPlans] = useState(false);
@@ -281,18 +282,16 @@ export default function NewPatientExamPage() {
           <Section title="Posture & Gait" expanded={expandSections.posture} onToggle={() => toggleSection("posture")}>
             <div className="flex flex-wrap gap-1.5 mb-2">
               <button onClick={() => set("posture_gait", "Normal posture, smooth gait bilaterally")} className="px-2 py-1 text-xs bg-green-100 text-green-700 border border-green-300 rounded hover:bg-green-200">Normal</button>
-              <button onClick={() => set("posture_gait", "Forward head posture noted, antalgic gait on right")} className="px-2 py-1 text-xs bg-blue-100 text-blue-700 border border-blue-300 rounded hover:bg-blue-200">Forward Head</button>
-              <button onClick={() => set("posture_gait", "Kyphosis noted, guarded gait with loss of normal lumbar lordosis")} className="px-2 py-1 text-xs bg-blue-100 text-blue-700 border border-blue-300 rounded hover:bg-blue-200">Kyphosis</button>
+              <button onClick={() => set("posture_gait", "Forward head posture noted, antalgic gait")} className="px-2 py-1 text-xs bg-blue-100 text-blue-700 border border-blue-300 rounded hover:bg-blue-200">Forward Head</button>
+              <button onClick={() => set("posture_gait", "Kyphosis noted, guarded gait with loss of lumbar lordosis")} className="px-2 py-1 text-xs bg-blue-100 text-blue-700 border border-blue-300 rounded hover:bg-blue-200">Kyphosis</button>
               <button onClick={() => set("posture_gait", "Scoliotic curve noted, limping gait")} className="px-2 py-1 text-xs bg-blue-100 text-blue-700 border border-blue-300 rounded hover:bg-blue-200">Scoliosis</button>
               <button onClick={() => set("posture_gait", "Pelvic tilt noted, uneven shoulder height")} className="px-2 py-1 text-xs bg-blue-100 text-blue-700 border border-blue-300 rounded hover:bg-blue-200">Pelvic Tilt</button>
+              <button onClick={() => set("posture_gait", "Lordosis noted, excessive lumbar curve")} className="px-2 py-1 text-xs bg-blue-100 text-blue-700 border border-blue-300 rounded hover:bg-blue-200">Lordosis</button>
+              <button onClick={() => set("posture_gait", "Antalgic gait, weight shifting to unaffected side")} className="px-2 py-1 text-xs bg-blue-100 text-blue-700 border border-blue-300 rounded hover:bg-blue-200">Antalgic</button>
+              <button onClick={() => set("posture_gait", "Muscle asymmetry noted, uneven shoulder/hip height")} className="px-2 py-1 text-xs bg-blue-100 text-blue-700 border border-blue-300 rounded hover:bg-blue-200">Asymmetry</button>
+              <button onClick={() => set("posture_gait", "Stooped posture, shuffling gait")} className="px-2 py-1 text-xs bg-blue-100 text-blue-700 border border-blue-300 rounded hover:bg-blue-200">Stooped</button>
             </div>
-            <Textarea
-              placeholder="Or type custom notes..."
-              rows={2}
-              className="text-sm"
-              value={exam.posture_gait}
-              onChange={e => set("posture_gait", e.target.value)}
-            />
+            <Textarea placeholder="Or type custom notes..." rows={2} className="text-sm" value={exam.posture_gait} onChange={e => set("posture_gait", e.target.value)} />
           </Section>
 
           {/* Cervical ROM */}
@@ -301,12 +300,13 @@ export default function NewPatientExamPage() {
               {["flexion", "extension", "left_lateral", "right_lateral", "left_rotation", "right_rotation"].map(field => (
                 <div key={field}>
                   <Label className="text-xs capitalize">{field.replace(/_/g, " ")}</Label>
-                  <Input
-                    placeholder="e.g. 45°/50°"
-                    className="mt-1 h-8 text-xs"
-                    value={exam.cervical_rom?.[field] || ""}
-                    onChange={e => set(`cervical_rom.${field}`, e.target.value)}
-                  />
+                  <div className="flex gap-1 mb-1 flex-wrap">
+                    {field.includes("flexion") && <><button onClick={() => set(`cervical_rom.${field}`, "45°/50°")} className="px-1.5 py-0.5 text-xs bg-blue-100 text-blue-700 border border-blue-300 rounded hover:bg-blue-200">45°</button><button onClick={() => set(`cervical_rom.${field}`, "50°/55°")} className="px-1.5 py-0.5 text-xs bg-blue-100 text-blue-700 border border-blue-300 rounded hover:bg-blue-200">50°</button></> }
+                    {field.includes("extension") && <><button onClick={() => set(`cervical_rom.${field}`, "55°/60°")} className="px-1.5 py-0.5 text-xs bg-blue-100 text-blue-700 border border-blue-300 rounded hover:bg-blue-200">55°</button><button onClick={() => set(`cervical_rom.${field}`, "60°/65°")} className="px-1.5 py-0.5 text-xs bg-blue-100 text-blue-700 border border-blue-300 rounded hover:bg-blue-200">60°</button></> }
+                    {field.includes("lateral") && <><button onClick={() => set(`cervical_rom.${field}`, "35°/40°")} className="px-1.5 py-0.5 text-xs bg-blue-100 text-blue-700 border border-blue-300 rounded hover:bg-blue-200">35°</button><button onClick={() => set(`cervical_rom.${field}`, "40°/45°")} className="px-1.5 py-0.5 text-xs bg-blue-100 text-blue-700 border border-blue-300 rounded hover:bg-blue-200">40°</button></> }
+                    {field.includes("rotation") && <><button onClick={() => set(`cervical_rom.${field}`, "60°/70°")} className="px-1.5 py-0.5 text-xs bg-blue-100 text-blue-700 border border-blue-300 rounded hover:bg-blue-200">60°</button><button onClick={() => set(`cervical_rom.${field}`, "70°/80°")} className="px-1.5 py-0.5 text-xs bg-blue-100 text-blue-700 border border-blue-300 rounded hover:bg-blue-200">70°</button></> }
+                  </div>
+                  <Input placeholder="e.g. 45°/50°" className="h-8 text-xs" value={exam.cervical_rom?.[field] || ""} onChange={e => set(`cervical_rom.${field}`, e.target.value)} />
                 </div>
               ))}
             </div>
@@ -318,12 +318,13 @@ export default function NewPatientExamPage() {
               {["flexion", "extension", "left_lateral", "right_lateral", "left_rotation", "right_rotation"].map(field => (
                 <div key={field}>
                   <Label className="text-xs capitalize">{field.replace(/_/g, " ")}</Label>
-                  <Input
-                    placeholder="e.g. 60°/80°"
-                    className="mt-1 h-8 text-xs"
-                    value={exam.lumbar_rom?.[field] || ""}
-                    onChange={e => set(`lumbar_rom.${field}`, e.target.value)}
-                  />
+                  <div className="flex gap-1 mb-1 flex-wrap">
+                    {field.includes("flexion") && <><button onClick={() => set(`lumbar_rom.${field}`, "60°/80°")} className="px-1.5 py-0.5 text-xs bg-blue-100 text-blue-700 border border-blue-300 rounded hover:bg-blue-200">60°</button><button onClick={() => set(`lumbar_rom.${field}`, "80°/90°")} className="px-1.5 py-0.5 text-xs bg-blue-100 text-blue-700 border border-blue-300 rounded hover:bg-blue-200">80°</button></> }
+                    {field.includes("extension") && <><button onClick={() => set(`lumbar_rom.${field}`, "20°/25°")} className="px-1.5 py-0.5 text-xs bg-blue-100 text-blue-700 border border-blue-300 rounded hover:bg-blue-200">20°</button><button onClick={() => set(`lumbar_rom.${field}`, "25°/30°")} className="px-1.5 py-0.5 text-xs bg-blue-100 text-blue-700 border border-blue-300 rounded hover:bg-blue-200">25°</button></> }
+                    {field.includes("lateral") && <><button onClick={() => set(`lumbar_rom.${field}`, "20°/25°")} className="px-1.5 py-0.5 text-xs bg-blue-100 text-blue-700 border border-blue-300 rounded hover:bg-blue-200">20°</button><button onClick={() => set(`lumbar_rom.${field}`, "25°/30°")} className="px-1.5 py-0.5 text-xs bg-blue-100 text-blue-700 border border-blue-300 rounded hover:bg-blue-200">25°</button></> }
+                    {field.includes("rotation") && <><button onClick={() => set(`lumbar_rom.${field}`, "20°/30°")} className="px-1.5 py-0.5 text-xs bg-blue-100 text-blue-700 border border-blue-300 rounded hover:bg-blue-200">20°</button><button onClick={() => set(`lumbar_rom.${field}`, "30°/45°")} className="px-1.5 py-0.5 text-xs bg-blue-100 text-blue-700 border border-blue-300 rounded hover:bg-blue-200">30°</button></> }
+                  </div>
+                  <Input placeholder="e.g. 60°/80°" className="h-8 text-xs" value={exam.lumbar_rom?.[field] || ""} onChange={e => set(`lumbar_rom.${field}`, e.target.value)} />
                 </div>
               ))}
             </div>
@@ -360,31 +361,23 @@ export default function NewPatientExamPage() {
               {/* Test List */}
               <div className="space-y-2">
                 {exam.orthopedic_tests?.map((test, idx) => (
-                  <div key={idx} className="flex gap-2 text-sm">
-                    <select
-                      className="flex-1 border rounded px-2 py-1 text-xs"
-                      value={test.test_name}
-                      onChange={e => updateOrthoTest(idx, "test_name", e.target.value)}
-                    >
-                      <option value="">Select test...</option>
-                      {ORTHO_TESTS.map(t => <option key={t} value={t}>{t}</option>)}
-                    </select>
-                    <select
-                      className="w-24 border rounded px-2 py-1 text-xs"
-                      value={test.result}
-                      onChange={e => updateOrthoTest(idx, "result", e.target.value)}
-                    >
-                      <option value="">Result</option>
-                      <option value="Positive">Positive</option>
-                      <option value="Negative">Negative</option>
-                    </select>
-                    <Input
-                      placeholder="Notes"
-                      className="flex-1 h-8 text-xs"
-                      value={test.notes}
-                      onChange={e => updateOrthoTest(idx, "notes", e.target.value)}
-                    />
-                    <Button size="sm" variant="ghost" onClick={() => removeOrthoTest(idx)}>×</Button>
+                  <div key={idx} className="space-y-2">
+                    <div className="flex gap-2 text-sm">
+                      <select className="flex-1 border rounded px-2 py-1 text-xs" value={test.test_name} onChange={e => updateOrthoTest(idx, "test_name", e.target.value)}>
+                        <option value="">Select test...</option>
+                        {ORTHO_TESTS.map(t => <option key={t} value={t}>{t}</option>)}
+                      </select>
+                      <select className="w-24 border rounded px-2 py-1 text-xs" value={test.result} onChange={e => updateOrthoTest(idx, "result", e.target.value)}>
+                        <option value="">Result</option>
+                        <option value="Positive">Positive</option>
+                        <option value="Negative">Negative</option>
+                      </select>
+                      <Button size="sm" variant="ghost" onClick={() => removeOrthoTest(idx)}>×</Button>
+                    </div>
+                    <div className="flex gap-2">
+                      <Input placeholder="Notes" className="flex-1 h-8 text-xs" value={test.notes} onChange={e => updateOrthoTest(idx, "notes", e.target.value)} />
+                      <VoiceDictation label="🎤" onTranscript={t => updateOrthoTest(idx, "notes", test.notes ? test.notes + ' ' + t : t)} />
+                    </div>
                   </div>
                 ))}
               </div>
@@ -437,12 +430,15 @@ export default function NewPatientExamPage() {
                 {["dtr_cervical", "dtr_lumbar", "sensory", "motor_strength", "cranial_nerves", "pathological_signs"].map(field => (
                   <div key={field}>
                     <Label className="text-xs capitalize">{field.replace(/_/g, " ")}</Label>
-                    <Textarea
-                      className="mt-1 h-12 text-xs"
-                      placeholder={field === "dtr_cervical" ? "e.g. 2+ normal, brisk..." : ""}
-                      value={exam.neurological_findings?.[field] || ""}
-                      onChange={e => set(`neurological_findings.${field}`, e.target.value)}
-                    />
+                    <div className="flex flex-wrap gap-1.5 mb-1">
+                      {field === "dtr_cervical" && <><button onClick={() => set(`neurological_findings.${field}`, "2+ normal")} className="px-2 py-0.5 text-xs bg-green-100 text-green-700 border border-green-300 rounded hover:bg-green-200">Normal</button><button onClick={() => set(`neurological_findings.${field}`, "1+ diminished")} className="px-2 py-0.5 text-xs bg-blue-100 text-blue-700 border border-blue-300 rounded hover:bg-blue-200">Diminished</button><button onClick={() => set(`neurological_findings.${field}`, "Brisk/hyperactive")} className="px-2 py-0.5 text-xs bg-amber-100 text-amber-700 border border-amber-300 rounded hover:bg-amber-200">Hyperactive</button></> }
+                      {field === "dtr_lumbar" && <><button onClick={() => set(`neurological_findings.${field}`, "2+ normal")} className="px-2 py-0.5 text-xs bg-green-100 text-green-700 border border-green-300 rounded hover:bg-green-200">Normal</button><button onClick={() => set(`neurological_findings.${field}`, "1+ diminished")} className="px-2 py-0.5 text-xs bg-blue-100 text-blue-700 border border-blue-300 rounded hover:bg-blue-200">Diminished</button><button onClick={() => set(`neurological_findings.${field}`, "Brisk/hyperactive")} className="px-2 py-0.5 text-xs bg-amber-100 text-amber-700 border border-amber-300 rounded hover:bg-amber-200">Hyperactive</button></> }
+                      {field === "sensory" && <><button onClick={() => set(`neurological_findings.${field}`, "Intact bilaterally")} className="px-2 py-0.5 text-xs bg-green-100 text-green-700 border border-green-300 rounded hover:bg-green-200">Intact</button><button onClick={() => set(`neurological_findings.${field}`, "Diminished in C6-C7")} className="px-2 py-0.5 text-xs bg-blue-100 text-blue-700 border border-blue-300 rounded hover:bg-blue-200">Diminished</button></> }
+                      {field === "motor_strength" && <><button onClick={() => set(`neurological_findings.${field}`, "5/5 bilateral")} className="px-2 py-0.5 text-xs bg-green-100 text-green-700 border border-green-300 rounded hover:bg-green-200">5/5</button><button onClick={() => set(`neurological_findings.${field}`, "4/5 with weakness")} className="px-2 py-0.5 text-xs bg-blue-100 text-blue-700 border border-blue-300 rounded hover:bg-blue-200">4/5</button></> }
+                      {field === "cranial_nerves" && <><button onClick={() => set(`neurological_findings.${field}`, "II-XII intact")} className="px-2 py-0.5 text-xs bg-green-100 text-green-700 border border-green-300 rounded hover:bg-green-200">Intact</button><button onClick={() => set(`neurological_findings.${field}`, "Deficit noted")} className="px-2 py-0.5 text-xs bg-blue-100 text-blue-700 border border-blue-300 rounded hover:bg-blue-200">Deficit</button></> }
+                      {field === "pathological_signs" && <><button onClick={() => set(`neurological_findings.${field}`, "Negative")} className="px-2 py-0.5 text-xs bg-green-100 text-green-700 border border-green-300 rounded hover:bg-green-200">Negative</button><button onClick={() => set(`neurological_findings.${field}`, "Babinski positive")} className="px-2 py-0.5 text-xs bg-blue-100 text-blue-700 border border-blue-300 rounded hover:bg-blue-200">Positive</button></> }
+                    </div>
+                    <Textarea className="h-12 text-xs" placeholder={field === "dtr_cervical" ? "e.g. 2+ normal, brisk..." : ""} value={exam.neurological_findings?.[field] || ""} onChange={e => set(`neurological_findings.${field}`, e.target.value)} />
                   </div>
                 ))}
               </div>
@@ -508,15 +504,67 @@ export default function NewPatientExamPage() {
             </div>
           </Section>
 
-          {/* Imaging, Impression, Plan */}
+          {/* Pain Assessment */}
+          <Section title="Pain Assessment" expanded={expandSections.pain} onToggle={() => toggleSection("pain")}>
+            <div className="space-y-3">
+              <div>
+                <Label className="text-sm mb-2 block">Pain Scale (0-10)</Label>
+                <div className="flex gap-1 flex-wrap mb-2">
+                  {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
+                    <button key={num} onClick={() => set("pain_scale", num.toString())} className={`w-8 h-8 rounded border text-xs font-semibold ${exam.pain_scale === num.toString() ? 'bg-red-500 text-white border-red-600' : 'bg-white border-gray-300 hover:bg-gray-100'}`}>{num}</button>
+                  ))}
+                </div>
+                {exam.pain_scale && <p className="text-xs text-muted-foreground">Pain Level: {exam.pain_scale}/10</p>}
+              </div>
+              <div>
+                <Label className="text-sm mb-2 block">Pain Areas</Label>
+                <div className="flex flex-wrap gap-2">
+                  {["Neck", "Shoulders", "Mid-back", "Low back", "Extremities", "Generalized"].map(area => (
+                    <button key={area} onClick={() => {
+                      const areas = exam.pain_areas?.split(',').map(s => s.trim()) || [];
+                      const updated = areas.includes(area) ? areas.filter(a => a !== area) : [...areas, area];
+                      set("pain_areas", updated.join(", "));
+                    }} className={`px-3 py-1 text-xs border rounded ${exam.pain_areas?.includes(area) ? 'bg-red-100 text-red-700 border-red-300' : 'bg-white border-gray-300 hover:bg-gray-100'}`}>{area}</button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </Section>
+
+          {/* Imaging Findings */}
           <Section title="Imaging Findings" expanded={expandSections.imaging} onToggle={() => toggleSection("imaging")}>
-            <Textarea
-              rows={2}
-              className="text-sm"
-              placeholder="X-rays, MRI, CT results..."
-              value={exam.imaging_findings}
-              onChange={e => set("imaging_findings", e.target.value)}
-            />
+            <div className="space-y-3">
+              <Textarea rows={2} className="text-sm" placeholder="X-rays, MRI, CT results..." value={exam.imaging_findings} onChange={e => set("imaging_findings", e.target.value)} />
+              <div>
+                <Label className="text-sm mb-2 block">Photo Upload</Label>
+                <input type="file" multiple accept="image/*" onChange={async (e) => {
+                  const files = Array.from(e.target.files || []);
+                  const urls = [];
+                  for (const file of files) {
+                    try {
+                      const res = await base44.integrations.Core.UploadFile({ file });
+                      urls.push(res.file_url);
+                    } catch (err) {
+                      toast({ title: "Upload failed", variant: "destructive" });
+                    }
+                  }
+                  set("imaging_photos", [...(exam.imaging_photos || []), ...urls]);
+                }} className="block w-full text-sm border border-gray-300 rounded px-3 py-2" />
+                {exam.imaging_photos?.length > 0 && (
+                  <div className="mt-3 space-y-2">
+                    <p className="text-xs font-semibold">{exam.imaging_photos.length} photos uploaded</p>
+                    <div className="flex gap-2 flex-wrap">
+                      {exam.imaging_photos.map((url, idx) => (
+                        <div key={idx} className="relative">
+                          <img src={url} alt={`Photo ${idx + 1}`} className="h-16 w-16 object-cover rounded border" />
+                          <button onClick={() => set("imaging_photos", exam.imaging_photos.filter((_, i) => i !== idx))} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center">×</button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </Section>
 
           <Section title="Clinical Impression" expanded={expandSections.impression} onToggle={() => toggleSection("impression")}>
