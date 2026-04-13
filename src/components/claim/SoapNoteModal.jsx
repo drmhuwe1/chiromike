@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Sparkles, X, Loader2, CheckCircle } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import VoiceDictation from "@/components/VoiceDictation";
+import NotePolishModal from "./NotePolishModal";
 
 export default function SoapNoteModal({ claim, onClose, onGenerated }) {
   const [painScale, setPainScale] = useState("");
@@ -14,6 +15,7 @@ export default function SoapNoteModal({ claim, onClose, onGenerated }) {
   const [doctorNotes, setDoctorNotes] = useState("");
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
+  const [polishTarget, setPolishTarget] = useState(null);
   const { toast } = useToast();
 
   const handleGenerate = async () => {
@@ -75,7 +77,17 @@ export default function SoapNoteModal({ claim, onClose, onGenerated }) {
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <Label className="text-sm">Functional Limitations</Label>
-                  <VoiceDictation label="Dictate" onTranscript={t => setFunctionalLimitations(prev => (prev ? prev + ' ' + t : t))} />
+                  <div className="flex gap-1">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-xs"
+                      onClick={() => setPolishTarget({ field: "functional_limitations", value: functionalLimitations })}
+                    >
+                      ✨ Polish
+                    </Button>
+                    <VoiceDictation label="Dictate" onTranscript={t => setFunctionalLimitations(prev => (prev ? prev + ' ' + t : t))} />
+                  </div>
                 </div>
                 <Textarea
                   placeholder="e.g. Difficulty sitting more than 20 min, limited ability to lift over 10 lbs, unable to turn head fully..."
@@ -88,7 +100,17 @@ export default function SoapNoteModal({ claim, onClose, onGenerated }) {
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <Label className="text-sm">Additional Doctor Notes (optional)</Label>
-                  <VoiceDictation label="Dictate" onTranscript={t => setDoctorNotes(prev => (prev ? prev + ' ' + t : t))} />
+                  <div className="flex gap-1">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-xs"
+                      onClick={() => setPolishTarget({ field: "doctor_notes", value: doctorNotes })}
+                    >
+                      ✨ Polish
+                    </Button>
+                    <VoiceDictation label="Dictate" onTranscript={t => setDoctorNotes(prev => (prev ? prev + ' ' + t : t))} />
+                  </div>
                 </div>
                 <Textarea
                   placeholder="Any extra findings, patient progress, or notes to include..."
@@ -111,6 +133,21 @@ export default function SoapNoteModal({ claim, onClose, onGenerated }) {
               <Button variant="outline" onClick={onClose}>Cancel</Button>
             </div>
           </>
+        )}
+
+        {polishTarget && (
+          <NotePolishModal
+            rawNotes={polishTarget.value}
+            onClose={() => setPolishTarget(null)}
+            onPolished={(polished) => {
+              if (polishTarget.field === "functional_limitations") {
+                setFunctionalLimitations(polished);
+              } else if (polishTarget.field === "doctor_notes") {
+                setDoctorNotes(polished);
+              }
+              setPolishTarget(null);
+            }}
+          />
         )}
       </div>
     </div>

@@ -1,0 +1,219 @@
+{
+  "name": "NewPatientExam",
+  "type": "object",
+  "properties": {
+    "patient_id": {
+      "type": "string",
+      "title": "Patient ID"
+    },
+    "patient_name": {
+      "type": "string",
+      "title": "Patient Name"
+    },
+    "date_of_exam": {
+      "type": "string",
+      "format": "date",
+      "title": "Date of Examination"
+    },
+    "examiner_name": {
+      "type": "string",
+      "title": "Examiner Name"
+    },
+    "vital_signs": {
+      "type": "object",
+      "properties": {
+        "height": {
+          "type": "string",
+          "title": "Height (e.g. 5'10\")"
+        },
+        "weight": {
+          "type": "number",
+          "title": "Weight (lbs)"
+        },
+        "bmi": {
+          "type": "number",
+          "title": "BMI"
+        },
+        "bp": {
+          "type": "string",
+          "title": "Blood Pressure (e.g. 120/80)"
+        },
+        "hr": {
+          "type": "number",
+          "title": "Heart Rate (bpm)"
+        },
+        "temp": {
+          "type": "number",
+          "title": "Temperature (\u00b0F)"
+        }
+      },
+      "title": "Vital Signs"
+    },
+    "posture_gait": {
+      "type": "string",
+      "title": "Posture & Gait Observation"
+    },
+    "cervical_rom": {
+      "type": "object",
+      "properties": {
+        "flexion": {
+          "type": "string",
+          "title": "Flexion (e.g. 45\u00b0/50\u00b0)"
+        },
+        "extension": {
+          "type": "string",
+          "title": "Extension"
+        },
+        "left_lateral": {
+          "type": "string",
+          "title": "Left Lateral"
+        },
+        "right_lateral": {
+          "type": "string",
+          "title": "Right Lateral"
+        },
+        "left_rotation": {
+          "type": "string",
+          "title": "Left Rotation"
+        },
+        "right_rotation": {
+          "type": "string",
+          "title": "Right Rotation"
+        }
+      },
+      "title": "Cervical ROM (Degrees)"
+    },
+    "lumbar_rom": {
+      "type": "object",
+      "properties": {
+        "flexion": {
+          "type": "string",
+          "title": "Flexion (e.g. 60\u00b0/80\u00b0)"
+        },
+        "extension": {
+          "type": "string",
+          "title": "Extension"
+        },
+        "left_lateral": {
+          "type": "string",
+          "title": "Left Lateral"
+        },
+        "right_lateral": {
+          "type": "string",
+          "title": "Right Lateral"
+        },
+        "left_rotation": {
+          "type": "string",
+          "title": "Left Rotation"
+        },
+        "right_rotation": {
+          "type": "string",
+          "title": "Right Rotation"
+        }
+      },
+      "title": "Lumbar ROM (Degrees)"
+    },
+    "orthopedic_tests": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "test_name": {
+            "type": "string",
+            "title": "Test Name (e.g. Spurling's, SLR)"
+          },
+          "result": {
+            "type": "string",
+            "enum": [
+              "Positive",
+              "Negative"
+            ],
+            "title": "Result"
+          },
+          "notes": {
+            "type": "string",
+            "title": "Notes"
+          }
+        }
+      },
+      "title": "Orthopedic Tests"
+    },
+    "neurological_findings": {
+      "type": "object",
+      "properties": {
+        "dtr_cervical": {
+          "type": "string",
+          "title": "DTR Cervical (e.g. 2+ normal, brisk, hyper)"
+        },
+        "dtr_lumbar": {
+          "type": "string",
+          "title": "DTR Lumbar"
+        },
+        "sensory": {
+          "type": "string",
+          "title": "Sensory Testing (intact/diminished areas)"
+        },
+        "motor_strength": {
+          "type": "string",
+          "title": "Motor Strength (grades by muscle group)"
+        },
+        "cranial_nerves": {
+          "type": "string",
+          "title": "Cranial Nerves (intact/deficit)"
+        },
+        "pathological_signs": {
+          "type": "string",
+          "title": "Pathological Signs (Babinski, Clonus, etc)"
+        }
+      },
+      "title": "Neurological Exam"
+    },
+    "palpation_findings": {
+      "type": "object",
+      "properties": {
+        "cervical_palpation": {
+          "type": "string",
+          "title": "Cervical (spasm grade, tenderness, trigger points)"
+        },
+        "thoracic_palpation": {
+          "type": "string",
+          "title": "Thoracic"
+        },
+        "lumbar_palpation": {
+          "type": "string",
+          "title": "Lumbar"
+        },
+        "sacroiliac": {
+          "type": "string",
+          "title": "Sacroiliac"
+        }
+      },
+      "title": "Palpation & Muscle Testing"
+    },
+    "imaging_findings": {
+      "type": "string",
+      "title": "Imaging Findings (X-rays, MRI, CT results if available)"
+    },
+    "clinical_impression": {
+      "type": "string",
+      "title": "Clinical Impression & Diagnoses"
+    },
+    "treatment_plan": {
+      "type": "string",
+      "title": "Treatment Plan & Prognosis"
+    },
+    "notes": {
+      "type": "string",
+      "title": "Additional Notes"
+    },
+    "active": {
+      "type": "boolean",
+      "title": "Active",
+      "default": true
+    }
+  },
+  "required": [
+    "patient_id",
+    "date_of_exam"
+  ]
+}

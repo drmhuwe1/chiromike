@@ -3,10 +3,11 @@ import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, FileText, Copy, ChevronRight, Link2 } from "lucide-react";
+import { Plus, Search, FileText, Copy, ChevronRight, Link2, Send } from "lucide-react";
 import PatientForm from "../components/patients/PatientForm";
 import PatientCases from "../components/patients/PatientCases";
 import IntakeAlertBanner from "../components/patients/IntakeAlertBanner";
+import FaxCompilerModal from "../components/claim/FaxCompilerModal";
 import { logAudit } from "../utils/auditLog";
 
 export default function Patients() {
@@ -16,6 +17,7 @@ export default function Patients() {
   const [showForm, setShowForm] = useState(false);
   const [expandedPatient, setExpandedPatient] = useState(null);
   const [editPatient, setEditPatient] = useState(null);
+  const [faxTarget, setFaxTarget] = useState(null);
   const navigate = useNavigate();
 
   const loadPatients = async () => {
@@ -92,6 +94,13 @@ export default function Patients() {
         />
       )}
 
+      {faxTarget && (
+        <FaxCompilerModal
+          patient={faxTarget}
+          onClose={() => setFaxTarget(null)}
+        />
+      )}
+
       {loading ? (
         <div className="flex justify-center py-12">
           <div className="w-8 h-8 border-4 border-muted border-t-primary rounded-full animate-spin" />
@@ -123,6 +132,14 @@ export default function Patients() {
                     <td className="py-3 px-4 hidden lg:table-cell text-muted-foreground">{p.insurance_company || "—"}</td>
                     <td className="py-3 px-4">
                       <div className="flex items-center justify-end gap-1">
+                        <Button
+                          variant="ghost" size="sm"
+                          onClick={() => setFaxTarget(p)}
+                          title="Compile & Fax Patient File"
+                          className="text-blue-600 hover:text-blue-700"
+                        >
+                          <Send className="w-4 h-4" />
+                        </Button>
                         <Button
                           variant="ghost" size="sm"
                           onClick={() => navigate(`/claim-builder?patient=${p.id}`)}

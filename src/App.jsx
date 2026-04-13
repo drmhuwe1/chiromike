@@ -23,6 +23,7 @@ import BillingDashboard from './pages/BillingDashboard';
 import HelpGuide from './pages/HelpGuide';
 import Compliance from './pages/Compliance';
 import SoapNotes from './pages/SoapNotes';
+import NewPatientExam from './pages/NewPatientExam';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -68,6 +69,7 @@ const AuthenticatedApp = () => {
         <Route path="/guide" element={<HelpGuide />} />
         <Route path="/compliance" element={<Compliance />} />
         <Route path="/soap-notes" element={<SoapNotes />} />
+        <Route path="/new-patient-exam" element={<NewPatientExam />} />
         <Route path="*" element={<PageNotFound />} />
       </Route>
     </Routes>
