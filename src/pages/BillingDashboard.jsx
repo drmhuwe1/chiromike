@@ -90,7 +90,7 @@ export default function BillingDashboard() {
       ) : (
         <>
           {tab === "aging" && <ARAgingTable claims={claims} />}
-          {tab === "outstanding" && <OutstandingClaims claims={claims} />}
+          {tab === "outstanding" && <OutstandingClaims claims={claims} onRefresh={load} />}
           {tab === "resubmission" && <ResubmissionQueue claims={claims} payments={payments} />}
           {tab === "posting" && <PaymentPosting onPosted={load} />}
         </>

@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { FileText, Copy } from "lucide-react";
+import { Copy, Trash2 } from "lucide-react";
 
 const statusColors = {
   Draft: "bg-gray-100 text-gray-600",
@@ -16,8 +18,17 @@ function daysSince(dos) {
   return Math.floor((new Date() - new Date(dos)) / 86400000);
 }
 
-export default function OutstandingClaims({ claims }) {
+export default function OutstandingClaims({ claims, onRefresh }) {
   const navigate = useNavigate();
+  const [deletingId, setDeletingId] = useState(null);
+
+  const handleDelete = async (claim) => {
+    if (!confirm(`Delete claim for ${claim.patient_name} on ${claim.date_of_service}? This cannot be undone.`)) return;
+    setDeletingId(claim.id);
+    await base44.entities.Claim.delete(claim.id);
+    setDeletingId(null);
+    if (onRefresh) onRefresh();
+  };
   const outstanding = claims
     .filter(c => !["Paid"].includes(c.status) && (c.total_charge || 0) - (c.amount_paid || 0) > 0)
     .sort((a, b) => new Date(a.date_of_service) - new Date(b.date_of_service));
@@ -57,6 +68,9 @@ export default function OutstandingClaims({ claims }) {
                 <td className="py-2.5 px-4">
                   <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => navigate(`/claim-builder?duplicate=${c.id}`)} title="Resubmit">
                     <Copy className="w-3.5 h-3.5" />
+                  </Button>
+                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive hover:text-destructive" onClick={() => handleDelete(c)} disabled={deletingId === c.id} title="Delete claim">
+                    {deletingId === c.id ? <div className="w-3 h-3 border border-muted border-t-destructive rounded-full animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
                   </Button>
                 </td>
               </tr>

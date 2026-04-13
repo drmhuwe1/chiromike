@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
-import { Plus, Search, CheckCircle, X } from "lucide-react";
+import { Plus, Search, CheckCircle, X, Trash2 } from "lucide-react";
 
 const paymentTypes = ["Insurance", "Patient", "Adjustment", "Denial", "Deductible", "Copay/Coinsurance"];
 
@@ -23,6 +23,7 @@ export default function PaymentPosting({ onPosted }) {
   const [form, setForm] = useState(emptyForm);
   const [payments, setPayments] = useState([]);
   const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -38,6 +39,20 @@ export default function PaymentPosting({ onPosted }) {
   }, [selectedClaim]);
 
   const set = (f, v) => setForm(p => ({ ...p, [f]: v }));
+
+  const handleDeletePayment = async (payment) => {
+    if (!confirm(`Delete this ${payment.payment_type} posting of $${(payment.payment_amount || 0).toFixed(2)}?`)) return;
+    setDeletingId(payment.id);
+    await base44.entities.Payment.delete(payment.id);
+    // Reverse the amount on the claim
+    const newPaid = Math.max(0, (selectedClaim.amount_paid || 0) - (payment.payment_amount || 0));
+    await base44.entities.Claim.update(selectedClaim.id, { amount_paid: newPaid });
+    setSelectedClaim(prev => ({ ...prev, amount_paid: newPaid }));
+    setPayments(prev => prev.filter(p => p.id !== payment.id));
+    setDeletingId(null);
+    toast({ title: 'Payment posting deleted' });
+    if (onPosted) onPosted();
+  };
 
   const filtered = search
     ? claims.filter(c => c.patient_name?.toLowerCase().includes(search.toLowerCase()) || c.date_of_service?.includes(search))
@@ -129,11 +144,14 @@ export default function PaymentPosting({ onPosted }) {
             <div className="bg-card border border-border rounded-xl overflow-hidden">
               <p className="text-xs font-semibold text-muted-foreground px-4 py-2 border-b bg-muted/30">Prior Postings</p>
               {payments.map(p => (
-                <div key={p.id} className="flex items-center justify-between px-4 py-2 border-b last:border-0 text-sm">
+                <div key={p.id} className="flex items-center justify-between px-4 py-2 border-b last:border-0 text-sm gap-3">
                   <span className="text-muted-foreground">{p.payment_date}</span>
                   <span className="font-medium">{p.payment_type}</span>
                   {p.denial_code && <span className="bg-red-100 text-red-700 px-2 py-0.5 rounded text-xs font-mono">{p.denial_code}</span>}
-                  <span className="font-semibold">${(p.payment_amount || 0).toFixed(2)}</span>
+                  <span className="font-semibold flex-1 text-right">${(p.payment_amount || 0).toFixed(2)}</span>
+                  <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-destructive hover:text-destructive" onClick={() => handleDeletePayment(p)} disabled={deletingId === p.id}>
+                    {deletingId === p.id ? <div className="w-3 h-3 border border-muted border-t-destructive rounded-full animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                  </Button>
                 </div>
               ))}
             </div>
