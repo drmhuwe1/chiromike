@@ -1,7 +1,7 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { 
   LayoutDashboard, Users, FileText, Settings, BookOpen, 
-  Library, Zap, BarChart3, Menu, X, Wallet
+  Library, Zap, BarChart3, Menu, X, Wallet, HelpCircle
 } from "lucide-react";
 import { useState } from "react";
 
@@ -14,6 +14,7 @@ const navItems = [
   { path: "/templates", label: "Quick Templates", icon: Zap },
   { path: "/billing", label: "Billing Dashboard", icon: Wallet },
   { path: "/reports", label: "Reports", icon: BarChart3 },
+  { path: "/guide", label: "Feature Guide", icon: HelpCircle },
   { path: "/settings", label: "Office Settings", icon: Settings },
 ];
 

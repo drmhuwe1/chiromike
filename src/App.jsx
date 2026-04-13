@@ -20,6 +20,7 @@ import PrintReceipt from './pages/PrintReceipt';
 import CodeLibrary from './pages/CodeLibrary';
 import PatientIntake from './pages/PatientIntake';
 import BillingDashboard from './pages/BillingDashboard';
+import HelpGuide from './pages/HelpGuide';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -62,6 +63,7 @@ const AuthenticatedApp = () => {
         <Route path="/code-library" element={<CodeLibrary />} />
         <Route path="/intake" element={<PatientIntake />} />
         <Route path="/billing" element={<BillingDashboard />} />
+        <Route path="/guide" element={<HelpGuide />} />
         <Route path="*" element={<PageNotFound />} />
       </Route>
     </Routes>
