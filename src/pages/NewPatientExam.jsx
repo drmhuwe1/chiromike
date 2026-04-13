@@ -260,8 +260,15 @@ export default function NewPatientExamPage() {
 
           {/* Posture & Gait */}
           <Section title="Posture & Gait" expanded={expandSections.posture} onToggle={() => toggleSection("posture")}>
+            <div className="flex flex-wrap gap-1.5 mb-2">
+              <button onClick={() => set("posture_gait", "Normal posture, smooth gait bilaterally")} className="px-2 py-1 text-xs bg-green-100 text-green-700 border border-green-300 rounded hover:bg-green-200">Normal</button>
+              <button onClick={() => set("posture_gait", "Forward head posture noted, antalgic gait on right")} className="px-2 py-1 text-xs bg-blue-100 text-blue-700 border border-blue-300 rounded hover:bg-blue-200">Forward Head</button>
+              <button onClick={() => set("posture_gait", "Kyphosis noted, guarded gait with loss of normal lumbar lordosis")} className="px-2 py-1 text-xs bg-blue-100 text-blue-700 border border-blue-300 rounded hover:bg-blue-200">Kyphosis</button>
+              <button onClick={() => set("posture_gait", "Scoliotic curve noted, limping gait")} className="px-2 py-1 text-xs bg-blue-100 text-blue-700 border border-blue-300 rounded hover:bg-blue-200">Scoliosis</button>
+              <button onClick={() => set("posture_gait", "Pelvic tilt noted, uneven shoulder height")} className="px-2 py-1 text-xs bg-blue-100 text-blue-700 border border-blue-300 rounded hover:bg-blue-200">Pelvic Tilt</button>
+            </div>
             <Textarea
-              placeholder="Describe posture, gait, and any abnormalities..."
+              placeholder="Or type custom notes..."
               rows={2}
               className="text-sm"
               value={exam.posture_gait}
@@ -432,32 +439,29 @@ export default function NewPatientExamPage() {
             <div className="space-y-3">
               {/* Quick Presets */}
               <div>
-                <p className="text-xs text-muted-foreground mb-2">Quick Fill:</p>
+                <p className="text-xs text-muted-foreground mb-2">Cervical Quick Fill:</p>
                 <div className="flex flex-wrap gap-1.5">
-                  <button
-                    onClick={() => { set("palpation_findings.cervical_palpation", "Mild muscle tension, moderate tenderness"); }}
-                    className="px-2 py-1 text-xs bg-blue-100 text-blue-700 border border-blue-300 rounded hover:bg-blue-200 transition-colors"
-                  >
-                    C-Spine Mild
-                  </button>
-                  <button
-                    onClick={() => { set("palpation_findings.lumbar_palpation", "Mild muscle tension, moderate tenderness"); }}
-                    className="px-2 py-1 text-xs bg-blue-100 text-blue-700 border border-blue-300 rounded hover:bg-blue-200 transition-colors"
-                  >
-                    L-Spine Mild
-                  </button>
-                  <button
-                    onClick={() => { set("palpation_findings.cervical_palpation", "Grade 2 spasm, significant tenderness"); }}
-                    className="px-2 py-1 text-xs bg-amber-100 text-amber-700 border border-amber-300 rounded hover:bg-amber-200 transition-colors"
-                  >
-                    C-Spine Moderate
-                  </button>
-                  <button
-                    onClick={() => { set("palpation_findings.lumbar_palpation", "Grade 2 spasm, significant tenderness"); }}
-                    className="px-2 py-1 text-xs bg-amber-100 text-amber-700 border border-amber-300 rounded hover:bg-amber-200 transition-colors"
-                  >
-                    L-Spine Moderate
-                  </button>
+                  <button onClick={() => set("palpation_findings.cervical_palpation", "No tenderness, normal tone")} className="px-2 py-1 text-xs bg-green-100 text-green-700 border border-green-300 rounded hover:bg-green-200">C-Normal</button>
+                  <button onClick={() => set("palpation_findings.cervical_palpation", "Mild muscle tension, mild tenderness at C4-C5")} className="px-2 py-1 text-xs bg-blue-100 text-blue-700 border border-blue-300 rounded hover:bg-blue-200">C-Mild</button>
+                  <button onClick={() => set("palpation_findings.cervical_palpation", "Grade 2 spasm, significant tenderness, trigger points")} className="px-2 py-1 text-xs bg-amber-100 text-amber-700 border border-amber-300 rounded hover:bg-amber-200">C-Moderate</button>
+                  <button onClick={() => set("palpation_findings.cervical_palpation", "Grade 3 spasm, severe tenderness, guarding present")} className="px-2 py-1 text-xs bg-red-100 text-red-700 border border-red-300 rounded hover:bg-red-200">C-Severe</button>
+                </div>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground mb-2">Lumbar Quick Fill:</p>
+                <div className="flex flex-wrap gap-1.5">
+                  <button onClick={() => set("palpation_findings.lumbar_palpation", "No tenderness, normal tone")} className="px-2 py-1 text-xs bg-green-100 text-green-700 border border-green-300 rounded hover:bg-green-200">L-Normal</button>
+                  <button onClick={() => set("palpation_findings.lumbar_palpation", "Mild muscle tension, mild tenderness at L4-L5")} className="px-2 py-1 text-xs bg-blue-100 text-blue-700 border border-blue-300 rounded hover:bg-blue-200">L-Mild</button>
+                  <button onClick={() => set("palpation_findings.lumbar_palpation", "Grade 2 spasm, significant tenderness, trigger points")} className="px-2 py-1 text-xs bg-amber-100 text-amber-700 border border-amber-300 rounded hover:bg-amber-200">L-Moderate</button>
+                  <button onClick={() => set("palpation_findings.lumbar_palpation", "Grade 3 spasm, severe tenderness, guarding present")} className="px-2 py-1 text-xs bg-red-100 text-red-700 border border-red-300 rounded hover:bg-red-200">L-Severe</button>
+                </div>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground mb-2">Thoracic Quick Fill:</p>
+                <div className="flex flex-wrap gap-1.5">
+                  <button onClick={() => set("palpation_findings.thoracic_palpation", "No tenderness, normal tone")} className="px-2 py-1 text-xs bg-green-100 text-green-700 border border-green-300 rounded hover:bg-green-200">T-Normal</button>
+                  <button onClick={() => set("palpation_findings.thoracic_palpation", "Mild restriction, tenderness at mid-thoracic")} className="px-2 py-1 text-xs bg-blue-100 text-blue-700 border border-blue-300 rounded hover:bg-blue-200">T-Mild</button>
+                  <button onClick={() => set("palpation_findings.thoracic_palpation", "Grade 2 spasm, significant tenderness")} className="px-2 py-1 text-xs bg-amber-100 text-amber-700 border border-amber-300 rounded hover:bg-amber-200">T-Moderate</button>
                 </div>
               </div>
 
