@@ -191,7 +191,7 @@ export default function NewPatientExamPage() {
               <div>
                 <Label className="text-xs">Height</Label>
                 <Input
-                  placeholder='e.g. 5\'10"'
+                  placeholder="Height (e.g. 5'10)"
                   className="mt-1 h-8 text-sm"
                   value={exam.vital_signs?.height || ""}
                   onChange={e => set("vital_signs.height", e.target.value)}
