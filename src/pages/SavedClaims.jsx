@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Search, Printer, Copy, Eye, Trash2 } from "lucide-react";
+import { Search, Printer, Copy, Trash2, Mail } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 
 const statusColors = {
   Draft: "bg-gray-100 text-gray-700",
@@ -21,7 +22,9 @@ export default function SavedClaims() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("All");
+  const [emailing, setEmailing] = useState(null);
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const load = async () => {
     setLoading(true);
@@ -46,6 +49,18 @@ export default function SavedClaims() {
   const handlePrint = (claim) => {
     const isCash = claim.visit_type?.includes("Cash");
     navigate(isCash ? `/print-receipt?id=${claim.id}` : `/print-claim?id=${claim.id}`);
+  };
+
+  const handleEmailSuperbill = async (claim) => {
+    setEmailing(claim.id);
+    try {
+      const res = await base44.functions.invoke('emailSuperbill', { claim_id: claim.id });
+      toast({ title: `Superbill emailed to ${res.data.sent_to}` });
+      load();
+    } catch (e) {
+      toast({ title: e.message || 'Failed to send email', variant: 'destructive' });
+    }
+    setEmailing(null);
   };
 
   const handleDelete = async (id) => {
@@ -111,6 +126,9 @@ export default function SavedClaims() {
                     <div className="flex items-center justify-end gap-1">
                       <Button variant="ghost" size="sm" onClick={() => handlePrint(c)} title="Print">
                         <Printer className="w-4 h-4" />
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => handleEmailSuperbill(c)} title="Email Superbill to Patient" disabled={emailing === c.id}>
+                        {emailing === c.id ? <div className="w-4 h-4 border-2 border-muted border-t-primary rounded-full animate-spin" /> : <Mail className="w-4 h-4" />}
                       </Button>
                       <Button variant="ghost" size="sm" onClick={() => handleDuplicate(c)} title="Duplicate">
                         <Copy className="w-4 h-4" />

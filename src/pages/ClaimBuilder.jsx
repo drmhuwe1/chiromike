@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
-import { Save, Printer, Copy, CalendarDays, Search, User, Plus, Trash2, Star, Zap } from "lucide-react";
+import { Save, Printer, Copy, CalendarDays, Search, User, Plus, Trash2, Star, Zap, Mail } from "lucide-react";
 
 const visitTypes = ["Insurance", "Auto", "Cash", "Cash Office Visit", "Cash Package"];
 const today = new Date().toISOString().split("T")[0];
@@ -40,6 +40,7 @@ export default function ClaimBuilder() {
   const [favCodes, setFavCodes] = useState([]);
   const [favDx, setFavDx] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [emailing, setEmailing] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -216,6 +217,20 @@ export default function ClaimBuilder() {
     setLoading(false);
     toast({ title: "Claim saved!" });
     navigate("/saved-claims");
+  };
+
+  const handleSaveAndEmail = async () => {
+    if (!claim.patient_id) { toast({ title: 'Select a patient', variant: 'destructive' }); return; }
+    setEmailing(true);
+    const saved = await base44.entities.Claim.create({ ...claim, total_charge: totalCharge, status: 'Saved' });
+    try {
+      const res = await base44.functions.invoke('emailSuperbill', { claim_id: saved.id });
+      toast({ title: `Superbill emailed to ${res.data.sent_to}` });
+      navigate('/saved-claims');
+    } catch (e) {
+      toast({ title: e.message || 'Could not email — check patient has email on file', variant: 'destructive' });
+    }
+    setEmailing(false);
   };
 
   const handleSaveAndPrint = async () => {
@@ -493,12 +508,18 @@ export default function ClaimBuilder() {
             <span className="text-muted-foreground text-sm">Total</span>
             <span className="text-3xl font-bold">${totalCharge.toFixed(2)}</span>
           </div>
-          <div className="flex gap-2">
-            <Button onClick={handleSave} disabled={loading} className="flex-1 h-11 text-base">
-              <Save className="w-4 h-4 mr-2" /> Save
-            </Button>
-            <Button onClick={handleSaveAndPrint} disabled={loading} variant="outline" className="flex-1 h-11 text-base">
-              <Printer className="w-4 h-4 mr-2" /> {isCash ? "Receipt" : "Print"}
+          <div className="flex flex-col gap-2">
+            <div className="flex gap-2">
+              <Button onClick={handleSave} disabled={loading} className="flex-1 h-11 text-base">
+                <Save className="w-4 h-4 mr-2" /> Save
+              </Button>
+              <Button onClick={handleSaveAndPrint} disabled={loading} variant="outline" className="flex-1 h-11 text-base">
+                <Printer className="w-4 h-4 mr-2" /> {isCash ? 'Receipt' : 'Print'}
+              </Button>
+            </div>
+            <Button onClick={handleSaveAndEmail} disabled={emailing || loading} variant="outline" className="w-full h-10 text-sm text-blue-600 border-blue-200 hover:bg-blue-50">
+              {emailing ? <div className="w-4 h-4 border-2 border-blue-200 border-t-blue-600 rounded-full animate-spin mr-2" /> : <Mail className="w-4 h-4 mr-2" />}
+              Email Superbill to Patient
             </Button>
           </div>
         </div>
