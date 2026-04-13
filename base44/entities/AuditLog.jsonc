@@ -1,0 +1,35 @@
+{
+  "name": "AuditLog",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "title": "User Email"
+    },
+    "action": {
+      "type": "string",
+      "title": "Action"
+    },
+    "resource_type": {
+      "type": "string",
+      "title": "Resource Type"
+    },
+    "resource_id": {
+      "type": "string",
+      "title": "Resource ID"
+    },
+    "resource_label": {
+      "type": "string",
+      "title": "Resource Label"
+    },
+    "ip_note": {
+      "type": "string",
+      "title": "Notes"
+    }
+  },
+  "required": [
+    "user_email",
+    "action",
+    "resource_type"
+  ]
+}

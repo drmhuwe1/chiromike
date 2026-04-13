@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Search, Printer, Copy, Trash2, Mail } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { logAudit } from "../utils/auditLog";
 
 const statusColors = {
   Draft: "bg-gray-100 text-gray-700",
@@ -32,6 +33,7 @@ export default function SavedClaims() {
     const data = await base44.entities.Claim.list("-created_date", 500);
     setClaims(data);
     setLoading(false);
+    logAudit("Viewed saved claims", "Claim");
   };
 
   useEffect(() => { load(); }, []);

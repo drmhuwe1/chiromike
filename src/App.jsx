@@ -21,6 +21,7 @@ import CodeLibrary from './pages/CodeLibrary';
 import PatientIntake from './pages/PatientIntake';
 import BillingDashboard from './pages/BillingDashboard';
 import HelpGuide from './pages/HelpGuide';
+import Compliance from './pages/Compliance';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -64,6 +65,7 @@ const AuthenticatedApp = () => {
         <Route path="/intake" element={<PatientIntake />} />
         <Route path="/billing" element={<BillingDashboard />} />
         <Route path="/guide" element={<HelpGuide />} />
+        <Route path="/compliance" element={<Compliance />} />
         <Route path="*" element={<PageNotFound />} />
       </Route>
     </Routes>

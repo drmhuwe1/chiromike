@@ -7,6 +7,7 @@ import { Plus, Search, FileText, Copy, ChevronRight, Link2 } from "lucide-react"
 import PatientForm from "../components/patients/PatientForm";
 import PatientCases from "../components/patients/PatientCases";
 import IntakeAlertBanner from "../components/patients/IntakeAlertBanner";
+import { logAudit } from "../utils/auditLog";
 
 export default function Patients() {
   const [patients, setPatients] = useState([]);
@@ -22,6 +23,7 @@ export default function Patients() {
     const data = await base44.entities.Patient.list("-updated_date", 200);
     setPatients(data);
     setLoading(false);
+    logAudit("Viewed patient list", "Patient");
   };
 
   useEffect(() => { loadPatients(); }, []);
