@@ -47,7 +47,7 @@ Deno.serve(async (req) => {
         timeZone: 'America/New_York'
       },
       attendees: [
-        { email: 'drahuwe@gmail.com' }
+        { email: 'drahuwe@gmail.com', responseStatus: 'needsAction' }
       ]
     };
 

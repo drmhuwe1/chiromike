@@ -78,7 +78,7 @@ export default function ScheduleNextVisitModal({ patient, claim, onClose, onSucc
         ) : (
           <>
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-900">
-              📅 This will sync directly to your <strong>drahuwe@gmail.com</strong> Google Calendar.
+              📅 This will sync directly to <strong>drahuwe@gmail.com</strong>'s Google Calendar.
             </div>
 
             <div>
