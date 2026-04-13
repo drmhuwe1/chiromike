@@ -25,15 +25,22 @@ Deno.serve(async (req) => {
 
     // Try to find insurance mailing address
     let insurerAddress = null;
+    let insurerPortalUrl = null;
+    let insurerPortalName = null;
     if (claim.insurance_company) {
       const insurers = await base44.asServiceRole.entities.InsuranceCompany.list("-name", 200);
       const insurer = insurers.find(i => i.name?.toLowerCase() === claim.insurance_company?.toLowerCase());
-      if (insurer && insurer.claims_address_line1) {
-        insurerAddress = [
-          insurer.claims_address_line1,
-          insurer.claims_address_line2,
-          [insurer.claims_city, insurer.claims_state, insurer.claims_zip].filter(Boolean).join(', ')
-        ].filter(Boolean).join('<br>');
+      if (insurer) {
+        if (insurer.claims_address_line1) {
+          insurerAddress = [
+            insurer.claims_address_line1,
+            insurer.claims_address_line2,
+            [insurer.claims_city, insurer.claims_state, insurer.claims_zip].filter(Boolean).join(', ')
+          ].filter(Boolean).join('<br>');
+        }
+        // Prefer provider_portal, fall back to website
+        insurerPortalUrl = insurer.provider_portal || insurer.website || null;
+        insurerPortalName = insurer.name || claim.insurance_company;
       }
     }
 
@@ -139,7 +146,7 @@ Deno.serve(async (req) => {
     <ol style="margin:0;padding-left:18px;font-size:12px;color:#475569;line-height:2;">
       <li>Write your <strong>name and Member ID</strong> at the top of this superbill</li>
       <li><strong>Option A — Mail:</strong> Send this superbill to the address above with a completed member reimbursement form (available on your insurer's website)</li>
-      <li><strong>Option B — Online:</strong> Log in to your insurance member portal → find "Submit a Claim" or "Member Reimbursement" → attach this superbill as a PDF</li>
+      <li><strong>Option B — Online:</strong> ${insurerPortalUrl ? `Log in to the <a href="${insurerPortalUrl}" style="color:#1e40af;font-weight:bold;">${insurerPortalName} Member Portal</a> → find "Submit a Claim" or "Member Reimbursement" → attach this superbill as a PDF` : 'Log in to your insurance member portal → find "Submit a Claim" or "Member Reimbursement" → attach this superbill as a PDF'}</li>
       <li><strong>Option C — App:</strong> Many insurers (including BCBS) have a mobile app where you can photograph and submit your superbill directly</li>
       <li>Keep a copy of everything you submit for your records</li>
     </ol>
