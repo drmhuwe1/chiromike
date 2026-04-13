@@ -2,7 +2,7 @@ import { useState } from "react";
 import { 
   Users, FileText, BookOpen, Library, Zap, BarChart3, Settings, 
   ClipboardList, Wallet, Mail, Printer, ChevronDown, ChevronRight,
-  CheckCircle, AlertCircle, Lightbulb, HelpCircle
+  CheckCircle, AlertCircle, Lightbulb, HelpCircle, Stethoscope, Zap as ZapIcon, CreditCard
 } from "lucide-react";
 
 const sections = [
@@ -157,6 +157,59 @@ const sections = [
       { type: "step", text: "Summary cards show total billed, total paid, outstanding balance, and claim counts." },
       { type: "step", text: "The breakdown table shows totals by visit type and by claim status." },
       { type: "tip", text: "Use this at month-end to reconcile collections and identify which visit types generate the most revenue." },
+    ],
+  },
+  {
+    id: "exams",
+    icon: Stethoscope,
+    color: "text-green-600",
+    bg: "bg-green-50 border-green-200",
+    title: "Patient Exams & ROM",
+    subtitle: "Comprehensive clinical documentation",
+    steps: [
+      { type: "step", text: "Go to **New Patient Exam** to document the initial intake exam — vital signs, posture/gait, range of motion (ROM), orthopedic tests, neurological findings, palpation, and imaging." },
+      { type: "step", text: "Use **ROM quick-fill buttons** for each direction: Normal (green), Diminished (blue), or Severe (red) — the system pre-fills clinically accurate degree ranges." },
+      { type: "step", text: "Add **Orthopedic Tests** with quick presets (Spurling's, SLR, Distraction) — mark each as Positive/Negative and add notes or voice dictation." },
+      { type: "step", text: "Fill **Neurological Exam** with quick presets for DTRs, sensory, motor, cranial nerves — voice dictation available for all fields." },
+      { type: "step", text: "Upload **imaging photos** directly (X-rays, etc.) — supports multiple file uploads per exam." },
+      { type: "step", text: "Rate **Pain Scale (0-10)** and select **Pain Areas** (Neck, Shoulders, Low Back, etc.) for quick documentation." },
+      { type: "step", text: "Use **Generate Treatment Plans** to auto-create AI-powered clinical treatment plans based on diagnoses and exam findings." },
+      { type: "step", text: "For follow-ups, use **Re-Examination** page with the same features to document progress and compare to baseline." },
+      { type: "tip", text: "All exams auto-save with timestamps. Use voice dictation (🎤 button) for faster note entry, then polish with AI if needed." },
+    ],
+  },
+  {
+    id: "soap-notes",
+    icon: FileText,
+    color: "text-purple-600",
+    bg: "bg-purple-50 border-purple-200",
+    title: "SOAP Notes",
+    subtitle: "AI-generated clinical documentation linked to exams and visits",
+    steps: [
+      { type: "step", text: "After saving a claim, click **Generate SOAP Note** to auto-create a professional SOAP note combining the claim, patient exam data, and visit history." },
+      { type: "step", text: "The AI pulls data from: exam findings (ROM, neuro, palpation), previous visit history, diagnoses, procedures, pain scale, and functional limitations." },
+      { type: "step", text: "Enter the patient's **current pain scale** and **functional limitations** (difficulty sitting, lifting, work tasks, etc.) to personalize the note." },
+      { type: "step", text: "Add **optional doctor notes** to include any extra findings or patient progress — use voice dictation or polish with AI." },
+      { type: "step", text: "The note auto-populates **Subjective** (patient complaints, MVA details if auto/PI), **Objective** (exam findings with ROM degrees, orthopedic/neuro results), **Assessment** (diagnoses, causation statement for accidents), and **Plan** (treatment frequency, home care, goals)." },
+      { type: "step", text: "Generated notes are stored in **SOAP Notes** page — searchable by patient and date, printable as PDF." },
+      { type: "tip", text: "For **Auto/PI cases**, the SOAP note automatically includes causation language, mechanism of injury, and detailed documentation standards required by insurers." },
+      { type: "tip", text: "Exams and visit history are merged intelligently — no manual copying needed." },
+    ],
+  },
+  {
+    id: "payments",
+    icon: CreditCard,
+    color: "text-blue-600",
+    bg: "bg-blue-50 border-blue-200",
+    title: "Stripe Payments & Treatment Plans",
+    subtitle: "Collect cash/card payments and offer pre-packaged treatment plans",
+    steps: [
+      { type: "step", text: "On a **cash visit claim**, the payment section shows the total due. Click **💵 Cash** or **💳 Credit Card** to log payment method." },
+      { type: "step", text: "Click **Collect Payment (Stripe)** to open a secure Stripe checkout — patient pays with card, link expires after one use." },
+      { type: "step", text: "Available **treatment plan products**: 6-visit plan ($325), 12-visit plan ($650), maintenance plans (monthly subscription), and individual services." },
+      { type: "step", text: "After a successful payment, the receipt email is sent automatically — patient gets itemized charges and payment confirmation." },
+      { type: "tip", text: "Stripe is live mode — all transactions are real. Include app ID in metadata for transaction tracking." },
+      { type: "tip", text: "Checkout only works from a published app, not the preview — make sure to publish before collecting real payments." },
     ],
   },
   {
