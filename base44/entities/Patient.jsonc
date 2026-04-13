@@ -71,6 +71,10 @@
       "format": "date",
       "title": "Date of Accident"
     },
+    "accident_state": {
+      "type": "string",
+      "title": "State of Accident"
+    },
     "accident_type": {
       "type": "string",
       "enum": [
@@ -80,6 +84,11 @@
         "None"
       ],
       "title": "Accident Type"
+    },
+    "date_of_first_visit": {
+      "type": "string",
+      "format": "date",
+      "title": "Date of First Visit"
     },
     "insurance_company": {
       "type": "string",
@@ -121,6 +130,21 @@
     "attorney_phone": {
       "type": "string",
       "title": "Attorney Phone"
+    },
+    "diagnoses": {
+      "type": "array",
+      "title": "Diagnosis Codes",
+      "items": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      }
     },
     "notes": {
       "type": "string",
