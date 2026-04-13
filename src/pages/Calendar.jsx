@@ -24,6 +24,7 @@ export default function Calendar() {
   const [patients, setPatients] = useState([]);
   const [patientSearch, setPatientSearch] = useState("");
   const [selectedAppt, setSelectedAppt] = useState(null);
+  const [selectedDayView, setSelectedDayView] = useState(null);
   const { toast } = useToast();
 
   // Load calendar events and appointments
@@ -211,23 +212,28 @@ export default function Calendar() {
           {days.map(day => {
             const { google, appts } = getEventsForDay(day);
             const hasEvents = google.length > 0 || appts.length > 0;
+            const dateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
             return (
               <div
                 key={day}
                 className={`aspect-square border rounded-lg p-2 overflow-hidden cursor-pointer transition-colors ${
                   hasEvents ? "bg-blue-50 border-blue-300 hover:bg-blue-100" : "bg-card border-border hover:bg-muted"
                 }`}
+                onClick={() => setSelectedDayView(dateStr)}
               >
                 <div className="text-sm font-semibold mb-1">{day}</div>
                 <div className="text-xs space-y-1 max-h-16 overflow-y-auto">
                   {appts.map((a, i) => (
                     <div
                       key={`appt-${i}`}
-                      className="bg-green-200 text-green-900 px-1.5 py-0.5 rounded text-xs truncate group flex items-center justify-between"
+                      className="bg-green-200 text-green-900 px-1.5 py-0.5 rounded text-xs truncate group hover:bg-green-300"
                       title={`${a.patient_name} - ${a.appointment_type}`}
-                      onClick={() => setSelectedAppt(a)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEditAppointment(a);
+                      }}
                     >
-                      <span className="truncate flex-1">{a.patient_name}</span>
+                      {a.patient_name}
                     </div>
                   ))}
                   {google.map((e, i) => (
@@ -242,30 +248,60 @@ export default function Calendar() {
         </div>
       </div>
 
-      {/* Appointment Details Modal */}
-      {selectedAppt && (
+      {/* Full Day Schedule View */}
+      {selectedDayView && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="bg-card border border-border rounded-xl p-6 max-w-md w-full space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold">{selectedAppt.patient_name}</h2>
-              <button onClick={() => setSelectedAppt(null)} className="text-muted-foreground hover:text-foreground">
+          <div className="bg-card border border-border rounded-xl p-6 max-w-2xl w-full space-y-4 max-h-[80vh] overflow-y-auto">
+            <div className="flex items-center justify-between sticky top-0 bg-card">
+              <h2 className="text-xl font-bold">
+                {new Date(selectedDayView + "T00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
+              </h2>
+              <button onClick={() => setSelectedDayView(null)} className="text-muted-foreground hover:text-foreground">
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <div className="space-y-2 text-sm">
-              <div><span className="font-semibold">Type:</span> {selectedAppt.appointment_type}</div>
-              <div><span className="font-semibold">Date:</span> {selectedAppt.appointment_date}</div>
-              <div><span className="font-semibold">Duration:</span> {selectedAppt.duration_minutes} min</div>
-              {selectedAppt.notes && <div><span className="font-semibold">Notes:</span> {selectedAppt.notes}</div>}
+            
+            <div className="space-y-3">
+              {getEventsForDay(parseInt(selectedDayView.split("-")[2])).appts.length === 0 && 
+               getEventsForDay(parseInt(selectedDayView.split("-")[2])).google.length === 0 ? (
+                <p className="text-center text-muted-foreground py-8">No appointments scheduled</p>
+              ) : (
+                <>
+                  {getEventsForDay(parseInt(selectedDayView.split("-")[2])).appts.map((a, i) => (
+                    <div key={`day-appt-${i}`} className="bg-green-50 border border-green-200 rounded-lg p-4">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <h3 className="font-semibold text-lg">{a.patient_name}</h3>
+                          <div className="text-sm text-muted-foreground space-y-1 mt-2">
+                            <div><span className="font-medium">Type:</span> {a.appointment_type}</div>
+                            <div><span className="font-medium">Duration:</span> {a.duration_minutes} min</div>
+                            {a.notes && <div><span className="font-medium">Notes:</span> {a.notes}</div>}
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button size="sm" onClick={() => { handleEditAppointment(a); setSelectedDayView(null); }} variant="outline" className="gap-1">
+                            <Edit2 className="w-3 h-3" /> Edit
+                          </Button>
+                          <Button size="sm" onClick={() => { handleDeleteAppointment(a.id); setSelectedDayView(null); }} variant="destructive" className="gap-1">
+                            <Trash2 className="w-3 h-3" /> Delete
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  {getEventsForDay(parseInt(selectedDayView.split("-")[2])).google.map((e, i) => (
+                    <div key={`day-google-${i}`} className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <h3 className="font-semibold text-lg">{e.title}</h3>
+                      <p className="text-sm text-muted-foreground mt-1">{e.description}</p>
+                    </div>
+                  ))}
+                </>
+              )}
             </div>
-            <div className="flex gap-2">
-              <Button onClick={() => { handleEditAppointment(selectedAppt); setSelectedAppt(null); }} className="flex-1 gap-2">
-                <Edit2 className="w-4 h-4" /> Edit
-              </Button>
-              <Button onClick={() => { handleDeleteAppointment(selectedAppt.id); setSelectedAppt(null); }} variant="destructive" className="flex-1 gap-2">
-                <Trash2 className="w-4 h-4" /> Delete
-              </Button>
-            </div>
+            
+            <Button onClick={() => { setFormData(prev => ({ ...prev, appointment_date: selectedDayView })); setShowForm(true); setSelectedDayView(null); }} className="w-full gap-2">
+              <Plus className="w-4 h-4" /> Add Appointment to This Day
+            </Button>
           </div>
         </div>
       )}
