@@ -69,6 +69,7 @@ export default function Calendar() {
     }
     try {
       if (editingId) {
+        const existingAppt = appointments.find(a => a.id === editingId);
         await base44.entities.Appointment.update(editingId, {
           patient_id: formData.patient_id,
           patient_name: formData.patient_name,
@@ -77,6 +78,13 @@ export default function Calendar() {
           duration_minutes: formData.duration_minutes,
           notes: formData.notes,
         });
+        // Sync update back to Google Calendar if already synced
+        if (existingAppt?.synced_to_calendar && existingAppt?.google_calendar_event_id) {
+          await base44.functions.invoke("syncAppointmentToCalendar", {
+            appointment_id: editingId,
+            update: true,
+          });
+        }
         toast({ title: "Appointment updated" });
       } else {
         await base44.entities.Appointment.create({

@@ -9,7 +9,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { appointment_id } = await req.json();
+    const { appointment_id, update } = await req.json();
 
     if (!appointment_id) {
       return Response.json({ error: 'Missing appointment_id' }, { status: 400 });
@@ -51,8 +51,19 @@ Deno.serve(async (req) => {
       ]
     };
 
-    const calendarRes = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
-      method: 'POST',
+    let calendarRes;
+    let calendarEvent;
+    let method = 'POST';
+    let url = 'https://www.googleapis.com/calendar/v3/calendars/primary/events';
+
+    // If updating existing event, use PUT with event ID
+    if (update && appointment.google_calendar_event_id) {
+      method = 'PUT';
+      url = `https://www.googleapis.com/calendar/v3/calendars/primary/events/${appointment.google_calendar_event_id}`;
+    }
+
+    calendarRes = await fetch(url, {
+      method,
       headers: {
         'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json'
@@ -63,12 +74,12 @@ Deno.serve(async (req) => {
     if (!calendarRes.ok) {
       const error = await calendarRes.text();
       console.error('Google Calendar API error:', error);
-      return Response.json({ error: 'Failed to create calendar event', details: error }, { status: 500 });
+      return Response.json({ error: `Failed to ${update ? 'update' : 'create'} calendar event`, details: error }, { status: 500 });
     }
 
-    const calendarEvent = await calendarRes.json();
+    calendarEvent = await calendarRes.json();
 
-    // Update appointment with calendar event ID
+    // Update appointment with calendar event ID (in case of new creation)
     await base44.asServiceRole.entities.Appointment.update(appointment_id, {
       google_calendar_event_id: calendarEvent.id,
       synced_to_calendar: true,
