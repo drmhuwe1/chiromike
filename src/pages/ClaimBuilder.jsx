@@ -41,6 +41,7 @@ export default function ClaimBuilder() {
   const [favDx, setFavDx] = useState([]);
   const [loading, setLoading] = useState(false);
   const [emailing, setEmailing] = useState(false);
+  const [includeHcfa, setIncludeHcfa] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -224,7 +225,7 @@ export default function ClaimBuilder() {
     setEmailing(true);
     const saved = await base44.entities.Claim.create({ ...claim, total_charge: totalCharge, status: 'Saved' });
     try {
-      const res = await base44.functions.invoke('emailSuperbill', { claim_id: saved.id });
+      const res = await base44.functions.invoke('emailSuperbill', { claim_id: saved.id, include_hcfa: includeHcfa });
       toast({ title: `Superbill emailed to ${res.data.sent_to}` });
       navigate('/saved-claims');
     } catch (e) {
@@ -517,9 +518,13 @@ export default function ClaimBuilder() {
                 <Printer className="w-4 h-4 mr-2" /> {isCash ? 'Receipt' : 'Print'}
               </Button>
             </div>
+            <div className="flex items-center gap-2 px-1">
+              <input type="checkbox" id="hcfa-toggle" checked={includeHcfa} onChange={e => setIncludeHcfa(e.target.checked)} className="w-4 h-4 accent-blue-600" />
+              <label htmlFor="hcfa-toggle" className="text-xs text-muted-foreground cursor-pointer">Also attach CMS-1500 form</label>
+            </div>
             <Button onClick={handleSaveAndEmail} disabled={emailing || loading} variant="outline" className="w-full h-10 text-sm text-blue-600 border-blue-200 hover:bg-blue-50">
               {emailing ? <div className="w-4 h-4 border-2 border-blue-200 border-t-blue-600 rounded-full animate-spin mr-2" /> : <Mail className="w-4 h-4 mr-2" />}
-              Email Superbill to Patient
+              {includeHcfa ? 'Email Superbill + CMS-1500' : 'Email Superbill to Patient'}
             </Button>
           </div>
         </div>

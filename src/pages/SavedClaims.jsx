@@ -23,6 +23,7 @@ export default function SavedClaims() {
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("All");
   const [emailing, setEmailing] = useState(null);
+  const [hcfaFlags, setHcfaFlags] = useState({});
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -54,7 +55,7 @@ export default function SavedClaims() {
   const handleEmailSuperbill = async (claim) => {
     setEmailing(claim.id);
     try {
-      const res = await base44.functions.invoke('emailSuperbill', { claim_id: claim.id });
+      const res = await base44.functions.invoke('emailSuperbill', { claim_id: claim.id, include_hcfa: !!hcfaFlags[claim.id] });
       toast({ title: `Superbill emailed to ${res.data.sent_to}` });
       load();
     } catch (e) {
@@ -127,9 +128,12 @@ export default function SavedClaims() {
                       <Button variant="ghost" size="sm" onClick={() => handlePrint(c)} title="Print">
                         <Printer className="w-4 h-4" />
                       </Button>
-                      <Button variant="ghost" size="sm" onClick={() => handleEmailSuperbill(c)} title="Email Superbill to Patient" disabled={emailing === c.id}>
-                        {emailing === c.id ? <div className="w-4 h-4 border-2 border-muted border-t-primary rounded-full animate-spin" /> : <Mail className="w-4 h-4" />}
-                      </Button>
+                      <div className="flex items-center gap-1">
+                        <input type="checkbox" title="Also attach CMS-1500" checked={!!hcfaFlags[c.id]} onChange={e => setHcfaFlags(f => ({ ...f, [c.id]: e.target.checked }))} className="w-3.5 h-3.5 accent-blue-600" />
+                        <Button variant="ghost" size="sm" onClick={() => handleEmailSuperbill(c)} title={hcfaFlags[c.id] ? 'Email Superbill + CMS-1500' : 'Email Superbill to Patient'} disabled={emailing === c.id}>
+                          {emailing === c.id ? <div className="w-4 h-4 border-2 border-muted border-t-primary rounded-full animate-spin" /> : <Mail className="w-4 h-4" />}
+                        </Button>
+                      </div>
                       <Button variant="ghost" size="sm" onClick={() => handleDuplicate(c)} title="Duplicate">
                         <Copy className="w-4 h-4" />
                       </Button>
