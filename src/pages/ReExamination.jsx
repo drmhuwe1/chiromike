@@ -6,8 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
-import { Search, Plus, Save, ChevronDown, ChevronUp } from "lucide-react";
+import { Search, Plus, Save, ChevronDown, ChevronUp, Mic } from "lucide-react";
 import NotePolishModal from "../components/claim/NotePolishModal";
+import VoiceDictation from "../components/VoiceDictation";
 
 const ORTHO_TESTS = [
   "Spurling's", "Distraction", "Compression", "SLR (Straight Leg Raise)", 
@@ -33,6 +34,8 @@ export default function ReExaminationPage() {
     neurological_findings: {}, palpation_findings: {},
     imaging_findings: "", clinical_impression: "", treatment_plan: "", notes: ""
   });
+  const [treatmentPlans, setTreatmentPlans] = useState([]);
+  const [generatingPlans, setGeneratingPlans] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -88,6 +91,22 @@ export default function ReExaminationPage() {
       ...prev,
       orthopedic_tests: prev.orthopedic_tests.filter((_, i) => i !== idx)
     }));
+  };
+
+  const generateTreatmentPlans = async () => {
+    setGeneratingPlans(true);
+    try {
+      const res = await base44.functions.invoke("generateTreatmentPlans", {
+        diagnosis: exam.clinical_impression || "",
+        pain_findings: exam.palpation_findings || {},
+        ortho_results: exam.orthopedic_tests || [],
+        vital_signs: exam.vital_signs || {},
+      });
+      setTreatmentPlans(res.data.plans || []);
+    } catch (e) {
+      toast({ title: "Failed to generate treatment plans", variant: "destructive" });
+    }
+    setGeneratingPlans(false);
   };
 
   const handleSave = async () => {
@@ -431,46 +450,55 @@ export default function ReExaminationPage() {
             expanded={expandSections.palp}
             onToggle={() => toggleSection("palp")}
           >
-            <div className="space-y-3">
+            <div className="space-y-4">
+              {/* Cervical */}
               <div>
-                <p className="text-xs text-muted-foreground mb-2">Cervical Quick Fill:</p>
-                <div className="flex flex-wrap gap-1.5">
+                <p className="text-xs text-muted-foreground mb-2">Cervical Palpation:</p>
+                <div className="flex flex-wrap gap-1.5 mb-2">
                   <button onClick={() => set("palpation_findings.cervical_palpation", "No tenderness, normal tone")} className="px-2 py-1 text-xs bg-green-100 text-green-700 border border-green-300 rounded hover:bg-green-200">C-Normal</button>
                   <button onClick={() => set("palpation_findings.cervical_palpation", "Mild muscle tension, mild tenderness at C4-C5")} className="px-2 py-1 text-xs bg-blue-100 text-blue-700 border border-blue-300 rounded hover:bg-blue-200">C-Mild</button>
                   <button onClick={() => set("palpation_findings.cervical_palpation", "Grade 2 spasm, significant tenderness, trigger points")} className="px-2 py-1 text-xs bg-amber-100 text-amber-700 border border-amber-300 rounded hover:bg-amber-200">C-Moderate</button>
                   <button onClick={() => set("palpation_findings.cervical_palpation", "Grade 3 spasm, severe tenderness, guarding present")} className="px-2 py-1 text-xs bg-red-100 text-red-700 border border-red-300 rounded hover:bg-red-200">C-Severe</button>
+                  <VoiceDictation label="🎤" onTranscript={t => set("palpation_findings.cervical_palpation", exam.palpation_findings?.cervical_palpation ? exam.palpation_findings.cervical_palpation + ' ' + t : t)} />
                 </div>
+                <Textarea className="h-12 text-xs" value={exam.palpation_findings?.cervical_palpation || ""} onChange={e => set("palpation_findings.cervical_palpation", e.target.value)} />
               </div>
+
+              {/* Thoracic */}
               <div>
-                <p className="text-xs text-muted-foreground mb-2">Lumbar Quick Fill:</p>
-                <div className="flex flex-wrap gap-1.5">
+                <p className="text-xs text-muted-foreground mb-2">Thoracic Palpation:</p>
+                <div className="flex flex-wrap gap-1.5 mb-2">
+                  <button onClick={() => set("palpation_findings.thoracic_palpation", "No tenderness, normal tone")} className="px-2 py-1 text-xs bg-green-100 text-green-700 border border-green-300 rounded hover:bg-green-200">T-Normal</button>
+                  <button onClick={() => set("palpation_findings.thoracic_palpation", "Mild restriction, tenderness at mid-thoracic")} className="px-2 py-1 text-xs bg-blue-100 text-blue-700 border border-blue-300 rounded hover:bg-blue-200">T-Mild</button>
+                  <button onClick={() => set("palpation_findings.thoracic_palpation", "Grade 2 spasm, significant tenderness")} className="px-2 py-1 text-xs bg-amber-100 text-amber-700 border border-amber-300 rounded hover:bg-amber-200">T-Moderate</button>
+                  <VoiceDictation label="🎤" onTranscript={t => set("palpation_findings.thoracic_palpation", exam.palpation_findings?.thoracic_palpation ? exam.palpation_findings.thoracic_palpation + ' ' + t : t)} />
+                </div>
+                <Textarea className="h-12 text-xs" value={exam.palpation_findings?.thoracic_palpation || ""} onChange={e => set("palpation_findings.thoracic_palpation", e.target.value)} />
+              </div>
+
+              {/* Lumbar */}
+              <div>
+                <p className="text-xs text-muted-foreground mb-2">Lumbar Palpation:</p>
+                <div className="flex flex-wrap gap-1.5 mb-2">
                   <button onClick={() => set("palpation_findings.lumbar_palpation", "No tenderness, normal tone")} className="px-2 py-1 text-xs bg-green-100 text-green-700 border border-green-300 rounded hover:bg-green-200">L-Normal</button>
                   <button onClick={() => set("palpation_findings.lumbar_palpation", "Mild muscle tension, mild tenderness at L4-L5")} className="px-2 py-1 text-xs bg-blue-100 text-blue-700 border border-blue-300 rounded hover:bg-blue-200">L-Mild</button>
                   <button onClick={() => set("palpation_findings.lumbar_palpation", "Grade 2 spasm, significant tenderness, trigger points")} className="px-2 py-1 text-xs bg-amber-100 text-amber-700 border border-amber-300 rounded hover:bg-amber-200">L-Moderate</button>
                   <button onClick={() => set("palpation_findings.lumbar_palpation", "Grade 3 spasm, severe tenderness, guarding present")} className="px-2 py-1 text-xs bg-red-100 text-red-700 border border-red-300 rounded hover:bg-red-200">L-Severe</button>
+                  <VoiceDictation label="🎤" onTranscript={t => set("palpation_findings.lumbar_palpation", exam.palpation_findings?.lumbar_palpation ? exam.palpation_findings.lumbar_palpation + ' ' + t : t)} />
                 </div>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground mb-2">Thoracic Quick Fill:</p>
-                <div className="flex flex-wrap gap-1.5">
-                  <button onClick={() => set("palpation_findings.thoracic_palpation", "No tenderness, normal tone")} className="px-2 py-1 text-xs bg-green-100 text-green-700 border border-green-300 rounded hover:bg-green-200">T-Normal</button>
-                  <button onClick={() => set("palpation_findings.thoracic_palpation", "Mild restriction, tenderness at mid-thoracic")} className="px-2 py-1 text-xs bg-blue-100 text-blue-700 border border-blue-300 rounded hover:bg-blue-200">T-Mild</button>
-                  <button onClick={() => set("palpation_findings.thoracic_palpation", "Grade 2 spasm, significant tenderness")} className="px-2 py-1 text-xs bg-amber-100 text-amber-700 border border-amber-300 rounded hover:bg-amber-200">T-Moderate</button>
-                </div>
+                <Textarea className="h-12 text-xs" value={exam.palpation_findings?.lumbar_palpation || ""} onChange={e => set("palpation_findings.lumbar_palpation", e.target.value)} />
               </div>
 
-              <div className="space-y-2">
-                {["cervical_palpation", "thoracic_palpation", "lumbar_palpation", "sacroiliac"].map(field => (
-                  <div key={field}>
-                    <Label className="text-xs capitalize">{field.replace(/_/g, " ")}</Label>
-                    <Textarea
-                      className="mt-1 h-12 text-xs"
-                      placeholder="Spasm grade, tenderness, trigger points..."
-                      value={exam.palpation_findings?.[field] || ""}
-                      onChange={e => set(`palpation_findings.${field}`, e.target.value)}
-                    />
-                  </div>
-                ))}
+              {/* Sacroiliac */}
+              <div>
+                <p className="text-xs text-muted-foreground mb-2">Sacroiliac:</p>
+                <div className="flex flex-wrap gap-1.5 mb-2">
+                  <button onClick={() => set("palpation_findings.sacroiliac", "No tenderness, normal mobility")} className="px-2 py-1 text-xs bg-green-100 text-green-700 border border-green-300 rounded hover:bg-green-200">Normal</button>
+                  <button onClick={() => set("palpation_findings.sacroiliac", "Mild tenderness, slight restriction")} className="px-2 py-1 text-xs bg-blue-100 text-blue-700 border border-blue-300 rounded hover:bg-blue-200">Mild</button>
+                  <button onClick={() => set("palpation_findings.sacroiliac", "Significant restriction and tenderness")} className="px-2 py-1 text-xs bg-amber-100 text-amber-700 border border-amber-300 rounded hover:bg-amber-200">Moderate</button>
+                  <VoiceDictation label="🎤" onTranscript={t => set("palpation_findings.sacroiliac", exam.palpation_findings?.sacroiliac ? exam.palpation_findings.sacroiliac + ' ' + t : t)} />
+                </div>
+                <Textarea className="h-12 text-xs" value={exam.palpation_findings?.sacroiliac || ""} onChange={e => set("palpation_findings.sacroiliac", e.target.value)} />
               </div>
             </div>
           </Section>
@@ -488,49 +516,39 @@ export default function ReExaminationPage() {
 
           <Section title="Clinical Impression" expanded={expandSections.impression} onToggle={() => toggleSection("impression")}>
             <div className="flex gap-2 mb-2">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setPolishTarget({ field: "clinical_impression", value: exam.clinical_impression })}
-              >
-                ✨ Polish with AI
-              </Button>
+              <Button size="sm" variant="outline" onClick={() => setPolishTarget({ field: "clinical_impression", value: exam.clinical_impression })}>✨ Polish with AI</Button>
+              <VoiceDictation label="🎤 Dictate" onTranscript={t => set("clinical_impression", exam.clinical_impression ? exam.clinical_impression + ' ' + t : t)} />
             </div>
-            <Textarea
-              rows={3}
-              className="text-sm"
-              placeholder="Clinical impression and diagnoses..."
-              value={exam.clinical_impression}
-              onChange={e => set("clinical_impression", e.target.value)}
-            />
+            <Textarea rows={3} className="text-sm" placeholder="Clinical impression and diagnoses..." value={exam.clinical_impression} onChange={e => set("clinical_impression", e.target.value)} />
           </Section>
 
           <Section title="Treatment Plan & Prognosis" expanded={expandSections.plan} onToggle={() => toggleSection("plan")}>
             <div className="flex gap-2 mb-2">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setPolishTarget({ field: "treatment_plan", value: exam.treatment_plan })}
-              >
-                ✨ Polish with AI
+              <Button size="sm" variant="outline" onClick={() => setPolishTarget({ field: "treatment_plan", value: exam.treatment_plan })}>✨ Polish with AI</Button>
+              <Button size="sm" variant="outline" onClick={generateTreatmentPlans} disabled={generatingPlans}>
+                {generatingPlans ? "Generating..." : "🤖 Generate Plans"}
               </Button>
+              <VoiceDictation label="🎤 Dictate" onTranscript={t => set("treatment_plan", exam.treatment_plan ? exam.treatment_plan + ' ' + t : t)} />
             </div>
-            <Textarea
-              rows={3}
-              className="text-sm"
-              placeholder="Treatment frequency, duration, prognosis..."
-              value={exam.treatment_plan}
-              onChange={e => set("treatment_plan", e.target.value)}
-            />
+            {treatmentPlans.length > 0 && (
+              <div className="mb-3 space-y-2">
+                <p className="text-xs text-muted-foreground font-semibold">Suggested Plans:</p>
+                <select className="w-full border rounded px-2 py-2 text-sm" onChange={e => set("treatment_plan", e.target.value)} defaultValue="">
+                  <option value="">Select a plan...</option>
+                  {treatmentPlans.map((plan, idx) => (
+                    <option key={idx} value={plan}>{plan.substring(0, 80)}...</option>
+                  ))}
+                </select>
+              </div>
+            )}
+            <Textarea rows={3} className="text-sm" placeholder="Treatment frequency, duration, prognosis..." value={exam.treatment_plan} onChange={e => set("treatment_plan", e.target.value)} />
           </Section>
 
           <Section title="Additional Notes" expanded={expandSections.notes} onToggle={() => toggleSection("notes")}>
-            <Textarea
-              rows={2}
-              className="text-sm"
-              value={exam.notes}
-              onChange={e => set("notes", e.target.value)}
-            />
+            <div className="mb-2">
+              <VoiceDictation label="🎤 Dictate" onTranscript={t => set("notes", exam.notes ? exam.notes + ' ' + t : t)} />
+            </div>
+            <Textarea rows={2} className="text-sm" value={exam.notes} onChange={e => set("notes", e.target.value)} />
           </Section>
 
           <Button onClick={handleSave} disabled={saving} className="w-full gap-1">
