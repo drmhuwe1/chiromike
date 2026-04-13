@@ -299,8 +299,21 @@ export default function Calendar() {
                   ))}
                   {getEventsForDay(parseInt(selectedDayView.split("-")[2])).google.map((e, i) => (
                     <div key={`day-google-${i}`} className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                      <h3 className="font-semibold text-lg">{e.title}</h3>
-                      <p className="text-sm text-muted-foreground mt-1">{e.description}</p>
+                      <div className="flex items-start justify-between mb-2">
+                        <h3 className="font-semibold text-lg">{e.title}</h3>
+                      </div>
+                      {e.description && (
+                        <p className="text-sm text-muted-foreground mb-3">{e.description}</p>
+                      )}
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="outline" className="gap-1 flex-1" disabled title="Google Calendar events cannot be edited directly">
+                          <Edit2 className="w-3 h-3" /> View
+                        </Button>
+                        <Button size="sm" variant="outline" className="gap-1" disabled title="Google Calendar events cannot be deleted from here">
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-2">Edit in Google Calendar directly</p>
                     </div>
                   ))}
                 </>
