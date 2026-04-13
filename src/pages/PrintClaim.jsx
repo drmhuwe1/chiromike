@@ -11,6 +11,7 @@ export default function PrintClaim() {
   const [office, setOffice] = useState(null);
   const [patient, setPatient] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [inkColor, setInkColor] = useState('black');
 
   useEffect(() => {
     const load = async () => {
@@ -47,10 +48,19 @@ export default function PrintClaim() {
     <div>
       <div className="flex items-center gap-3 mb-4 no-print">
         <Link to="/saved-claims"><Button variant="outline" size="sm"><ArrowLeft className="w-4 h-4 mr-1" /> Back</Button></Link>
+        <div className="flex items-center gap-2 border border-border rounded-lg px-3 py-1.5 bg-card">
+          <span className="text-xs text-muted-foreground font-medium">Ink Color:</span>
+          <button onClick={() => setInkColor('black')} className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-semibold border transition-colors ${inkColor === 'black' ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}>
+            <span className="w-3 h-3 rounded-full bg-black inline-block" /> Black
+          </button>
+          <button onClick={() => setInkColor('red')} className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-semibold border transition-colors ${inkColor === 'red' ? 'bg-red-600 text-white border-red-600' : 'bg-white text-red-600 border-red-300 hover:bg-red-50'}`}>
+            <span className="w-3 h-3 rounded-full bg-red-600 inline-block" /> Red
+          </button>
+        </div>
         <Button onClick={handlePrint}><Printer className="w-4 h-4 mr-2" /> Print CMS-1500</Button>
       </div>
 
-      <div className="print-area bg-white text-black p-8 max-w-[8.5in] mx-auto border border-border rounded-xl" style={{ fontFamily: "'Courier New', monospace", fontSize: "11px" }}>
+      <div className="print-area bg-white p-8 max-w-[8.5in] mx-auto border border-border rounded-xl" style={{ fontFamily: "'Courier New', monospace", fontSize: "11px", color: inkColor === 'red' ? '#cc0000' : 'black' }}>
         {/* Header */}
         <div className="text-center border-b-2 border-black pb-3 mb-4">
           <h1 className="text-lg font-bold tracking-wider">HEALTH INSURANCE CLAIM FORM</h1>
