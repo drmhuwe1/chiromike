@@ -16,9 +16,16 @@ Deno.serve(async (req) => {
     const claim = claims[0];
     if (!claim) return Response.json({ error: 'Claim not found' }, { status: 404 });
 
-    const patients = await base44.entities.Patient.filter({ id: claim.patient_id });
+    const [patients, exams, prevClaims] = await Promise.all([
+      base44.entities.Patient.filter({ id: claim.patient_id }),
+      base44.entities.NewPatientExam.filter({ patient_id: claim.patient_id }, '-created_date', 10),
+      base44.entities.Claim.filter({ patient_id: claim.patient_id }, '-date_of_service', 5),
+    ]);
+    
     const patient = patients[0];
     const office = settings[0] || {};
+    const mostRecentExam = exams[0]; // Latest exam for this patient
+    const visitHistory = prevClaims.filter(c => c.id !== claim.id).slice(0, 3); // Previous visits
 
     const isAutoPI = claim.visit_type === 'Auto' || claim.payer_type === 'Auto/PI';
     const isAccident = isAutoPI || claim.accident_related;
@@ -49,6 +56,24 @@ You MUST include in the appropriate SOAP sections:
 - Prognosis: good/fair/guarded with rationale
 - Referral considerations if neurological signs are present` : '';
 
+    const examNotes = mostRecentExam ? `
+EXAMINATION FINDINGS (from intake exam):
+- Posture & Gait: ${mostRecentExam.posture_gait || 'Not recorded'}
+- Vital Signs: ${mostRecentExam.vital_signs?.bp || ''} BP${mostRecentExam.vital_signs?.hr ? ', ' + mostRecentExam.vital_signs.hr + ' HR' : ''}${mostRecentExam.vital_signs?.temp ? ', ' + mostRecentExam.vital_signs.temp + '°F temp' : ''}
+- Cervical ROM: Flexion ${mostRecentExam.cervical_rom?.flexion || '—'}, Extension ${mostRecentExam.cervical_rom?.extension || '—'}, Lateral ${mostRecentExam.cervical_rom?.left_lateral || '—'}/${mostRecentExam.cervical_rom?.right_lateral || '—'}, Rotation ${mostRecentExam.cervical_rom?.left_rotation || '—'}/${mostRecentExam.cervical_rom?.right_rotation || '—'}
+- Lumbar ROM: Flexion ${mostRecentExam.lumbar_rom?.flexion || '—'}, Extension ${mostRecentExam.lumbar_rom?.extension || '—'}, Lateral ${mostRecentExam.lumbar_rom?.left_lateral || '—'}/${mostRecentExam.lumbar_rom?.right_lateral || '—'}, Rotation ${mostRecentExam.lumbar_rom?.left_rotation || '—'}/${mostRecentExam.lumbar_rom?.right_rotation || '—'}
+- Orthopedic Tests: ${mostRecentExam.orthopedic_tests?.map(t => `${t.test_name} ${t.result}`).join(', ') || 'Not recorded'}
+- Neurological: DTR Cervical ${mostRecentExam.neurological_findings?.dtr_cervical || '—'}, Lumbar ${mostRecentExam.neurological_findings?.dtr_lumbar || '—'}, Sensory ${mostRecentExam.neurological_findings?.sensory || '—'}, Motor ${mostRecentExam.neurological_findings?.motor_strength || '—'}
+- Palpation: Cervical ${mostRecentExam.palpation_findings?.cervical_palpation || '—'}, Lumbar ${mostRecentExam.palpation_findings?.lumbar_palpation || '—'}, Sacroiliac ${mostRecentExam.palpation_findings?.sacroiliac || '—'}
+- Pain Scale at Exam: ${mostRecentExam.pain_scale || '—'}, Areas: ${mostRecentExam.pain_areas || '—'}
+- Clinical Impression: ${mostRecentExam.clinical_impression || '—'}
+` : '';
+
+    const visitHistoryNotes = visitHistory.length > 0 ? `
+VISIT HISTORY (Previous Claims):
+${visitHistory.map((v, i) => `Visit ${i + 1} (${v.date_of_service}): ${v.visit_type}, Procedures: ${v.service_lines?.map(s => s.code).join(', ') || 'N/A'}, Total: $${(v.total_charge || 0).toFixed(2)}`).join('\n')}
+` : '';
+
     const prompt = `You are a licensed chiropractic physician (DC) writing a legally and clinically defensible SOAP note for a patient visit. Write in the first person as the treating physician. Use precise clinical language appropriate for insurance review, peer review, IME defense, and potential litigation.
 
 PATIENT: ${patient ? patient.first_name + ' ' + patient.last_name : 'Unknown'}
@@ -76,6 +101,8 @@ ${patient?.surgeries ? `PRIOR SURGERIES: ${patient.surgeries}` : ''}
 ${isAutoPI && patient?.attorney_name ? `PATIENT'S ATTORNEY: ${patient.attorney_name}` : ''}
 ${isAutoPI && patient?.insurance_company ? `AUTO INSURER: ${patient.insurance_company}` : ''}
 ${isAutoPI && patient?.insured_id ? `CLAIM/POLICY NUMBER: ${patient.insured_id}` : ''}
+${examNotes}
+${visitHistoryNotes}
 
 CLAIM NOTES: ${claim.claim_notes || 'None'}
 
