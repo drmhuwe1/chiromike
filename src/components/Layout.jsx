@@ -11,6 +11,7 @@ const navItems = [
   { path: "/patient-account", label: "Patient Account", icon: Users },
   { path: "/claim-builder", label: "New Claim", icon: FileText },
   { path: "/new-patient-exam", label: "New Patient Exam", icon: Stethoscope },
+  { path: "/re-examination", label: "Re-Examination", icon: Stethoscope },
   { path: "/saved-claims", label: "Saved Claims", icon: BookOpen },
   { path: "/code-library", label: "Code Library", icon: Library },
   { path: "/templates", label: "Quick Templates", icon: Zap },

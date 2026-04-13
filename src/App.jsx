@@ -25,6 +25,7 @@ import HelpGuide from './pages/HelpGuide';
 import Compliance from './pages/Compliance';
 import SoapNotes from './pages/SoapNotes';
 import NewPatientExam from './pages/NewPatientExam';
+import ReExamination from './pages/ReExamination';
 import FinancialReports from './pages/FinancialReports';
 import PaymentSuccess from './pages/PaymentSuccess';
 import PaymentCancelled from './pages/PaymentCancelled';
@@ -75,6 +76,7 @@ const AuthenticatedApp = () => {
         <Route path="/compliance" element={<Compliance />} />
         <Route path="/soap-notes" element={<SoapNotes />} />
         <Route path="/new-patient-exam" element={<NewPatientExam />} />
+        <Route path="/re-examination" element={<ReExamination />} />
         <Route path="/financial-reports" element={<FinancialReports />} />
         <Route path="/payment-success" element={<PaymentSuccess />} />
         <Route path="/payment-cancelled" element={<PaymentCancelled />} />
