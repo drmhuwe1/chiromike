@@ -392,13 +392,19 @@ export default function Calendar() {
                 </select>
               </div>
               <div>
-                <Label className="text-sm">Duration (min)</Label>
-                <Input
-                  type="number"
-                  className="mt-1"
+                <Label className="text-sm">Duration</Label>
+                <select
+                  className="mt-1 w-full border border-input rounded-md px-2 py-1.5 text-sm"
                   value={formData.duration_minutes}
-                  onChange={e => setFormData(prev => ({ ...prev, duration_minutes: parseInt(e.target.value) || 30 }))}
-                />
+                  onChange={e => setFormData(prev => ({ ...prev, duration_minutes: parseInt(e.target.value) }))}
+                >
+                  <option value={15}>15 min</option>
+                  <option value={30}>30 min</option>
+                  <option value={45}>45 min</option>
+                  <option value={60}>60 min</option>
+                  <option value={75}>75 min</option>
+                  <option value={90}>90 min</option>
+                </select>
               </div>
             </div>
 
