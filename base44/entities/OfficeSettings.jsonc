@@ -78,6 +78,10 @@
     "superbill_notes": {
       "type": "string",
       "title": "Superbill Notes"
+    },
+    "logo_url": {
+      "type": "string",
+      "title": "Practice Logo URL"
     }
   },
   "required": [

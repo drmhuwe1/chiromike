@@ -63,6 +63,9 @@ export default function PrintClaim() {
       <div className="print-area bg-white p-8 max-w-[8.5in] mx-auto border border-border rounded-xl" style={{ fontFamily: "'Courier New', monospace", fontSize: "11px", color: inkColor === 'red' ? '#cc0000' : 'black' }}>
         {/* Header */}
         <div className="text-center border-b-2 border-black pb-3 mb-4">
+          {office?.logo_url && (
+            <img src={office.logo_url} alt="Logo" className="h-14 mx-auto mb-2 object-contain" />
+          )}
           <h1 className="text-lg font-bold tracking-wider">HEALTH INSURANCE CLAIM FORM</h1>
           <p className="text-[10px]">APPROVED BY NATIONAL UNIFORM CLAIM COMMITTEE (NUCC) 02/12</p>
           <p className="text-[10px]">CMS-1500 / HCFA-1500</p>

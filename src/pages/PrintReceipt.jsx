@@ -55,6 +55,9 @@ export default function PrintReceipt() {
       <div className="print-area bg-white text-black p-8 max-w-[5in] mx-auto border border-border rounded-xl" style={{ fontFamily: "'Courier New', monospace", fontSize: "12px" }}>
         {/* Header */}
         <div className="text-center mb-6">
+          {office?.logo_url && (
+            <img src={office.logo_url} alt="Logo" className="h-16 mx-auto mb-2 object-contain" />
+          )}
           <h1 className="text-xl font-bold">{office?.practice_name || "Huwe Chiropractic"}</h1>
           <p className="text-[11px]">{office?.billing_address_line1 || ""}</p>
           <p className="text-[11px]">{office?.billing_city || ""} {office?.billing_state || ""} {office?.billing_zip || ""}</p>

@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Save, Building } from "lucide-react";
+import { Save, Building, Upload, X } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import PayerProfilesTab from "../components/settings/PayerProfilesTab";
 
@@ -160,6 +160,30 @@ export default function OfficeSettings() {
         <TabsContent value="receipts">
           <div className="bg-card border border-border rounded-xl p-6 space-y-4">
             <h2 className="text-lg font-semibold">Receipts & Superbills</h2>
+            <div>
+              <Label>Practice Logo</Label>
+              <p className="text-xs text-muted-foreground mb-2">Displayed at the top of printed superbills and receipts</p>
+              {settings.logo_url ? (
+                <div className="flex items-center gap-3">
+                  <img src={settings.logo_url} alt="Logo" className="h-16 max-w-[200px] object-contain border border-border rounded p-1 bg-white" />
+                  <button onClick={() => set("logo_url", "")} className="text-destructive hover:opacity-70 text-sm flex items-center gap-1">
+                    <X className="w-4 h-4" /> Remove
+                  </button>
+                </div>
+              ) : (
+                <label className="flex items-center gap-2 cursor-pointer w-fit">
+                  <div className="flex items-center gap-2 px-4 py-2 border border-dashed border-border rounded-lg hover:bg-muted transition-colors text-sm text-muted-foreground">
+                    <Upload className="w-4 h-4" /> Upload Logo (PNG, JPG)
+                  </div>
+                  <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+                    set("logo_url", file_url);
+                  }} />
+                </label>
+              )}
+            </div>
             <div>
               <Label>Receipt Header Text</Label>
               <Textarea value={settings.receipt_header || ""} onChange={e => set("receipt_header", e.target.value)} rows={2} />
