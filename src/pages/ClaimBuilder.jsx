@@ -9,6 +9,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Save, Printer, Copy, CalendarDays, Search, User, Plus, Trash2, Star, Zap, Mail, Sparkles, ChevronDown } from "lucide-react";
 import PayerAlertBanner from "../components/claim/PayerAlertBanner";
 import SoapNoteModal from "../components/claim/SoapNoteModal";
+import VoiceDictation from "../components/VoiceDictation";
 
 const CANNED_NOTES = [
   "Patient presents for follow-up chiropractic care. Responding well to treatment with gradual improvement in pain and function. Continue current treatment plan.",
@@ -522,12 +523,15 @@ export default function ClaimBuilder() {
         <div className="bg-card border border-border rounded-xl p-3">
           <div className="flex items-center justify-between mb-1">
             <Label className="text-xs text-muted-foreground">Claim Notes</Label>
-            <button
-              className="text-xs text-primary hover:underline flex items-center gap-1"
-              onClick={() => setShowCannedNotes(v => !v)}
-            >
-              Quick Notes <ChevronDown className="w-3 h-3" />
-            </button>
+            <div className="flex items-center gap-2">
+              <VoiceDictation label="Dictate" onTranscript={t => set("claim_notes", claim.claim_notes ? claim.claim_notes + ' ' + t : t)} />
+              <button
+                className="text-xs text-primary hover:underline flex items-center gap-1"
+                onClick={() => setShowCannedNotes(v => !v)}
+              >
+                Quick Notes <ChevronDown className="w-3 h-3" />
+              </button>
+            </div>
           </div>
           {showCannedNotes && (
             <div className="mb-2 space-y-1 max-h-40 overflow-y-auto border border-border rounded-lg p-2 bg-muted/30">

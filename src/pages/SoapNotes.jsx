@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Printer, FileText, ChevronDown, ChevronUp } from "lucide-react";
+import { Search, Printer, FileText, ChevronDown, ChevronUp, Send } from "lucide-react";
+import FaxModal from "../components/claim/FaxModal";
 
 export default function SoapNotes() {
   const [notes, setNotes] = useState([]);
@@ -11,6 +11,7 @@ export default function SoapNotes() {
   const [search, setSearch] = useState("");
   const [expanded, setExpanded] = useState(null);
   const [printing, setPrinting] = useState(null);
+  const [faxTarget, setFaxTarget] = useState(null); // { soapNote, claim }
 
   useEffect(() => {
     base44.entities.SoapNote.list("-date_of_service", 500).then(data => {
@@ -27,6 +28,16 @@ export default function SoapNotes() {
   const handlePrint = (note) => {
     setPrinting(note);
     setTimeout(() => window.print(), 300);
+  };
+
+  const handleFax = async (note) => {
+    // Try to find the associated claim to include CMS-1500 data
+    let claim = null;
+    if (note.claim_id) {
+      const claims = await base44.entities.Claim.filter({ id: note.claim_id });
+      claim = claims[0] || null;
+    }
+    setFaxTarget({ soapNote: note, claim });
   };
 
   return (
@@ -62,9 +73,14 @@ export default function SoapNotes() {
                   {note.visit_type && <span className="ml-3 text-xs bg-muted px-2 py-0.5 rounded-full">{note.visit_type}</span>}
                   {note.accident_related && <span className="ml-2 text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">Accident</span>}
                 </div>
-                <Button variant="ghost" size="sm" className="h-7 w-7 p-0 shrink-0" onClick={e => { e.stopPropagation(); handlePrint(note); }} title="Print PDF">
-                  <Printer className="w-3.5 h-3.5" />
-                </Button>
+                <div className="flex items-center gap-1 shrink-0" onClick={e => e.stopPropagation()}>
+                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => handleFax(note)} title="Send via Fax">
+                    <Send className="w-3.5 h-3.5 text-blue-600" />
+                  </Button>
+                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => handlePrint(note)} title="Print PDF">
+                    <Printer className="w-3.5 h-3.5" />
+                  </Button>
+                </div>
                 {expanded === note.id ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
               </div>
 
@@ -84,6 +100,11 @@ export default function SoapNotes() {
                       Signed: {note.doctor_signature} — {note.date_of_service}
                     </div>
                   )}
+                  <div className="pt-2">
+                    <Button size="sm" variant="outline" className="text-blue-600 border-blue-200 hover:bg-blue-50" onClick={() => handleFax(note)}>
+                      <Send className="w-3.5 h-3.5 mr-1.5" /> Fax Patient File
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>
@@ -101,6 +122,15 @@ export default function SoapNotes() {
         <div className="print-area" style={{ display: "none" }}>
           <SoapPrintView note={printing} />
         </div>
+      )}
+
+      {/* Fax modal */}
+      {faxTarget && (
+        <FaxModal
+          soapNote={faxTarget.soapNote}
+          claim={faxTarget.claim}
+          onClose={() => setFaxTarget(null)}
+        />
       )}
     </div>
   );
@@ -123,18 +153,11 @@ function Section({ label, text, color }) {
 
 function SoapPrintView({ note }) {
   return (
-    <div style={{
-      fontFamily: "Arial, sans-serif",
-      fontSize: "11pt",
-      color: "#000",
-      margin: "1in",
-      lineHeight: "1.5",
-    }}>
+    <div style={{ fontFamily: "Arial, sans-serif", fontSize: "11pt", color: "#000", margin: "1in", lineHeight: "1.5" }}>
       <div style={{ textAlign: "center", borderBottom: "2px solid #000", paddingBottom: "12px", marginBottom: "20px" }}>
         <h1 style={{ fontSize: "16pt", fontWeight: "bold", margin: 0 }}>CHIROPRACTIC SOAP NOTE</h1>
         <p style={{ margin: "4px 0", fontSize: "10pt" }}>CONFIDENTIAL MEDICAL RECORD</p>
       </div>
-
       <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "20px", fontSize: "10pt" }}>
         <tbody>
           <tr>
@@ -158,7 +181,6 @@ function SoapPrintView({ note }) {
           )}
         </tbody>
       </table>
-
       {note.diagnoses?.length > 0 && (
         <div style={{ marginBottom: "16px" }}>
           <strong>DIAGNOSIS CODES:</strong>
@@ -169,12 +191,10 @@ function SoapPrintView({ note }) {
           </div>
         </div>
       )}
-
       <PrintSection label="S — SUBJECTIVE" text={note.subjective} />
       <PrintSection label="O — OBJECTIVE" text={note.objective} />
       <PrintSection label="A — ASSESSMENT" text={note.assessment} />
       <PrintSection label="P — PLAN" text={note.plan} />
-
       {note.procedures?.length > 0 && (
         <div style={{ marginTop: "16px" }}>
           <strong>PROCEDURES PERFORMED:</strong>
@@ -185,7 +205,6 @@ function SoapPrintView({ note }) {
           </div>
         </div>
       )}
-
       <div style={{ marginTop: "48px", borderTop: "1px solid #000", paddingTop: "12px" }}>
         <table style={{ width: "100%" }}>
           <tbody>
@@ -196,19 +215,14 @@ function SoapPrintView({ note }) {
               </td>
               <td style={{ width: "10%" }}></td>
               <td style={{ width: "40%" }}>
-                <div style={{ borderBottom: "1px solid #000", marginBottom: "4px", height: "32px", paddingTop: "8px", fontSize: "10pt" }}>
-                  {note.date_of_service}
-                </div>
+                <div style={{ borderBottom: "1px solid #000", marginBottom: "4px", height: "32px", paddingTop: "8px", fontSize: "10pt" }}>{note.date_of_service}</div>
                 <div style={{ fontSize: "9pt" }}>Date</div>
               </td>
             </tr>
           </tbody>
         </table>
-        <div style={{ marginTop: "8px", fontSize: "10pt" }}>
-          <strong>{note.doctor_signature}</strong>
-        </div>
+        <div style={{ marginTop: "8px", fontSize: "10pt" }}><strong>{note.doctor_signature}</strong></div>
       </div>
-
       <div style={{ marginTop: "24px", fontSize: "8pt", color: "#666", textAlign: "center", borderTop: "1px solid #ccc", paddingTop: "8px" }}>
         This document is a confidential medical record. Unauthorized disclosure is prohibited by law.
       </div>

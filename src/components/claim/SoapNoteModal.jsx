@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Sparkles, X, Loader2, CheckCircle } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import VoiceDictation from "@/components/VoiceDictation";
 
 export default function SoapNoteModal({ claim, onClose, onGenerated }) {
   const [painScale, setPainScale] = useState("");
@@ -72,7 +73,10 @@ export default function SoapNoteModal({ claim, onClose, onGenerated }) {
                 />
               </div>
               <div>
-                <Label className="text-sm">Functional Limitations</Label>
+                <div className="flex items-center justify-between mb-1">
+                  <Label className="text-sm">Functional Limitations</Label>
+                  <VoiceDictation label="Dictate" onTranscript={t => setFunctionalLimitations(prev => (prev ? prev + ' ' + t : t))} />
+                </div>
                 <Textarea
                   placeholder="e.g. Difficulty sitting more than 20 min, limited ability to lift over 10 lbs, unable to turn head fully..."
                   rows={2}
@@ -82,7 +86,10 @@ export default function SoapNoteModal({ claim, onClose, onGenerated }) {
                 />
               </div>
               <div>
-                <Label className="text-sm">Additional Doctor Notes (optional)</Label>
+                <div className="flex items-center justify-between mb-1">
+                  <Label className="text-sm">Additional Doctor Notes (optional)</Label>
+                  <VoiceDictation label="Dictate" onTranscript={t => setDoctorNotes(prev => (prev ? prev + ' ' + t : t))} />
+                </div>
                 <Textarea
                   placeholder="Any extra findings, patient progress, or notes to include..."
                   rows={2}
