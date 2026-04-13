@@ -125,9 +125,15 @@ export default function ClaimBuilder() {
   }, []);
 
   const applyPatient = async (patient) => {
-    // Load default case if exists
-    const patientCases = await base44.entities.PatientCase.filter({ patient_id: patient.id }, "-created_date", 50);
+    // Load default case if exists, otherwise use patient's initial intake data
+    let patientCases = await base44.entities.PatientCase.filter({ patient_id: patient.id }, "-created_date", 50);
     const defaultCase = patientCases.find(c => c.is_default) || patientCases[0];
+    
+    // Sync diagnoses from case, preferring case diagnoses
+    const caseDiagnoses = defaultCase?.diagnoses && defaultCase.diagnoses.length > 0 
+      ? defaultCase.diagnoses 
+      : patient.diagnoses || [];
+    
     setClaim(prev => ({
       ...prev,
       patient_id: patient.id,
@@ -140,8 +146,14 @@ export default function ClaimBuilder() {
       accident_related: defaultCase?.is_accident_related || patient.is_accident_related || false,
       accident_date: defaultCase?.accident_date || patient.accident_date || "",
       accident_type: defaultCase?.accident_type || patient.accident_type || "",
-      diagnoses: defaultCase?.diagnoses?.length ? defaultCase.diagnoses.map((d, i) => ({ ...d, pointer: String(i + 1) })) : [],
+      diagnoses: caseDiagnoses.map((d, i) => ({ code: d.code, description: d.description, pointer: String(i + 1) })),
     }));
+    
+    // Persist diagnoses to localStorage
+    if (caseDiagnoses.length > 0) {
+      localStorage.setItem('persistedDiagnoses', JSON.stringify(caseDiagnoses));
+    }
+    
     setPatientSearch("");
     setShowPatientDrop(false);
     setSelectedPatient(patient);
