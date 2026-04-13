@@ -46,7 +46,7 @@
     },
     "phone": {
       "type": "string",
-      "title": "Phone"
+      "title": "Cell Phone"
     },
     "email": {
       "type": "string",
@@ -123,6 +123,14 @@
       "type": "string",
       "title": "Insured Employer"
     },
+    "insurance_card_photo_front": {
+      "type": "string",
+      "title": "Insurance Card Photo (Front)"
+    },
+    "insurance_card_photo_back": {
+      "type": "string",
+      "title": "Insurance Card Photo (Back)"
+    },
     "attorney_name": {
       "type": "string",
       "title": "Attorney Name"
@@ -130,6 +138,93 @@
     "attorney_phone": {
       "type": "string",
       "title": "Attorney Phone"
+    },
+    "chief_complaint": {
+      "type": "string",
+      "title": "Chief Complaint"
+    },
+    "pain_scale": {
+      "type": "number",
+      "title": "Pain Scale (0-10)"
+    },
+    "pain_areas": {
+      "type": "array",
+      "title": "Pain Areas",
+      "items": {
+        "type": "string"
+      }
+    },
+    "pain_description": {
+      "type": "string",
+      "title": "Pain Description"
+    },
+    "pain_onset": {
+      "type": "string",
+      "title": "When did pain start?"
+    },
+    "pain_frequency": {
+      "type": "string",
+      "enum": [
+        "Constant",
+        "Frequent",
+        "Occasional",
+        "Rare"
+      ],
+      "title": "Pain Frequency"
+    },
+    "health_history": {
+      "type": "array",
+      "title": "Health History",
+      "items": {
+        "type": "string"
+      }
+    },
+    "health_history_other": {
+      "type": "string",
+      "title": "Health History Other"
+    },
+    "current_medications": {
+      "type": "string",
+      "title": "Current Medications"
+    },
+    "allergies": {
+      "type": "string",
+      "title": "Allergies"
+    },
+    "surgeries": {
+      "type": "string",
+      "title": "Prior Surgeries"
+    },
+    "family_history": {
+      "type": "array",
+      "title": "Family Health History",
+      "items": {
+        "type": "string"
+      }
+    },
+    "family_history_other": {
+      "type": "string",
+      "title": "Family History Other"
+    },
+    "occupation": {
+      "type": "string",
+      "title": "Occupation"
+    },
+    "emergency_contact_name": {
+      "type": "string",
+      "title": "Emergency Contact Name"
+    },
+    "emergency_contact_phone": {
+      "type": "string",
+      "title": "Emergency Contact Phone"
+    },
+    "emergency_contact_relation": {
+      "type": "string",
+      "title": "Emergency Contact Relationship"
+    },
+    "how_heard": {
+      "type": "string",
+      "title": "How did you hear about us?"
     },
     "diagnoses": {
       "type": "array",
@@ -154,6 +249,23 @@
       "type": "boolean",
       "title": "Active",
       "default": true
+    },
+    "intake_source": {
+      "type": "string",
+      "title": "Intake Source",
+      "enum": [
+        "manual",
+        "intake_form"
+      ],
+      "default": "manual"
+    },
+    "intake_completed_at": {
+      "type": "string",
+      "title": "Intake Completed At"
+    },
+    "hipaa_consent": {
+      "type": "boolean",
+      "title": "HIPAA Consent"
     }
   },
   "required": [

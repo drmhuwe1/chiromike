@@ -3,9 +3,10 @@ import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, FileText, Copy, ChevronRight } from "lucide-react";
+import { Plus, Search, FileText, Copy, ChevronRight, Link2 } from "lucide-react";
 import PatientForm from "../components/patients/PatientForm";
 import PatientCases from "../components/patients/PatientCases";
+import IntakeAlertBanner from "../components/patients/IntakeAlertBanner";
 
 export default function Patients() {
   const [patients, setPatients] = useState([]);
@@ -57,9 +58,18 @@ export default function Patients() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold tracking-tight">Patients</h1>
-        <Button onClick={() => { setEditPatient(null); setShowForm(true); }}>
-          <Plus className="w-4 h-4 mr-2" /> Add Patient
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => {
+            const url = window.location.origin + "/intake";
+            navigator.clipboard.writeText(url);
+            alert("Intake form link copied!\n\n" + url + "\n\nSend this link to new patients via text or email.");
+          }}>
+            <Link2 className="w-4 h-4 mr-2" /> Copy Intake Link
+          </Button>
+          <Button onClick={() => { setEditPatient(null); setShowForm(true); }}>
+            <Plus className="w-4 h-4 mr-2" /> Add Patient
+          </Button>
+        </div>
       </div>
 
       <div className="relative mb-4">
@@ -138,6 +148,7 @@ export default function Patients() {
                   {expandedPatient === p.id && (
                     <tr key={p.id + "-cases"}>
                       <td colSpan={5} className="px-4 pb-4 bg-muted/10">
+                        <IntakeAlertBanner patient={p} />
                         <PatientCases patientId={p.id} />
                       </td>
                     </tr>

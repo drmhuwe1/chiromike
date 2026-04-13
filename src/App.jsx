@@ -18,6 +18,7 @@ import OfficeSettings from './pages/OfficeSettings';
 import PrintClaim from './pages/PrintClaim';
 import PrintReceipt from './pages/PrintReceipt';
 import CodeLibrary from './pages/CodeLibrary';
+import PatientIntake from './pages/PatientIntake';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -58,6 +59,7 @@ const AuthenticatedApp = () => {
         <Route path="/print-claim" element={<PrintClaim />} />
         <Route path="/print-receipt" element={<PrintReceipt />} />
         <Route path="/code-library" element={<CodeLibrary />} />
+        <Route path="/intake" element={<PatientIntake />} />
         <Route path="*" element={<PageNotFound />} />
       </Route>
     </Routes>
