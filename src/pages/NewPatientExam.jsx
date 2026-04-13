@@ -101,12 +101,12 @@ export default function NewPatientExamPage() {
     setSaving(false);
   };
 
-  const filteredPatients = search
+  const filteredPatients = search.length >= 3
     ? patients.filter(p => {
         const q = search.toLowerCase();
-        return p.first_name?.toLowerCase().includes(q) || p.last_name?.toLowerCase().includes(q);
-      }).slice(0, 8)
-    : patients.slice(0, 8);
+        return p.first_name?.toLowerCase().startsWith(q) || p.last_name?.toLowerCase().startsWith(q);
+      }).slice(0, 12)
+    : [];
 
   const [expandSections, setExpandSections] = useState({});
   const toggleSection = (key) => setExpandSections(prev => ({ ...prev, [key]: !prev[key] }));
@@ -127,25 +127,30 @@ export default function NewPatientExamPage() {
           <div className="relative">
             <Search className="absolute left-3 top-2.5 w-4 h-4 text-muted-foreground" />
             <Input
-              placeholder="Search patient..."
+              placeholder="Type 3+ letters of first or last name..."
               className="pl-9"
               value={search}
               onChange={e => setSearch(e.target.value)}
               autoFocus
             />
           </div>
-          <div className="mt-2 space-y-1 max-h-48 overflow-y-auto">
-            {filteredPatients.map(p => (
-              <button
-                key={p.id}
-                onClick={() => selectPatient(p)}
-                className="w-full text-left px-3 py-2 rounded hover:bg-muted text-sm"
-              >
-                <span className="font-medium">{p.first_name} {p.last_name}</span>
-                <span className="text-xs text-muted-foreground ml-2">{p.phone}</span>
-              </button>
-            ))}
-          </div>
+          {search.length >= 3 ? (
+            <div className="mt-2 space-y-1 max-h-48 overflow-y-auto">
+              {filteredPatients.map(p => (
+                <button
+                  key={p.id}
+                  onClick={() => selectPatient(p)}
+                  className="w-full text-left px-3 py-2 rounded hover:bg-muted text-sm"
+                >
+                  <span className="font-medium">{p.first_name} {p.last_name}</span>
+                  <span className="text-xs text-muted-foreground ml-2">{p.phone}</span>
+                </button>
+              ))}
+              {filteredPatients.length === 0 && <p className="text-xs text-muted-foreground p-2">No patients found</p>}
+            </div>
+          ) : (
+            <p className="text-xs text-muted-foreground mt-2">Type at least 3 letters to search</p>
+          )}
         </div>
       ) : (
         <div className="bg-card border border-border rounded-xl p-4 flex items-center justify-between">
