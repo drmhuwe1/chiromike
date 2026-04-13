@@ -296,10 +296,11 @@ export default function ClaimBuilder() {
                 className="pl-8 h-9"
                 value={patientSearch}
                 onChange={e => { setPatientSearch(e.target.value); setShowPatientDrop(true); }}
-                onFocus={() => setShowPatientDrop(true)}
+                onFocus={() => { if (patientSearch) setShowPatientDrop(true); }}
+                onBlur={() => setTimeout(() => setShowPatientDrop(false), 150)}
                 autoFocus
               />
-              {showPatientDrop && (
+              {showPatientDrop && patientSearch && (
                 <div className="absolute z-30 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-xl max-h-56 overflow-y-auto">
                   {filteredPatients.map(p => (
                     <button key={p.id} className="w-full text-left px-3 py-2 hover:bg-muted text-sm flex justify-between items-center"
