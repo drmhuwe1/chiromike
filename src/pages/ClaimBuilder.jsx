@@ -131,6 +131,23 @@ export default function ClaimBuilder() {
 
   const set = (field, value) => setClaim(prev => ({ ...prev, [field]: value }));
 
+  // Auto-save to localStorage every time claim changes
+  useEffect(() => {
+    localStorage.setItem('claimDraft', JSON.stringify(claim));
+  }, [claim]);
+
+  // Load draft on mount
+  useEffect(() => {
+    const draft = localStorage.getItem('claimDraft');
+    if (draft) {
+      try {
+        setClaim(JSON.parse(draft));
+      } catch (e) {
+        console.error('Failed to load draft', e);
+      }
+    }
+  }, []);
+
   const totalCharge = useMemo(() =>
     claim.service_lines.reduce((sum, l) => sum + ((l.charge || 0) * (l.units || 1)), 0),
     [claim.service_lines]
@@ -240,7 +257,8 @@ export default function ClaimBuilder() {
     const saved = await base44.entities.Claim.create({ ...claim, total_charge: totalCharge, status: "Saved" });
     setLoading(false);
     setSavedClaim(saved);
-    toast({ title: "Claim saved! Generate a SOAP note?" });
+    localStorage.removeItem('claimDraft'); // Clear draft after saving
+    toast({ title: "Claim saved!" });
     navigate("/saved-claims");
   };
 
@@ -269,12 +287,12 @@ export default function ClaimBuilder() {
 
   const isCash = claim.visit_type?.includes("Cash");
 
-  const filteredPatients = patientSearch
+  const filteredPatients = patientSearch && patientSearch.length >= 3
     ? patients.filter(p => {
         const q = patientSearch.toLowerCase();
-        return p.first_name?.toLowerCase().includes(q) || p.last_name?.toLowerCase().includes(q) || p.phone?.includes(q);
-      }).slice(0, 8)
-    : patients.slice(0, 8);
+        return p.first_name?.toLowerCase().startsWith(q) || p.last_name?.toLowerCase().startsWith(q) || p.phone?.includes(q);
+      }).slice(0, 12)
+    : [];
 
   const groupedTemplates = templates.reduce((acc, t) => {
     const cat = t.category || "Custom";
@@ -315,15 +333,15 @@ export default function ClaimBuilder() {
             <div className="relative mt-1">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
               <Input
-                placeholder="Search patient..."
+                placeholder="Type first 3 letters of first or last name..."
                 className="pl-8 h-9"
                 value={patientSearch}
-                onChange={e => { setPatientSearch(e.target.value); setShowPatientDrop(true); }}
-                onFocus={() => { if (patientSearch) setShowPatientDrop(true); }}
+                onChange={e => { setPatientSearch(e.target.value); if (e.target.value.length >= 3) setShowPatientDrop(true); else setShowPatientDrop(false); }}
+                onFocus={() => { if (patientSearch.length >= 3) setShowPatientDrop(true); }}
                 onBlur={() => setTimeout(() => setShowPatientDrop(false), 150)}
                 autoFocus
               />
-              {showPatientDrop && patientSearch && (
+              {showPatientDrop && patientSearch.length >= 3 && (
                 <div className="absolute z-30 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-xl max-h-56 overflow-y-auto">
                   {filteredPatients.map(p => (
                     <button key={p.id} className="w-full text-left px-3 py-2 hover:bg-muted text-sm flex justify-between items-center"
