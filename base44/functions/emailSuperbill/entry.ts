@@ -1,5 +1,29 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
+function buildRawEmail({ to, subject, htmlBody }) {
+  const from = 'Huwe Chiropractic <drmhuwe@huwechiropractic.com>';
+  const replyTo = 'drahuwe@gmail.com, drmhuwe@gmail.com';
+  const boundary = 'boundary_' + Math.random().toString(36).slice(2);
+  const mime = [
+    `From: ${from}`,
+    `To: ${to}`,
+    `Reply-To: ${replyTo}`,
+    `Subject: ${subject}`,
+    'MIME-Version: 1.0',
+    `Content-Type: multipart/alternative; boundary="${boundary}"`,
+    '',
+    `--${boundary}`,
+    'Content-Type: text/html; charset=UTF-8',
+    'Content-Transfer-Encoding: quoted-printable',
+    '',
+    htmlBody,
+    '',
+    `--${boundary}--`,
+  ].join('\r\n');
+  return btoa(unescape(encodeURIComponent(mime)))
+    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -295,11 +319,18 @@ Deno.serve(async (req) => {
       ? `Superbill + CMS-1500 from ${practiceName} — ${dos}`
       : `Superbill from ${practiceName} — ${dos}`;
 
-    await base44.asServiceRole.integrations.Core.SendEmail({
-      to: patient.email,
-      subject,
-      body: html,
+    // Send via Gmail connector from practice address
+    const { accessToken } = await base44.asServiceRole.connectors.getConnection('gmail');
+    const raw = buildRawEmail({ to: patient.email, subject, htmlBody: html });
+    const gmailRes = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ raw }),
     });
+    if (!gmailRes.ok) {
+      const err = await gmailRes.json();
+      throw new Error(err.error?.message || 'Gmail send failed');
+    }
 
     // Update claim status
     await base44.asServiceRole.entities.Claim.update(claim_id, { status: 'Printed' });
