@@ -11,6 +11,7 @@ import PayerAlertBanner from "../components/claim/PayerAlertBanner";
 import SoapNoteModal from "../components/claim/SoapNoteModal";
 import VoiceDictation from "../components/VoiceDictation";
 import PaymentModal from "../components/payment/PaymentModal";
+import ScheduleNextVisitModal from "../components/claim/ScheduleNextVisitModal";
 
 const CANNED_NOTES = [
   "Patient presents for follow-up chiropractic care. Responding well to treatment with gradual improvement in pain and function. Continue current treatment plan.",
@@ -60,6 +61,7 @@ export default function ClaimBuilder() {
   const [showCannedNotes, setShowCannedNotes] = useState(false);
   const [paymentQuick, setPaymentQuick] = useState(null); // "cash" or "cc"
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState(null);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -639,9 +641,14 @@ export default function ClaimBuilder() {
               {includeHcfa ? 'Email Superbill + CMS-1500' : 'Email Superbill to Patient'}
             </Button>
             {savedClaim && (
-              <Button variant="outline" className="w-full h-10 text-sm text-purple-600 border-purple-200 hover:bg-purple-50" onClick={() => setShowSoapModal(true)}>
-                <Sparkles className="w-4 h-4 mr-2" /> Generate SOAP Note
-              </Button>
+              <>
+                <Button variant="outline" className="w-full h-10 text-sm text-purple-600 border-purple-200 hover:bg-purple-50" onClick={() => setShowSoapModal(true)}>
+                  <Sparkles className="w-4 h-4 mr-2" /> Generate SOAP Note
+                </Button>
+                <Button variant="outline" className="w-full h-10 text-sm text-blue-600 border-blue-200 hover:bg-blue-50" onClick={() => setShowScheduleModal(true)}>
+                  📅 Schedule Next Visit
+                </Button>
+              </>
             )}
           </div>
         </div>
@@ -661,6 +668,15 @@ export default function ClaimBuilder() {
           patient={selectedPatient}
           onClose={() => setShowPaymentModal(false)}
           onSuccess={() => setShowPaymentModal(false)}
+        />
+      )}
+
+      {showScheduleModal && selectedPatient && savedClaim && (
+        <ScheduleNextVisitModal
+          patient={selectedPatient}
+          claim={savedClaim}
+          onClose={() => setShowScheduleModal(false)}
+          onSuccess={() => setShowScheduleModal(false)}
         />
       )}
     </div>

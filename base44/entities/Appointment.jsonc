@@ -1,0 +1,65 @@
+{
+  "name": "Appointment",
+  "type": "object",
+  "properties": {
+    "patient_id": {
+      "type": "string",
+      "title": "Patient ID"
+    },
+    "patient_name": {
+      "type": "string",
+      "title": "Patient Name"
+    },
+    "appointment_date": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Appointment Date & Time"
+    },
+    "appointment_type": {
+      "type": "string",
+      "enum": [
+        "Follow-up",
+        "New Patient",
+        "Re-evaluation",
+        "Maintenance"
+      ],
+      "title": "Appointment Type"
+    },
+    "duration_minutes": {
+      "type": "number",
+      "title": "Duration (minutes)",
+      "default": 30
+    },
+    "notes": {
+      "type": "string",
+      "title": "Visit Notes"
+    },
+    "google_calendar_event_id": {
+      "type": "string",
+      "title": "Google Calendar Event ID"
+    },
+    "synced_to_calendar": {
+      "type": "boolean",
+      "title": "Synced to Google Calendar",
+      "default": false
+    },
+    "synced_at": {
+      "type": "string",
+      "title": "Synced Timestamp"
+    },
+    "claim_id": {
+      "type": "string",
+      "title": "Associated Claim ID"
+    },
+    "cancelled": {
+      "type": "boolean",
+      "title": "Cancelled",
+      "default": false
+    }
+  },
+  "required": [
+    "patient_id",
+    "patient_name",
+    "appointment_date"
+  ]
+}
