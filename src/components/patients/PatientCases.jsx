@@ -208,6 +208,39 @@ export default function PatientCases({ patientId }) {
   const load = async () => {
     setLoading(true);
     const data = await base44.entities.PatientCase.filter({ patient_id: patientId }, "-created_date", 50);
+    
+    // If no cases exist, auto-create first case from patient data
+    if (data.length === 0) {
+      const patient = await base44.entities.Patient.list("", 1)
+        .then(pts => pts.find(p => p.id === patientId));
+      
+      if (patient) {
+        const firstCase = {
+          patient_id: patientId,
+          name: "Initial Intake",
+          is_default: true,
+          is_accident_related: patient.is_accident_related || false,
+          accident_date: patient.accident_date || "",
+          accident_state: patient.accident_state || "",
+          accident_type: patient.accident_type || "None",
+          date_of_first_visit: patient.date_of_first_visit || "",
+          insurance_company: patient.insurance_company || "",
+          insurance_plan: patient.insurance_plan || "",
+          insurance_id: patient.insurance_id || "",
+          insurance_group: patient.insurance_group || "",
+          insured_name: patient.insured_name || "",
+          insured_dob: patient.insured_dob || "",
+          attorney_name: patient.attorney_name || "",
+          attorney_phone: patient.attorney_phone || "",
+          diagnoses: patient.diagnoses || [],
+          notes: "",
+          active: true
+        };
+        await base44.entities.PatientCase.create(firstCase);
+        data.push(firstCase);
+      }
+    }
+    
     setCases(data);
     setLoading(false);
   };
