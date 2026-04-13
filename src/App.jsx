@@ -8,6 +8,7 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import Patients from './pages/Patients';
+import Calendar from './pages/Calendar';
 import ClaimBuilder from './pages/ClaimBuilder';
 import SavedClaims from './pages/SavedClaims';
 import ProcedureLibrary from './pages/ProcedureLibrary';
@@ -59,6 +60,7 @@ const AuthenticatedApp = () => {
       <Route element={<Layout />}>
         <Route path="/" element={<Dashboard />} />
         <Route path="/patients" element={<Patients />} />
+        <Route path="/calendar" element={<Calendar />} />
         <Route path="/claim-builder" element={<ClaimBuilder />} />
         <Route path="/saved-claims" element={<SavedClaims />} />
         <Route path="/procedures" element={<ProcedureLibrary />} />

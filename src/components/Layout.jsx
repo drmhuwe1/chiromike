@@ -1,13 +1,14 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { 
   LayoutDashboard, Users, FileText, Settings, BookOpen, 
-  Library, Zap, BarChart3, Menu, X, Wallet, HelpCircle, ShieldCheck, ClipboardList, Stethoscope
+  Library, Zap, BarChart3, Menu, X, Wallet, HelpCircle, ShieldCheck, ClipboardList, Stethoscope, Calendar
 } from "lucide-react";
 import { useState } from "react";
 
 const navItems = [
   { path: "/", label: "Dashboard", icon: LayoutDashboard },
   { path: "/patients", label: "Patients", icon: Users },
+  { path: "/calendar", label: "Calendar", icon: Calendar },
   { path: "/patient-account", label: "Patient Account", icon: Users },
   { path: "/claim-builder", label: "New Claim", icon: FileText },
   { path: "/new-patient-exam", label: "New Patient Exam", icon: Stethoscope },
