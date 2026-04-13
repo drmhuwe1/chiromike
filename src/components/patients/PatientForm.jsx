@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,6 +17,53 @@ const initialState = {
   insured_name: "", insured_dob: "", insured_id: "", insured_employer: "",
   attorney_name: "", attorney_phone: "", notes: "", active: true,
 };
+
+function InsuranceComboInput({ value, onChange }) {
+  const [insurers, setInsurers] = useState([]);
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    base44.entities.InsuranceCompany.list("-name", 200).then(setInsurers);
+  }, []);
+
+  useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const filtered = value
+    ? insurers.filter(i => i.name?.toLowerCase().includes(value.toLowerCase()))
+    : insurers;
+
+  return (
+    <div ref={ref} className="relative">
+      <input
+        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring md:text-sm"
+        value={value}
+        onChange={e => { onChange(e.target.value); setOpen(true); }}
+        onFocus={() => setOpen(true)}
+        placeholder="Type or select..."
+      />
+      {open && filtered.length > 0 && (
+        <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-xl max-h-48 overflow-y-auto">
+          {filtered.map(i => (
+            <button
+              key={i.id}
+              type="button"
+              className="w-full text-left px-3 py-2 hover:bg-muted text-sm flex justify-between items-center"
+              onMouseDown={() => { onChange(i.name); setOpen(false); }}
+            >
+              <span className="font-medium">{i.name}</span>
+              {i.edi_payer_id && <span className="text-xs text-muted-foreground">{i.edi_payer_id}</span>}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function PatientForm({ patient, onSave, onCancel }) {
   const [form, setForm] = useState(patient || initialState);
@@ -104,9 +152,12 @@ export default function PatientForm({ patient, onSave, onCancel }) {
         <div>
           <h3 className="text-sm font-medium text-muted-foreground mb-3">Insurance</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div>
+            <div className="relative">
               <Label>Insurance Company</Label>
-              <Input value={form.insurance_company} onChange={e => set("insurance_company", e.target.value)} />
+              <InsuranceComboInput
+                value={form.insurance_company}
+                onChange={v => set("insurance_company", v)}
+              />
             </div>
             <div>
               <Label>Plan Name</Label>
