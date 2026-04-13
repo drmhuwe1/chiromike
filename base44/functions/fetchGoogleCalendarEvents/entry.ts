@@ -29,6 +29,7 @@ Deno.serve(async (req) => {
       end: event.end?.dateTime || event.end?.date,
       description: event.description || '',
       location: event.location || '',
+      htmlLink: event.htmlLink,
       source: 'google_calendar'
     }));
 
