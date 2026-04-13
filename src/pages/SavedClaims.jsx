@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Search, Printer, Copy, Trash2, Mail } from "lucide-react";
+import { Search, Printer, Copy, Trash2, Mail, FileCode } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { logAudit } from "../utils/auditLog";
 
@@ -25,6 +25,7 @@ export default function SavedClaims() {
   const [typeFilter, setTypeFilter] = useState("All");
   const [emailing, setEmailing] = useState(null);
   const [hcfaFlags, setHcfaFlags] = useState({});
+  const [downloadingEdi, setDownloadingEdi] = useState(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -64,6 +65,27 @@ export default function SavedClaims() {
       toast({ title: e.message || 'Failed to send email', variant: 'destructive' });
     }
     setEmailing(null);
+  };
+
+  const handleDownloadEdi = async (claim) => {
+    if (claim.visit_type?.includes('Cash')) {
+      toast({ title: 'EDI files are for insurance claims only', variant: 'destructive' });
+      return;
+    }
+    setDownloadingEdi(claim.id);
+    try {
+      const res = await base44.functions.invoke('generateEDI837', { claim_id: claim.id });
+      const blob = new Blob([res.data], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `claim_${claim.patient_name?.replace(/\s+/g, '_')}_${claim.date_of_service}.edi`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      toast({ title: e.message || 'Failed to generate EDI', variant: 'destructive' });
+    }
+    setDownloadingEdi(null);
   };
 
   const handleDelete = async (id) => {
@@ -127,6 +149,11 @@ export default function SavedClaims() {
                   </td>
                   <td className="py-3 px-4">
                     <div className="flex items-center justify-end gap-1">
+                      {!c.visit_type?.includes('Cash') && (
+                        <Button variant="ghost" size="sm" onClick={() => handleDownloadEdi(c)} title="Download 837P EDI (Office Ally)" disabled={downloadingEdi === c.id}>
+                          {downloadingEdi === c.id ? <div className="w-4 h-4 border-2 border-muted border-t-primary rounded-full animate-spin" /> : <FileCode className="w-4 h-4" />}
+                        </Button>
+                      )}
                       <Button variant="ghost" size="sm" onClick={() => handlePrint(c)} title="Print">
                         <Printer className="w-4 h-4" />
                       </Button>
