@@ -67,8 +67,33 @@ function InsuranceComboInput({ value, onChange }) {
 
 export default function PatientForm({ patient, onSave, onCancel }) {
   const [form, setForm] = useState(patient || initialState);
+  const [patients, setPatients] = useState([]);
+  const [guarantorSearch, setGuarantorSearch] = useState("");
+  const [showGuarantorDrop, setShowGuarantorDrop] = useState(false);
+
+  useEffect(() => {
+    base44.entities.Patient.list("-updated_date", 300).then(setPatients);
+  }, []);
 
   const set = (field, value) => setForm(prev => ({ ...prev, [field]: value }));
+
+  const copyFromGuarantor = (guarantor) => {
+    set("address_line1", guarantor.address_line1 || form.address_line1);
+    set("address_line2", guarantor.address_line2 || form.address_line2);
+    set("city", guarantor.city || form.city);
+    set("state", guarantor.state || form.state);
+    set("zip", guarantor.zip || form.zip);
+    set("phone", guarantor.phone || form.phone);
+    set("email", guarantor.email || form.email);
+    set("insurance_company", guarantor.insurance_company || form.insurance_company);
+    set("insurance_plan", guarantor.insurance_plan || form.insurance_plan);
+    set("insurance_id", guarantor.insurance_id || form.insurance_id);
+    set("insurance_group", guarantor.insurance_group || form.insurance_group);
+    set("insured_name", guarantor.insured_name || guarantor.first_name + " " + guarantor.last_name || form.insured_name);
+    set("insured_dob", guarantor.insured_dob || guarantor.dob || form.insured_dob);
+    setGuarantorSearch("");
+    setShowGuarantorDrop(false);
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -120,6 +145,49 @@ export default function PatientForm({ patient, onSave, onCancel }) {
             </div>
           </div>
         </div>
+
+        {/* Guarantor Lookup (for Child patients) */}
+        {form.relationship_to_insured === "Child" && (
+          <div>
+            <h3 className="text-sm font-medium text-muted-foreground mb-3">Copy from Guarantor/Parent</h3>
+            <div className="relative">
+              <div className="text-xs text-muted-foreground mb-2">Find a parent/guardian to auto-fill address and insurance info:</div>
+              <div className="relative">
+                <Input
+                  placeholder="Type first 3 letters of parent name..."
+                  value={guarantorSearch}
+                  onChange={e => { setGuarantorSearch(e.target.value); if (e.target.value.length >= 3) setShowGuarantorDrop(true); else setShowGuarantorDrop(false); }}
+                  onFocus={() => { if (guarantorSearch.length >= 3) setShowGuarantorDrop(true); }}
+                  onBlur={() => setTimeout(() => setShowGuarantorDrop(false), 150)}
+                />
+                {showGuarantorDrop && guarantorSearch.length >= 3 && (
+                  <div className="absolute z-30 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-xl max-h-48 overflow-y-auto">
+                    {patients
+                      .filter(p => (p.first_name?.toLowerCase().startsWith(guarantorSearch.toLowerCase()) || p.last_name?.toLowerCase().startsWith(guarantorSearch.toLowerCase())) && p.id !== patient?.id)
+                      .slice(0, 8)
+                      .map(p => (
+                        <button
+                          key={p.id}
+                          type="button"
+                          className="w-full text-left px-3 py-2 hover:bg-muted text-sm flex justify-between items-center border-b border-border last:border-b-0"
+                          onMouseDown={() => copyFromGuarantor(p)}
+                        >
+                          <div>
+                            <div className="font-medium">{p.first_name} {p.last_name}</div>
+                            {p.insurance_company && <div className="text-xs text-muted-foreground">{p.insurance_company}</div>}
+                          </div>
+                          <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">Copy</span>
+                        </button>
+                      ))}
+                    {patients.filter(p => (p.first_name?.toLowerCase().startsWith(guarantorSearch.toLowerCase()) || p.last_name?.toLowerCase().startsWith(guarantorSearch.toLowerCase())) && p.id !== patient?.id).length === 0 && (
+                      <div className="px-3 py-4 text-sm text-muted-foreground text-center">No parents found</div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Address */}
         <div>
