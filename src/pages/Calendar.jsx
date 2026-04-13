@@ -306,14 +306,12 @@ export default function Calendar() {
                         <p className="text-sm text-muted-foreground mb-3">{e.description}</p>
                       )}
                       <div className="flex gap-2">
-                        <Button size="sm" variant="outline" className="gap-1 flex-1" disabled title="Google Calendar events cannot be edited directly">
-                          <Edit2 className="w-3 h-3" /> View
-                        </Button>
-                        <Button size="sm" variant="outline" className="gap-1" disabled title="Google Calendar events cannot be deleted from here">
-                          <Trash2 className="w-3 h-3" />
-                        </Button>
+                        <a href={e.htmlLink} target="_blank" rel="noopener noreferrer" className="flex-1">
+                          <Button size="sm" variant="outline" className="gap-1 w-full">
+                            <Edit2 className="w-3 h-3" /> Edit in Google
+                          </Button>
+                        </a>
                       </div>
-                      <p className="text-xs text-muted-foreground mt-2">Edit in Google Calendar directly</p>
                     </div>
                   ))}
                 </>
