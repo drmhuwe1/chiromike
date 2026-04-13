@@ -298,37 +298,61 @@ export default function NewPatientExamPage() {
             expanded={expandSections.ortho}
             onToggle={() => toggleSection("ortho")}
           >
-            <div className="space-y-2">
-              {exam.orthopedic_tests?.map((test, idx) => (
-                <div key={idx} className="flex gap-2 text-sm">
-                  <select
-                    className="flex-1 border rounded px-2 py-1 text-xs"
-                    value={test.test_name}
-                    onChange={e => updateOrthoTest(idx, "test_name", e.target.value)}
-                  >
-                    <option value="">Select test...</option>
-                    {ORTHO_TESTS.map(t => <option key={t} value={t}>{t}</option>)}
-                  </select>
-                  <select
-                    className="w-24 border rounded px-2 py-1 text-xs"
-                    value={test.result}
-                    onChange={e => updateOrthoTest(idx, "result", e.target.value)}
-                  >
-                    <option value="">Result</option>
-                    <option value="Positive">Positive</option>
-                    <option value="Negative">Negative</option>
-                  </select>
-                  <Input
-                    placeholder="Notes"
-                    className="flex-1 h-8 text-xs"
-                    value={test.notes}
-                    onChange={e => updateOrthoTest(idx, "notes", e.target.value)}
-                  />
-                  <Button size="sm" variant="ghost" onClick={() => removeOrthoTest(idx)}>×</Button>
+            <div className="space-y-3">
+              {/* Quick Presets */}
+              <div>
+                <p className="text-xs text-muted-foreground mb-2">Quick Add:</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {["Spurling's", "SLR", "Straight Leg Raise", "Distraction", "Compression"].map(test => (
+                    <button
+                      key={test}
+                      onClick={() => {
+                        setExam(prev => ({
+                          ...prev,
+                          orthopedic_tests: [...(prev.orthopedic_tests || []), { test_name: test, result: "", notes: "" }]
+                        }));
+                      }}
+                      className="px-2 py-1 text-xs bg-primary/10 text-primary border border-primary/30 rounded hover:bg-primary/20 transition-colors"
+                    >
+                      + {test}
+                    </button>
+                  ))}
                 </div>
-              ))}
+              </div>
+
+              {/* Test List */}
+              <div className="space-y-2">
+                {exam.orthopedic_tests?.map((test, idx) => (
+                  <div key={idx} className="flex gap-2 text-sm">
+                    <select
+                      className="flex-1 border rounded px-2 py-1 text-xs"
+                      value={test.test_name}
+                      onChange={e => updateOrthoTest(idx, "test_name", e.target.value)}
+                    >
+                      <option value="">Select test...</option>
+                      {ORTHO_TESTS.map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                    <select
+                      className="w-24 border rounded px-2 py-1 text-xs"
+                      value={test.result}
+                      onChange={e => updateOrthoTest(idx, "result", e.target.value)}
+                    >
+                      <option value="">Result</option>
+                      <option value="Positive">Positive</option>
+                      <option value="Negative">Negative</option>
+                    </select>
+                    <Input
+                      placeholder="Notes"
+                      className="flex-1 h-8 text-xs"
+                      value={test.notes}
+                      onChange={e => updateOrthoTest(idx, "notes", e.target.value)}
+                    />
+                    <Button size="sm" variant="ghost" onClick={() => removeOrthoTest(idx)}>×</Button>
+                  </div>
+                ))}
+              </div>
               <Button size="sm" variant="outline" onClick={addOrthoTest} className="w-full text-xs">
-                <Plus className="w-3 h-3 mr-1" /> Add Test
+                <Plus className="w-3 h-3 mr-1" /> Add Custom Test
               </Button>
             </div>
           </Section>
@@ -339,18 +363,52 @@ export default function NewPatientExamPage() {
             expanded={expandSections.neuro}
             onToggle={() => toggleSection("neuro")}
           >
-            <div className="space-y-2">
-              {["dtr_cervical", "dtr_lumbar", "sensory", "motor_strength", "cranial_nerves", "pathological_signs"].map(field => (
-                <div key={field}>
-                  <Label className="text-xs capitalize">{field.replace(/_/g, " ")}</Label>
-                  <Textarea
-                    className="mt-1 h-12 text-xs"
-                    placeholder={field === "dtr_cervical" ? "e.g. 2+ normal, brisk..." : ""}
-                    value={exam.neurological_findings?.[field] || ""}
-                    onChange={e => set(`neurological_findings.${field}`, e.target.value)}
-                  />
+            <div className="space-y-3">
+              {/* Quick Presets */}
+              <div>
+                <p className="text-xs text-muted-foreground mb-2">Quick Fill:</p>
+                <div className="flex flex-wrap gap-1.5">
+                  <button
+                    onClick={() => { set("neurological_findings.dtr_cervical", "2+ normal"); set("neurological_findings.dtr_lumbar", "2+ normal"); }}
+                    className="px-2 py-1 text-xs bg-green-100 text-green-700 border border-green-300 rounded hover:bg-green-200 transition-colors"
+                  >
+                    DTRs Normal
+                  </button>
+                  <button
+                    onClick={() => set("neurological_findings.sensory", "Intact bilaterally")}
+                    className="px-2 py-1 text-xs bg-green-100 text-green-700 border border-green-300 rounded hover:bg-green-200 transition-colors"
+                  >
+                    Sensory Intact
+                  </button>
+                  <button
+                    onClick={() => set("neurological_findings.motor_strength", "5/5 bilateral")}
+                    className="px-2 py-1 text-xs bg-green-100 text-green-700 border border-green-300 rounded hover:bg-green-200 transition-colors"
+                  >
+                    Motor 5/5
+                  </button>
+                  <button
+                    onClick={() => set("neurological_findings.cranial_nerves", "II-XII intact")}
+                    className="px-2 py-1 text-xs bg-green-100 text-green-700 border border-green-300 rounded hover:bg-green-200 transition-colors"
+                  >
+                    CN Intact
+                  </button>
                 </div>
-              ))}
+              </div>
+
+              {/* Full Fields */}
+              <div className="space-y-2">
+                {["dtr_cervical", "dtr_lumbar", "sensory", "motor_strength", "cranial_nerves", "pathological_signs"].map(field => (
+                  <div key={field}>
+                    <Label className="text-xs capitalize">{field.replace(/_/g, " ")}</Label>
+                    <Textarea
+                      className="mt-1 h-12 text-xs"
+                      placeholder={field === "dtr_cervical" ? "e.g. 2+ normal, brisk..." : ""}
+                      value={exam.neurological_findings?.[field] || ""}
+                      onChange={e => set(`neurological_findings.${field}`, e.target.value)}
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
           </Section>
 
@@ -360,18 +418,52 @@ export default function NewPatientExamPage() {
             expanded={expandSections.palp}
             onToggle={() => toggleSection("palp")}
           >
-            <div className="space-y-2">
-              {["cervical_palpation", "thoracic_palpation", "lumbar_palpation", "sacroiliac"].map(field => (
-                <div key={field}>
-                  <Label className="text-xs capitalize">{field.replace(/_/g, " ")}</Label>
-                  <Textarea
-                    className="mt-1 h-12 text-xs"
-                    placeholder="Spasm grade, tenderness, trigger points..."
-                    value={exam.palpation_findings?.[field] || ""}
-                    onChange={e => set(`palpation_findings.${field}`, e.target.value)}
-                  />
+            <div className="space-y-3">
+              {/* Quick Presets */}
+              <div>
+                <p className="text-xs text-muted-foreground mb-2">Quick Fill:</p>
+                <div className="flex flex-wrap gap-1.5">
+                  <button
+                    onClick={() => { set("palpation_findings.cervical_palpation", "Mild muscle tension, moderate tenderness"); }}
+                    className="px-2 py-1 text-xs bg-blue-100 text-blue-700 border border-blue-300 rounded hover:bg-blue-200 transition-colors"
+                  >
+                    C-Spine Mild
+                  </button>
+                  <button
+                    onClick={() => { set("palpation_findings.lumbar_palpation", "Mild muscle tension, moderate tenderness"); }}
+                    className="px-2 py-1 text-xs bg-blue-100 text-blue-700 border border-blue-300 rounded hover:bg-blue-200 transition-colors"
+                  >
+                    L-Spine Mild
+                  </button>
+                  <button
+                    onClick={() => { set("palpation_findings.cervical_palpation", "Grade 2 spasm, significant tenderness"); }}
+                    className="px-2 py-1 text-xs bg-amber-100 text-amber-700 border border-amber-300 rounded hover:bg-amber-200 transition-colors"
+                  >
+                    C-Spine Moderate
+                  </button>
+                  <button
+                    onClick={() => { set("palpation_findings.lumbar_palpation", "Grade 2 spasm, significant tenderness"); }}
+                    className="px-2 py-1 text-xs bg-amber-100 text-amber-700 border border-amber-300 rounded hover:bg-amber-200 transition-colors"
+                  >
+                    L-Spine Moderate
+                  </button>
                 </div>
-              ))}
+              </div>
+
+              {/* Full Fields */}
+              <div className="space-y-2">
+                {["cervical_palpation", "thoracic_palpation", "lumbar_palpation", "sacroiliac"].map(field => (
+                  <div key={field}>
+                    <Label className="text-xs capitalize">{field.replace(/_/g, " ")}</Label>
+                    <Textarea
+                      className="mt-1 h-12 text-xs"
+                      placeholder="Spasm grade, tenderness, trigger points..."
+                      value={exam.palpation_findings?.[field] || ""}
+                      onChange={e => set(`palpation_findings.${field}`, e.target.value)}
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
           </Section>
 

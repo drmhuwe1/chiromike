@@ -57,6 +57,7 @@ export default function ClaimBuilder() {
   const [savedClaim, setSavedClaim] = useState(null);
   const [showSoapModal, setShowSoapModal] = useState(false);
   const [showCannedNotes, setShowCannedNotes] = useState(false);
+  const [paymentQuick, setPaymentQuick] = useState(null); // "cash" or "cc"
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -391,6 +392,45 @@ export default function ClaimBuilder() {
               <Input className="h-8 text-sm mt-0.5" value={claim.authorization_number} onChange={e => set("authorization_number", e.target.value)} />
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Cash/CC Payment Quick Toggle (shows total due) */}
+      {isCash && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <Label className="text-xs text-amber-700 font-semibold uppercase tracking-wide">Payment Due Today</Label>
+              <p className="text-3xl font-bold text-amber-900 mt-1">${totalCharge.toFixed(2)}</p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setPaymentQuick("cash")}
+                className={`px-5 py-2 rounded-lg font-semibold transition-colors ${
+                  paymentQuick === "cash"
+                    ? "bg-green-600 text-white"
+                    : "bg-white border border-amber-300 text-amber-900 hover:bg-green-50"
+                }`}
+              >
+                💵 Cash
+              </button>
+              <button
+                onClick={() => setPaymentQuick("cc")}
+                className={`px-5 py-2 rounded-lg font-semibold transition-colors ${
+                  paymentQuick === "cc"
+                    ? "bg-blue-600 text-white"
+                    : "bg-white border border-amber-300 text-amber-900 hover:bg-blue-50"
+                }`}
+              >
+                💳 Credit Card
+              </button>
+            </div>
+          </div>
+          {paymentQuick && (
+            <div className="mt-3 p-2 bg-white rounded-lg text-sm text-center font-semibold">
+              ✓ Received {paymentQuick === "cash" ? "Cash" : "Credit Card"} Payment: ${totalCharge.toFixed(2)}
+            </div>
+          )}
         </div>
       )}
 
