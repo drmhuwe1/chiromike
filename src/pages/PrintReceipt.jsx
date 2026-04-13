@@ -52,7 +52,7 @@ export default function PrintReceipt() {
         <Button onClick={handlePrint}><Printer className="w-4 h-4 mr-2" /> Print Receipt</Button>
       </div>
 
-      <div className="print-area bg-white text-black p-8 max-w-[5in] mx-auto border border-border rounded-xl" style={{ fontFamily: "'Courier New', monospace", fontSize: "12px" }}>
+      <div className="print-area bg-white text-black p-8 max-w-[5in] mx-auto border border-border rounded-xl" style={{ fontFamily: "'Courier New', monospace", fontSize: "12px", pageBreakAfter: "avoid" }}>
         {/* Header */}
         <div className="text-center mb-6">
           {office?.logo_url && (

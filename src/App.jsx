@@ -19,6 +19,7 @@ import PrintClaim from './pages/PrintClaim';
 import PrintReceipt from './pages/PrintReceipt';
 import CodeLibrary from './pages/CodeLibrary';
 import PatientIntake from './pages/PatientIntake';
+import PatientAccount from './pages/PatientAccount';
 import BillingDashboard from './pages/BillingDashboard';
 import HelpGuide from './pages/HelpGuide';
 import Compliance from './pages/Compliance';
@@ -68,6 +69,7 @@ const AuthenticatedApp = () => {
         <Route path="/print-receipt" element={<PrintReceipt />} />
         <Route path="/code-library" element={<CodeLibrary />} />
         <Route path="/intake" element={<PatientIntake />} />
+        <Route path="/patient-account" element={<PatientAccount />} />
         <Route path="/billing" element={<BillingDashboard />} />
         <Route path="/guide" element={<HelpGuide />} />
         <Route path="/compliance" element={<Compliance />} />
