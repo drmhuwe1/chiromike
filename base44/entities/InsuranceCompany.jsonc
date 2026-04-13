@@ -78,6 +78,39 @@
       "type": "string",
       "title": "Notes / Special Instructions"
     },
+    "plan_addresses": {
+      "type": "array",
+      "title": "Plan-Specific Addresses",
+      "items": {
+        "type": "object",
+        "properties": {
+          "plan_name": {
+            "type": "string",
+            "title": "Plan Name"
+          },
+          "address_line1": {
+            "type": "string",
+            "title": "Address Line 1"
+          },
+          "address_line2": {
+            "type": "string",
+            "title": "Address Line 2"
+          },
+          "city": {
+            "type": "string",
+            "title": "City"
+          },
+          "state": {
+            "type": "string",
+            "title": "State"
+          },
+          "zip": {
+            "type": "string",
+            "title": "ZIP"
+          }
+        }
+      }
+    },
     "active": {
       "type": "boolean",
       "title": "Active",

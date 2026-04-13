@@ -7,11 +7,14 @@ import { Plus, Search, FileText, Copy, ChevronRight, Link2, Send } from "lucide-
 import PatientForm from "../components/patients/PatientForm";
 import PatientCases from "../components/patients/PatientCases";
 import IntakeAlertBanner from "../components/patients/IntakeAlertBanner";
+import PatientBalanceWidget from "../components/patients/PatientBalanceWidget";
 import FaxCompilerModal from "../components/claim/FaxCompilerModal";
 import { logAudit } from "../utils/auditLog";
 
 export default function Patients() {
   const [patients, setPatients] = useState([]);
+  const [claims, setClaims] = useState([]);
+  const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [showForm, setShowForm] = useState(false);
@@ -22,8 +25,14 @@ export default function Patients() {
 
   const loadPatients = async () => {
     setLoading(true);
-    const data = await base44.entities.Patient.list("-updated_date", 200);
-    setPatients(data);
+    const [patientData, claimData, paymentData] = await Promise.all([
+      base44.entities.Patient.list("-updated_date", 200),
+      base44.entities.Claim.list("-created_date", 500),
+      base44.entities.Payment.list("-created_date", 500)
+    ]);
+    setPatients(patientData);
+    setClaims(claimData);
+    setPayments(paymentData);
     setLoading(false);
     logAudit("Viewed patient list", "Patient");
   };
@@ -114,6 +123,7 @@ export default function Patients() {
                 <th className="text-left py-3 px-4 font-medium hidden md:table-cell">DOB</th>
                 <th className="text-left py-3 px-4 font-medium hidden md:table-cell">Phone</th>
                 <th className="text-left py-3 px-4 font-medium hidden lg:table-cell">Insurance</th>
+                <th className="text-left py-3 px-4 font-medium">Balance</th>
                 <th className="text-right py-3 px-4 font-medium">Actions</th>
               </tr>
             </thead>
@@ -130,6 +140,9 @@ export default function Patients() {
                     <td className="py-3 px-4 hidden md:table-cell text-muted-foreground">{p.dob || "—"}</td>
                     <td className="py-3 px-4 hidden md:table-cell text-muted-foreground">{p.phone || "—"}</td>
                     <td className="py-3 px-4 hidden lg:table-cell text-muted-foreground">{p.insurance_company || "—"}</td>
+                    <td className="py-3 px-4">
+                      <PatientBalanceWidget patientId={p.id} claims={claims} payments={payments} />
+                    </td>
                     <td className="py-3 px-4">
                       <div className="flex items-center justify-end gap-1">
                         <Button
@@ -166,7 +179,7 @@ export default function Patients() {
                   </tr>
                   {expandedPatient === p.id && (
                     <tr key={p.id + "-cases"}>
-                      <td colSpan={5} className="px-4 pb-4 bg-muted/10">
+                      <td colSpan={6} className="px-4 pb-4 bg-muted/10">
                         <IntakeAlertBanner patient={p} />
                         <PatientCases patientId={p.id} />
                       </td>
@@ -176,7 +189,7 @@ export default function Patients() {
               ))}
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="py-12 text-center text-muted-foreground">
+                  <td colSpan={6} className="py-12 text-center text-muted-foreground">
                     {search ? "No patients match your search" : "No patients yet. Add your first patient."}
                   </td>
                 </tr>

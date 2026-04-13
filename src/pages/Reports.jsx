@@ -3,17 +3,27 @@ import { base44 } from "@/api/base44Client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import PatientBalancesReport from "../components/reports/PatientBalancesReport";
 
 export default function Reports() {
   const [claims, setClaims] = useState([]);
+  const [patients, setPatients] = useState([]);
+  const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [typeFilter, setTypeFilter] = useState("All");
+  const [reportTab, setReportTab] = useState("claims");
 
   useEffect(() => {
-    base44.entities.Claim.list("-created_date", 1000).then(data => {
-      setClaims(data);
+    Promise.all([
+      base44.entities.Claim.list("-created_date", 1000),
+      base44.entities.Patient.list("-updated_date", 500),
+      base44.entities.Payment.list("-created_date", 1000)
+    ]).then(([claimData, patientData, paymentData]) => {
+      setClaims(claimData);
+      setPatients(patientData);
+      setPayments(paymentData);
       setLoading(false);
     });
   }, []);
@@ -56,6 +66,28 @@ export default function Reports() {
     <div>
       <h1 className="text-2xl font-bold tracking-tight mb-6">Reports</h1>
 
+      {/* Report Tabs */}
+      <div className="flex gap-1 mb-6 bg-muted rounded-lg p-1 w-fit flex-wrap">
+        <button
+          onClick={() => setReportTab("claims")}
+          className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${reportTab === "claims" ? "bg-card shadow text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+        >
+          Claims Analysis
+        </button>
+        <button
+          onClick={() => setReportTab("balances")}
+          className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${reportTab === "balances" ? "bg-card shadow text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+        >
+          Patient Balances
+        </button>
+      </div>
+
+      {reportTab === "balances" && (
+        <PatientBalancesReport patients={patients} claims={claims} payments={payments} />
+      )}
+
+      {reportTab === "claims" && (
+      <div>
       <div className="flex gap-3 mb-6 flex-wrap">
         <div>
           <Label className="text-xs">From Date</Label>
@@ -143,6 +175,8 @@ export default function Reports() {
           </table>
         </div>
       </div>
+      </div>
+      )}
     </div>
   );
 }

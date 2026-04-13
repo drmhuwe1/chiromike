@@ -30,8 +30,8 @@ export default function InsurersTab() {
 
   const load = async () => {
     setLoading(true);
-    const data = await base44.entities.InsuranceCompany.list("-updated_date", 200);
-    setInsurers(data);
+    const data = await base44.entities.InsuranceCompany.list("-updated_date", 500);
+    setInsurers(data.filter(i => i.active !== false));
     setLoading(false);
   };
 
@@ -61,8 +61,8 @@ export default function InsurersTab() {
       const result = await base44.integrations.Core.InvokeLLM({
         prompt: `Look up the insurance company billing/claims information for: "${aiQuery}".
 Return accurate, real-world data for this payer as used by chiropractic and medical providers in the United States.
-Include their EDI payer ID (used for electronic claims), claims mailing address, provider services phone, fax, website, provider portal URL, and typical timely filing limit in days.
-If this is a regional plan, return the most common national or widely-used version.`,
+Include their EDI payer ID (used for electronic claims), primary claims mailing address, provider services phone, fax, website, provider portal URL, and typical timely filing limit in days.
+ALSO identify and list any alternate/regional plan addresses if this carrier has different claims addresses for different plans or regions.`,
         add_context_from_internet: true,
         model: "gemini_3_flash",
         response_json_schema: {
@@ -82,6 +82,20 @@ If this is a regional plan, return the most common national or widely-used versi
             provider_portal: { type: "string" },
             timely_filing_days: { type: "number" },
             notes: { type: "string" },
+            plan_addresses: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  plan_name: { type: "string" },
+                  address_line1: { type: "string" },
+                  address_line2: { type: "string" },
+                  city: { type: "string" },
+                  state: { type: "string" },
+                  zip: { type: "string" }
+                }
+              }
+            }
           }
         }
       });
@@ -228,8 +242,87 @@ If this is a regional plan, return the most common national or widely-used versi
                 <Label className="text-xs">Notes / Special Instructions</Label>
                 <Textarea className="mt-0.5 text-sm" rows={2} value={editing.notes} onChange={e => set("notes", e.target.value)} />
               </div>
-            </div>
-          </div>
+              </div>
+              </div>
+
+              {/* Plan-Specific Addresses */}
+              <div>
+              <div className="flex items-center justify-between mb-2">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Plan-Specific Claims Addresses (Optional)</p>
+              <button
+                onClick={() => set("plan_addresses", [...(editing.plan_addresses || []), { plan_name: "", address_line1: "", address_line2: "", city: "", state: "", zip: "" }])}
+                className="text-xs text-primary hover:underline flex items-center gap-1"
+              >
+                <Plus className="w-3 h-3" /> Add Plan
+              </button>
+              </div>
+              <div className="space-y-3">
+              {(editing.plan_addresses || []).map((plan, idx) => (
+                <div key={idx} className="border border-border rounded-lg p-3 space-y-2">
+                  <div className="flex items-center gap-2 justify-between mb-2">
+                    <Input
+                      placeholder="Plan name (e.g. BCBS Texas HMO, BCBS PPO)"
+                      className="h-7 text-xs flex-1"
+                      value={plan.plan_name}
+                      onChange={e => {
+                        const plans = [...(editing.plan_addresses || [])];
+                        plans[idx] = { ...plans[idx], plan_name: e.target.value };
+                        set("plan_addresses", plans);
+                      }}
+                    />
+                    <button
+                      onClick={() => set("plan_addresses", (editing.plan_addresses || []).filter((_, i) => i !== idx))}
+                      className="text-destructive hover:opacity-70 px-2 py-1"
+                    >
+                      ×
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    <div className="col-span-2">
+                      <Input className="h-7 text-xs" placeholder="Address Line 1" value={plan.address_line1}
+                        onChange={e => {
+                          const plans = [...(editing.plan_addresses || [])];
+                          plans[idx] = { ...plans[idx], address_line1: e.target.value };
+                          set("plan_addresses", plans);
+                        }} />
+                    </div>
+                    <div className="col-span-2">
+                      <Input className="h-7 text-xs" placeholder="Address Line 2" value={plan.address_line2}
+                        onChange={e => {
+                          const plans = [...(editing.plan_addresses || [])];
+                          plans[idx] = { ...plans[idx], address_line2: e.target.value };
+                          set("plan_addresses", plans);
+                        }} />
+                    </div>
+                    <div className="col-span-2">
+                      <Input className="h-7 text-xs" placeholder="City" value={plan.city}
+                        onChange={e => {
+                          const plans = [...(editing.plan_addresses || [])];
+                          plans[idx] = { ...plans[idx], city: e.target.value };
+                          set("plan_addresses", plans);
+                        }} />
+                    </div>
+                    <div>
+                      <Input className="h-7 text-xs" placeholder="State" value={plan.state}
+                        onChange={e => {
+                          const plans = [...(editing.plan_addresses || [])];
+                          plans[idx] = { ...plans[idx], state: e.target.value };
+                          set("plan_addresses", plans);
+                        }} />
+                    </div>
+                    <div>
+                      <Input className="h-7 text-xs" placeholder="ZIP" value={plan.zip}
+                        onChange={e => {
+                          const plans = [...(editing.plan_addresses || [])];
+                          plans[idx] = { ...plans[idx], zip: e.target.value };
+                          set("plan_addresses", plans);
+                        }} />
+                    </div>
+                  </div>
+                </div>
+              ))}
+              </div>
+              </div>
 
           <div className="flex gap-2">
             <Button size="sm" onClick={save}><Save className="w-4 h-4 mr-1" /> Save Insurer</Button>
