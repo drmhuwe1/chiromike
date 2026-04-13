@@ -6,10 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
-import { Save, Printer, Copy, CalendarDays, Search, User, Plus, Trash2, Star, Zap, Mail, Sparkles, ChevronDown } from "lucide-react";
+import { Save, Printer, Copy, CalendarDays, Search, User, Plus, Trash2, Star, Zap, Mail, Sparkles, ChevronDown, CreditCard } from "lucide-react";
 import PayerAlertBanner from "../components/claim/PayerAlertBanner";
 import SoapNoteModal from "../components/claim/SoapNoteModal";
 import VoiceDictation from "../components/VoiceDictation";
+import PaymentModal from "../components/payment/PaymentModal";
 
 const CANNED_NOTES = [
   "Patient presents for follow-up chiropractic care. Responding well to treatment with gradual improvement in pain and function. Continue current treatment plan.",
@@ -58,6 +59,8 @@ export default function ClaimBuilder() {
   const [showSoapModal, setShowSoapModal] = useState(false);
   const [showCannedNotes, setShowCannedNotes] = useState(false);
   const [paymentQuick, setPaymentQuick] = useState(null); // "cash" or "cc"
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [selectedPatient, setSelectedPatient] = useState(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -86,7 +89,10 @@ export default function ClaimBuilder() {
 
       if (presetPatientId) {
         const p = pts.find(p => p.id === presetPatientId);
-        if (p) applyPatient(p);
+        if (p) {
+          applyPatient(p);
+          setSelectedPatient(p);
+        }
       }
 
       if (duplicateId) {
@@ -120,6 +126,7 @@ export default function ClaimBuilder() {
     }));
     setPatientSearch("");
     setShowPatientDrop(false);
+    setSelectedPatient(patient);
   };
 
   const set = (field, value) => setClaim(prev => ({ ...prev, [field]: value }));
@@ -600,6 +607,11 @@ export default function ClaimBuilder() {
                 <Printer className="w-4 h-4 mr-2" /> {isCash ? 'Receipt' : 'Print'}
               </Button>
             </div>
+            {isCash && (
+              <Button onClick={() => setShowPaymentModal(true)} className="w-full h-10 bg-green-600 hover:bg-green-700 text-white">
+                <CreditCard className="w-4 h-4 mr-2" /> Collect Payment (Stripe)
+              </Button>
+            )}
             <div className="flex items-center gap-2 px-1">
               <input type="checkbox" id="hcfa-toggle" checked={includeHcfa} onChange={e => setIncludeHcfa(e.target.checked)} className="w-4 h-4 accent-blue-600" />
               <label htmlFor="hcfa-toggle" className="text-xs text-muted-foreground cursor-pointer">Also attach CMS-1500 form</label>
@@ -622,6 +634,15 @@ export default function ClaimBuilder() {
           claim={savedClaim}
           onClose={() => setShowSoapModal(false)}
           onGenerated={() => setShowSoapModal(false)}
+        />
+      )}
+
+      {showPaymentModal && selectedPatient && savedClaim && (
+        <PaymentModal
+          claim={savedClaim}
+          patient={selectedPatient}
+          onClose={() => setShowPaymentModal(false)}
+          onSuccess={() => setShowPaymentModal(false)}
         />
       )}
     </div>
