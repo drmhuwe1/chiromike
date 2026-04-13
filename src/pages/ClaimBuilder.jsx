@@ -81,19 +81,23 @@ export default function ClaimBuilder() {
     init();
   }, []);
 
-  const applyPatient = (patient) => {
+  const applyPatient = async (patient) => {
+    // Load default case if exists
+    const patientCases = await base44.entities.PatientCase.filter({ patient_id: patient.id }, "-created_date", 50);
+    const defaultCase = patientCases.find(c => c.is_default) || patientCases[0];
     setClaim(prev => ({
       ...prev,
       patient_id: patient.id,
       patient_name: `${patient.first_name} ${patient.last_name}`,
-      insurance_company: patient.insurance_company || "",
-      insurance_id: patient.insurance_id || "",
-      insurance_group: patient.insurance_group || "",
-      insured_name: patient.insured_name || `${patient.first_name} ${patient.last_name}`,
-      insured_dob: patient.insured_dob || patient.dob || "",
-      accident_related: patient.is_accident_related || false,
-      accident_date: patient.accident_date || "",
-      accident_type: patient.accident_type || "",
+      insurance_company: defaultCase?.insurance_company || patient.insurance_company || "",
+      insurance_id: defaultCase?.insurance_id || patient.insurance_id || "",
+      insurance_group: defaultCase?.insurance_group || patient.insurance_group || "",
+      insured_name: defaultCase?.insured_name || patient.insured_name || `${patient.first_name} ${patient.last_name}`,
+      insured_dob: defaultCase?.insured_dob || patient.insured_dob || patient.dob || "",
+      accident_related: defaultCase?.is_accident_related || patient.is_accident_related || false,
+      accident_date: defaultCase?.accident_date || patient.accident_date || "",
+      accident_type: defaultCase?.accident_type || patient.accident_type || "",
+      diagnoses: defaultCase?.diagnoses?.length ? defaultCase.diagnoses.map((d, i) => ({ ...d, pointer: String(i + 1) })) : [],
     }));
     setPatientSearch("");
     setShowPatientDrop(false);

@@ -1,0 +1,108 @@
+{
+  "name": "PatientCase",
+  "type": "object",
+  "properties": {
+    "patient_id": {
+      "type": "string",
+      "title": "Patient ID"
+    },
+    "name": {
+      "type": "string",
+      "title": "Case Name"
+    },
+    "is_default": {
+      "type": "boolean",
+      "title": "Default Case",
+      "default": false
+    },
+    "is_accident_related": {
+      "type": "boolean",
+      "title": "Accident Related"
+    },
+    "accident_date": {
+      "type": "string",
+      "format": "date",
+      "title": "Date of Accident"
+    },
+    "accident_state": {
+      "type": "string",
+      "title": "State of Accident"
+    },
+    "accident_type": {
+      "type": "string",
+      "enum": [
+        "Auto",
+        "Work",
+        "Other",
+        "None"
+      ],
+      "title": "Accident Type"
+    },
+    "date_of_first_visit": {
+      "type": "string",
+      "format": "date",
+      "title": "Date of First Visit"
+    },
+    "insurance_company": {
+      "type": "string",
+      "title": "Insurance Company"
+    },
+    "insurance_plan": {
+      "type": "string",
+      "title": "Insurance Plan"
+    },
+    "insurance_id": {
+      "type": "string",
+      "title": "Insurance ID"
+    },
+    "insurance_group": {
+      "type": "string",
+      "title": "Group Number"
+    },
+    "insured_name": {
+      "type": "string",
+      "title": "Insured Name"
+    },
+    "insured_dob": {
+      "type": "string",
+      "format": "date",
+      "title": "Insured DOB"
+    },
+    "attorney_name": {
+      "type": "string",
+      "title": "Attorney Name"
+    },
+    "attorney_phone": {
+      "type": "string",
+      "title": "Attorney Phone"
+    },
+    "diagnoses": {
+      "type": "array",
+      "title": "Diagnosis Codes",
+      "items": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "notes": {
+      "type": "string",
+      "title": "Case Notes"
+    },
+    "active": {
+      "type": "boolean",
+      "title": "Active",
+      "default": true
+    }
+  },
+  "required": [
+    "patient_id",
+    "name"
+  ]
+}

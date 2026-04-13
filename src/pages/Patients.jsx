@@ -1,16 +1,18 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Search, FileText, Copy, ChevronRight } from "lucide-react";
 import PatientForm from "../components/patients/PatientForm";
+import PatientCases from "../components/patients/PatientCases";
 
 export default function Patients() {
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [showForm, setShowForm] = useState(false);
+  const [expandedPatient, setExpandedPatient] = useState(null);
   const [editPatient, setEditPatient] = useState(null);
   const navigate = useNavigate();
 
@@ -62,8 +64,8 @@ export default function Patients() {
 
       <div className="relative mb-4">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input 
-          placeholder="Search patients by name, phone, or insurance ID..." 
+        <Input
+          placeholder="Search patients by name, phone, or insurance ID..."
           className="pl-10"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -96,37 +98,51 @@ export default function Patients() {
             </thead>
             <tbody>
               {filtered.map((p) => (
-                <tr key={p.id} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
-                  <td className="py-3 px-4 font-medium">{p.first_name} {p.last_name}</td>
-                  <td className="py-3 px-4 hidden md:table-cell text-muted-foreground">{p.dob || "—"}</td>
-                  <td className="py-3 px-4 hidden md:table-cell text-muted-foreground">{p.phone || "—"}</td>
-                  <td className="py-3 px-4 hidden lg:table-cell text-muted-foreground">{p.insurance_company || "—"}</td>
-                  <td className="py-3 px-4">
-                    <div className="flex items-center justify-end gap-1">
-                      <Button 
-                        variant="ghost" size="sm"
-                        onClick={() => navigate(`/claim-builder?patient=${p.id}`)}
-                        title="New Claim"
-                      >
-                        <FileText className="w-4 h-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" size="sm"
-                        onClick={() => handleDuplicate(p)}
-                        title="Duplicate"
-                      >
-                        <Copy className="w-4 h-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" size="sm"
-                        onClick={() => { setEditPatient(p); setShowForm(true); }}
-                        title="Edit"
-                      >
-                        <ChevronRight className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
+                <>
+                  <tr key={p.id} className="border-b border-border hover:bg-muted/30 transition-colors">
+                    <td
+                      className="py-3 px-4 font-medium cursor-pointer hover:text-primary"
+                      onClick={() => setExpandedPatient(expandedPatient === p.id ? null : p.id)}
+                    >
+                      {p.first_name} {p.last_name}
+                    </td>
+                    <td className="py-3 px-4 hidden md:table-cell text-muted-foreground">{p.dob || "—"}</td>
+                    <td className="py-3 px-4 hidden md:table-cell text-muted-foreground">{p.phone || "—"}</td>
+                    <td className="py-3 px-4 hidden lg:table-cell text-muted-foreground">{p.insurance_company || "—"}</td>
+                    <td className="py-3 px-4">
+                      <div className="flex items-center justify-end gap-1">
+                        <Button
+                          variant="ghost" size="sm"
+                          onClick={() => navigate(`/claim-builder?patient=${p.id}`)}
+                          title="New Claim"
+                        >
+                          <FileText className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost" size="sm"
+                          onClick={() => handleDuplicate(p)}
+                          title="Duplicate"
+                        >
+                          <Copy className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost" size="sm"
+                          onClick={() => { setEditPatient(p); setShowForm(true); }}
+                          title="Edit"
+                        >
+                          <ChevronRight className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                  {expandedPatient === p.id && (
+                    <tr key={p.id + "-cases"}>
+                      <td colSpan={5} className="px-4 pb-4 bg-muted/10">
+                        <PatientCases patientId={p.id} />
+                      </td>
+                    </tr>
+                  )}
+                </>
               ))}
               {filtered.length === 0 && (
                 <tr>
