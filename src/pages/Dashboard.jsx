@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { 
   FileText, Car, DollarSign, Users, BookOpen, 
-  Settings, BarChart3, Zap 
+  Settings, BarChart3, Zap, Calendar 
 } from "lucide-react";
 
 const quickActions = [
@@ -9,6 +9,7 @@ const quickActions = [
   { label: "New Auto Claim", icon: Car, path: "/claim-builder?type=Auto", color: "bg-amber-600" },
   { label: "New Cash Visit", icon: DollarSign, path: "/claim-builder?type=Cash", color: "bg-accent" },
   { label: "Patients", icon: Users, path: "/patients", color: "bg-indigo-600" },
+  { label: "Calendar", icon: Calendar, path: "/calendar", color: "bg-teal-600" },
   { label: "Saved Claims", icon: BookOpen, path: "/saved-claims", color: "bg-slate-600" },
   { label: "Quick Templates", icon: Zap, path: "/templates", color: "bg-purple-600" },
   { label: "Reports", icon: BarChart3, path: "/reports", color: "bg-rose-600" },
