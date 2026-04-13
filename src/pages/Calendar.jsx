@@ -319,39 +319,52 @@ export default function Calendar() {
 
             <div>
               <Label className="text-sm">Patient</Label>
-              <div className="relative mt-1">
-                <Input
-                  placeholder="Type 3+ letters..."
-                  className="mt-1"
-                  value={patientSearch}
-                  onChange={e => setPatientSearch(e.target.value)}
-                  onFocus={() => patientSearch.length >= 3 && filteredPatients.length > 0}
-                />
-                {patientSearch.length >= 3 && filteredPatients.length > 0 && (
-                  <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg max-h-40 overflow-y-auto">
-                    {filteredPatients.map(p => (
-                      <button
-                        key={p.id}
-                        type="button"
-                        className="w-full text-left px-3 py-2 hover:bg-muted text-sm"
-                        onClick={() => {
-                          setFormData(prev => ({
-                            ...prev,
-                            patient_id: p.id,
-                            patient_name: `${p.first_name} ${p.last_name}`
-                          }));
-                          setPatientSearch("");
-                        }}
-                      >
-                        {p.first_name} {p.last_name}
-                      </button>
-                    ))}
-                  </div>
-                )}
-                {formData.patient_id && (
-                  <div className="mt-1 text-sm font-medium">{formData.patient_name}</div>
-                )}
-              </div>
+              {formData.patient_id ? (
+                <div className="mt-1 flex items-center justify-between">
+                  <span className="text-sm font-medium">{formData.patient_name}</span>
+                  <button onClick={() => { setFormData(prev => ({ ...prev, patient_id: "", patient_name: "" })); setPatientSearch(""); }} className="text-xs text-primary hover:underline">
+                    Change
+                  </button>
+                </div>
+              ) : (
+                <div className="relative mt-1">
+                  <Input
+                    placeholder="Type 3+ letters of first or last name..."
+                    className="mt-1"
+                    value={patientSearch}
+                    onChange={e => setPatientSearch(e.target.value)}
+                    onFocus={() => patientSearch.length >= 3}
+                    autoFocus
+                  />
+                  {patientSearch.length >= 3 && filteredPatients.length > 0 && (
+                    <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                      {filteredPatients.map(p => (
+                        <button
+                          key={p.id}
+                          type="button"
+                          className="w-full text-left px-3 py-2 hover:bg-muted text-sm flex justify-between items-center"
+                          onClick={() => {
+                            setFormData(prev => ({
+                              ...prev,
+                              patient_id: p.id,
+                              patient_name: `${p.first_name} ${p.last_name}`
+                            }));
+                            setPatientSearch("");
+                          }}
+                        >
+                          <span className="font-medium">{p.first_name} {p.last_name}</span>
+                          <span className="text-xs text-muted-foreground">{p.phone || ""}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {patientSearch.length >= 3 && filteredPatients.length === 0 && (
+                    <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg p-3 text-sm text-muted-foreground text-center">
+                      No patients found
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             <div>
