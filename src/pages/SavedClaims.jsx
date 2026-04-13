@@ -41,7 +41,9 @@ export default function SavedClaims() {
 
   const filtered = claims.filter(c => {
     const q = search.toLowerCase();
-    const matchSearch = c.patient_name?.toLowerCase().includes(q) || c.date_of_service?.includes(q);
+    // Allow date search anytime, but patient name requires 3+ letters
+    const matchSearch = c.date_of_service?.includes(q) || 
+      (q.length >= 3 && c.patient_name?.toLowerCase().startsWith(q));
     const matchType = typeFilter === "All" || c.visit_type === typeFilter;
     return matchSearch && matchType;
   });
@@ -103,7 +105,7 @@ export default function SavedClaims() {
       <div className="flex gap-3 mb-4 flex-wrap">
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input placeholder="Search by patient or date..." className="pl-10" value={search} onChange={e => setSearch(e.target.value)} />
+          <Input placeholder="Search by date or patient (3+ letters)..." className="pl-10" value={search} onChange={e => setSearch(e.target.value)} />
         </div>
         <Select value={typeFilter} onValueChange={setTypeFilter}>
           <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
