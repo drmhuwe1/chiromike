@@ -16,6 +16,7 @@ const navItems = [
   { path: "/billing", label: "Billing Dashboard", icon: Wallet },
   { path: "/soap-notes", label: "SOAP Notes", icon: ClipboardList },
   { path: "/reports", label: "Reports", icon: BarChart3 },
+  { path: "/financial-reports", label: "Financial Reports", icon: Wallet },
   { path: "/guide", label: "Feature Guide", icon: HelpCircle },
   { path: "/compliance", label: "HIPAA Compliance", icon: ShieldCheck },
   { path: "/settings", label: "Office Settings", icon: Settings },
