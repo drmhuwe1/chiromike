@@ -1,0 +1,89 @@
+{
+  "name": "Payment",
+  "type": "object",
+  "properties": {
+    "claim_id": {
+      "type": "string",
+      "title": "Claim ID"
+    },
+    "patient_id": {
+      "type": "string",
+      "title": "Patient ID"
+    },
+    "patient_name": {
+      "type": "string",
+      "title": "Patient Name"
+    },
+    "date_of_service": {
+      "type": "string",
+      "format": "date",
+      "title": "Date of Service"
+    },
+    "insurance_company": {
+      "type": "string",
+      "title": "Insurance Company"
+    },
+    "payment_date": {
+      "type": "string",
+      "format": "date",
+      "title": "Payment Date"
+    },
+    "payment_type": {
+      "type": "string",
+      "enum": [
+        "Insurance",
+        "Patient",
+        "Adjustment",
+        "Denial",
+        "Deductible",
+        "Copay/Coinsurance"
+      ],
+      "title": "Payment Type"
+    },
+    "payment_amount": {
+      "type": "number",
+      "title": "Payment Amount"
+    },
+    "check_number": {
+      "type": "string",
+      "title": "Check / EFT Number"
+    },
+    "allowed_amount": {
+      "type": "number",
+      "title": "Allowed Amount"
+    },
+    "contractual_adjustment": {
+      "type": "number",
+      "title": "Contractual Adjustment"
+    },
+    "deductible_applied": {
+      "type": "number",
+      "title": "Applied to Deductible"
+    },
+    "copay_coinsurance": {
+      "type": "number",
+      "title": "Copay / Coinsurance"
+    },
+    "denial_code": {
+      "type": "string",
+      "title": "Denial / Adjustment Code (e.g. CO-97)"
+    },
+    "denial_reason": {
+      "type": "string",
+      "title": "Denial Reason"
+    },
+    "notes": {
+      "type": "string",
+      "title": "Notes"
+    },
+    "era_source": {
+      "type": "string",
+      "title": "ERA Source"
+    }
+  },
+  "required": [
+    "claim_id",
+    "payment_type",
+    "payment_date"
+  ]
+}
