@@ -16,6 +16,14 @@ export default function PatientBalanceWidget({ patientId, claims = [], payments 
     };
   }, [patientId, claims, payments]);
 
+  if (balance.totalCharged === 0) {
+    return (
+      <div className="flex items-center gap-2">
+        <span className="text-sm text-muted-foreground">—</span>
+      </div>
+    );
+  }
+
   if (balance.balance === 0) {
     return (
       <div className="flex items-center gap-2">

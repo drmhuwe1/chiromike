@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Plus, Trash2, X } from "lucide-react";
+import { Plus, Trash2, X, Search } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import DiagnosisCodeSearchModal from "@/components/claim/DiagnosisCodeSearchModal";
 
 const initialState = {
   first_name: "", last_name: "", dob: "", sex: "Male",
@@ -70,6 +71,7 @@ export default function PatientForm({ patient, onSave, onCancel }) {
   const [patients, setPatients] = useState([]);
   const [guarantorSearch, setGuarantorSearch] = useState("");
   const [showGuarantorDrop, setShowGuarantorDrop] = useState(false);
+  const [showDxModal, setShowDxModal] = useState(null);
 
   useEffect(() => {
     base44.entities.Patient.list("-updated_date", 300).then(setPatients);
@@ -305,16 +307,14 @@ export default function PatientForm({ patient, onSave, onCancel }) {
           <div className="space-y-2">
             {(form.diagnoses || []).map((dx, idx) => (
               <div key={idx} className="flex gap-2 items-center">
-                <Input
-                  className="h-8 w-28 font-mono text-sm"
-                  placeholder="Code"
-                  value={dx.code}
-                  onChange={e => {
-                    const updated = [...form.diagnoses];
-                    updated[idx] = { ...updated[idx], code: e.target.value };
-                    set("diagnoses", updated);
-                  }}
-                />
+                <button
+                  type="button"
+                  onClick={() => setShowDxModal(idx)}
+                  className="h-8 w-28 font-mono text-sm px-2 rounded border border-input hover:bg-muted bg-white text-left truncate"
+                  title="Click to search diagnosis codes"
+                >
+                  {dx.code || '⊕ Search'}
+                </button>
                 <Input
                   className="h-8 flex-1 text-sm"
                   placeholder="Description"
@@ -332,7 +332,7 @@ export default function PatientForm({ patient, onSave, onCancel }) {
             ))}
             <button
               type="button"
-              onClick={() => set("diagnoses", [...(form.diagnoses || []), { code: "", description: "" }])}
+              onClick={() => { setShowDxModal(form.diagnoses.length); set("diagnoses", [...(form.diagnoses || []), { code: "", description: "" }]); }}
               className="text-xs text-primary hover:underline flex items-center gap-1 mt-1"
             >
               <Plus className="w-3 h-3" /> Add diagnosis
@@ -351,6 +351,18 @@ export default function PatientForm({ patient, onSave, onCancel }) {
           <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
         </div>
       </form>
+
+      {showDxModal !== null && (
+        <DiagnosisCodeSearchModal
+          onSelect={(code) => {
+            const updated = [...form.diagnoses];
+            updated[showDxModal] = { code: code.code, description: code.description };
+            set("diagnoses", updated);
+            setShowDxModal(null);
+          }}
+          onClose={() => setShowDxModal(null)}
+        />
+      )}
     </div>
   );
 }
