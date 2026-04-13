@@ -36,8 +36,14 @@ export default function NewPatientExamPage() {
   });
 
   useEffect(() => {
-    base44.entities.Patient.list("-updated_date", 200).then(data => {
-      setPatients(data);
+    Promise.all([
+      base44.entities.Patient.list("-updated_date", 200),
+      base44.entities.OfficeSettings.list("-updated_date", 1)
+    ]).then(([patientData, settingsData]) => {
+      setPatients(patientData);
+      if (settingsData[0]?.rendering_provider) {
+        setExam(prev => ({ ...prev, examiner_name: settingsData[0].rendering_provider }));
+      }
       setLoading(false);
     });
   }, []);
