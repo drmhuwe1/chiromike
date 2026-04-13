@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { Save, Printer, Copy, CalendarDays, Search, User, Plus, Trash2, Star, Zap, Mail } from "lucide-react";
+import PayerAlertBanner from "../components/claim/PayerAlertBanner";
 
 const visitTypes = ["Insurance", "Auto", "Cash", "Cash Office Visit", "Cash Package"];
 const today = new Date().toISOString().split("T")[0];
@@ -376,6 +377,9 @@ export default function ClaimBuilder() {
           </div>
         </div>
       )}
+
+      {/* Payer Alert Banner */}
+      <PayerAlertBanner payerType={claim.payer_type} />
 
       {/* Quick Panel - always visible */}
       <div className="bg-card border border-border rounded-xl p-3">
