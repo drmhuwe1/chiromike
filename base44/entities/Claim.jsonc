@@ -28,7 +28,8 @@
         "BCBS",
         "Auto/PI",
         "Cash",
-        "Other Commercial"
+        "Other Commercial",
+        "Patient"
       ],
       "title": "Payer Type"
     },

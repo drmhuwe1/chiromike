@@ -21,6 +21,7 @@ export default function ClaimBuilder() {
     patient_id: "", patient_name: "",
     visit_type: presetType || "Insurance",
     payer_type: presetType === "Cash" ? "Cash" : presetType === "Auto" ? "Auto/PI" : "Other Commercial",
+    // payer_type options: Medicare, BCBS, Auto/PI, Cash, Other Commercial, Patient
     status: "Draft", date_of_service: today,
     diagnoses: [], service_lines: [],
     total_charge: 0, amount_paid: 0,
