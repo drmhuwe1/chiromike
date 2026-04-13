@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
-import { ChevronLeft, ChevronRight, Plus, Calendar as CalendarIcon } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Calendar as CalendarIcon, Edit2, Trash2, X } from "lucide-react";
 
 export default function Calendar() {
   const [currentDate, setCurrentDate] = useState(new Date(2026, 3, 13)); // April 13, 2026
@@ -12,6 +12,7 @@ export default function Calendar() {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({
     patient_id: "",
     patient_name: "",
@@ -22,6 +23,7 @@ export default function Calendar() {
   });
   const [patients, setPatients] = useState([]);
   const [patientSearch, setPatientSearch] = useState("");
+  const [selectedAppt, setSelectedAppt] = useState(null);
   const { toast } = useToast();
 
   // Load calendar events and appointments
@@ -59,18 +61,31 @@ export default function Calendar() {
     load();
   }, [currentDate]);
 
-  const handleAddAppointment = async () => {
+  const handleSaveAppointment = async () => {
     if (!formData.patient_id || !formData.appointment_date) {
       toast({ title: "Select a patient and date", variant: "destructive" });
       return;
     }
     try {
-      await base44.entities.Appointment.create({
-        ...formData,
-        synced_to_calendar: false,
-      });
-      toast({ title: "Appointment added" });
+      if (editingId) {
+        await base44.entities.Appointment.update(editingId, {
+          patient_id: formData.patient_id,
+          patient_name: formData.patient_name,
+          appointment_date: formData.appointment_date,
+          appointment_type: formData.appointment_type,
+          duration_minutes: formData.duration_minutes,
+          notes: formData.notes,
+        });
+        toast({ title: "Appointment updated" });
+      } else {
+        await base44.entities.Appointment.create({
+          ...formData,
+          synced_to_calendar: false,
+        });
+        toast({ title: "Appointment added" });
+      }
       setShowForm(false);
+      setEditingId(null);
       setFormData({
         patient_id: "",
         patient_name: "",
@@ -79,6 +94,7 @@ export default function Calendar() {
         duration_minutes: 30,
         notes: "",
       });
+      setPatientSearch("");
       // Refresh appointments
       const appts = await base44.entities.Appointment.filter(
         { cancelled: false },
@@ -87,8 +103,51 @@ export default function Calendar() {
       );
       setAppointments(appts);
     } catch (error) {
-      toast({ title: error.message || "Failed to add appointment", variant: "destructive" });
+      toast({ title: error.message || "Failed to save appointment", variant: "destructive" });
     }
+  };
+
+  const handleEditAppointment = (appt) => {
+    setEditingId(appt.id);
+    setFormData({
+      patient_id: appt.patient_id,
+      patient_name: appt.patient_name,
+      appointment_date: appt.appointment_date,
+      appointment_type: appt.appointment_type,
+      duration_minutes: appt.duration_minutes,
+      notes: appt.notes || "",
+    });
+    setShowForm(true);
+  };
+
+  const handleDeleteAppointment = async (id) => {
+    if (!window.confirm("Delete this appointment?")) return;
+    try {
+      await base44.entities.Appointment.update(id, { cancelled: true });
+      toast({ title: "Appointment deleted" });
+      const appts = await base44.entities.Appointment.filter(
+        { cancelled: false },
+        "-appointment_date",
+        100
+      );
+      setAppointments(appts);
+    } catch (error) {
+      toast({ title: "Failed to delete appointment", variant: "destructive" });
+    }
+  };
+
+  const closeForm = () => {
+    setShowForm(false);
+    setEditingId(null);
+    setFormData({
+      patient_id: "",
+      patient_name: "",
+      appointment_date: new Date().toISOString().split("T")[0],
+      appointment_type: "Follow-up",
+      duration_minutes: 30,
+      notes: "",
+    });
+    setPatientSearch("");
   };
 
   const daysInMonth = (date) => new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
@@ -155,15 +214,20 @@ export default function Calendar() {
             return (
               <div
                 key={day}
-                className={`aspect-square border rounded-lg p-2 overflow-hidden ${
-                  hasEvents ? "bg-blue-50 border-blue-300" : "bg-card border-border hover:bg-muted"
+                className={`aspect-square border rounded-lg p-2 overflow-hidden cursor-pointer transition-colors ${
+                  hasEvents ? "bg-blue-50 border-blue-300 hover:bg-blue-100" : "bg-card border-border hover:bg-muted"
                 }`}
               >
                 <div className="text-sm font-semibold mb-1">{day}</div>
-                <div className="text-xs space-y-0.5 max-h-16 overflow-y-auto">
+                <div className="text-xs space-y-1 max-h-16 overflow-y-auto">
                   {appts.map((a, i) => (
-                    <div key={`appt-${i}`} className="bg-green-200 text-green-900 px-1.5 py-0.5 rounded text-xs truncate" title={a.patient_name}>
-                      {a.patient_name}
+                    <div
+                      key={`appt-${i}`}
+                      className="bg-green-200 text-green-900 px-1.5 py-0.5 rounded text-xs truncate group flex items-center justify-between"
+                      title={`${a.patient_name} - ${a.appointment_type}`}
+                      onClick={() => setSelectedAppt(a)}
+                    >
+                      <span className="truncate flex-1">{a.patient_name}</span>
                     </div>
                   ))}
                   {google.map((e, i) => (
@@ -178,11 +242,44 @@ export default function Calendar() {
         </div>
       </div>
 
-      {/* Add Appointment Form */}
+      {/* Appointment Details Modal */}
+      {selectedAppt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="bg-card border border-border rounded-xl p-6 max-w-md w-full space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-bold">{selectedAppt.patient_name}</h2>
+              <button onClick={() => setSelectedAppt(null)} className="text-muted-foreground hover:text-foreground">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="space-y-2 text-sm">
+              <div><span className="font-semibold">Type:</span> {selectedAppt.appointment_type}</div>
+              <div><span className="font-semibold">Date:</span> {selectedAppt.appointment_date}</div>
+              <div><span className="font-semibold">Duration:</span> {selectedAppt.duration_minutes} min</div>
+              {selectedAppt.notes && <div><span className="font-semibold">Notes:</span> {selectedAppt.notes}</div>}
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={() => { handleEditAppointment(selectedAppt); setSelectedAppt(null); }} className="flex-1 gap-2">
+                <Edit2 className="w-4 h-4" /> Edit
+              </Button>
+              <Button onClick={() => { handleDeleteAppointment(selectedAppt.id); setSelectedAppt(null); }} variant="destructive" className="flex-1 gap-2">
+                <Trash2 className="w-4 h-4" /> Delete
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add/Edit Appointment Form */}
       {showForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="bg-card border border-border rounded-xl p-6 max-w-md w-full space-y-4">
-            <h2 className="text-lg font-bold">Add Patient Appointment</h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-bold">{editingId ? "Edit Appointment" : "Add Patient Appointment"}</h2>
+              <button onClick={closeForm} className="text-muted-foreground hover:text-foreground">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
 
             <div>
               <Label className="text-sm">Patient</Label>
@@ -262,8 +359,8 @@ export default function Calendar() {
             </div>
 
             <div className="flex gap-2">
-              <Button onClick={handleAddAppointment} className="flex-1">Add Appointment</Button>
-              <Button variant="outline" onClick={() => setShowForm(false)} className="flex-1">Cancel</Button>
+              <Button onClick={handleSaveAppointment} className="flex-1">{editingId ? "Update" : "Add"} Appointment</Button>
+              <Button variant="outline" onClick={closeForm} className="flex-1">Cancel</Button>
             </div>
           </div>
         </div>
