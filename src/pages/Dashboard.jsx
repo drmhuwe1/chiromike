@@ -5,14 +5,15 @@ import {
 } from "lucide-react";
 
 const quickActions = [
-  { label: "New Insurance Claim", icon: FileText, path: "/claim-builder?type=Insurance", color: "bg-primary" },
-  { label: "New Auto Claim", icon: Car, path: "/claim-builder?type=Auto", color: "bg-amber-600" },
-  { label: "New Cash Visit", icon: DollarSign, path: "/claim-builder?type=Cash", color: "bg-accent" },
   { label: "Patients", icon: Users, path: "/patients", color: "bg-indigo-600" },
+  { label: "New Claim", icon: FileText, path: "/claim-builder", color: "bg-primary" },
   { label: "Patient Account", icon: Wallet, path: "/patient-account", color: "bg-green-600" },
+  { label: "New Patient Exam", icon: FileText, path: "/new-patient-exam", color: "bg-purple-600" },
+  { label: "Re-Exam", icon: FileText, path: "/re-examination", color: "bg-blue-600" },
+  { label: "SOAP Notes", icon: FileText, path: "/soap-notes", color: "bg-indigo-500" },
   { label: "Calendar", icon: Calendar, path: "/calendar", color: "bg-teal-600" },
   { label: "Saved Claims", icon: BookOpen, path: "/saved-claims", color: "bg-slate-600" },
-  { label: "Quick Templates", icon: Zap, path: "/templates", color: "bg-purple-600" },
+  { label: "Quick Templates", icon: Zap, path: "/templates", color: "bg-pink-600" },
   { label: "Reports", icon: BarChart3, path: "/reports", color: "bg-rose-600" },
   { label: "Office Settings", icon: Settings, path: "/settings", color: "bg-gray-700" },
 ];
