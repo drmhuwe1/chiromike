@@ -10,16 +10,13 @@ Deno.serve(async (req) => {
 
     if (!patient_id) return Response.json({ error: 'patient_id required' }, { status: 400 });
 
-    const [patients, claims, settings] = await Promise.all([
-      base44.entities.Patient.filter({ id: patient_id }),
-      base44.entities.Claim.filter({ patient_id }, '-date_of_service', 50),
-      base44.entities.OfficeSettings.list('-updated_date', 1),
-    ]);
+    // Fetch patient, claims, and office settings
+    const patientData = await base44.asServiceRole.entities.Patient.get(patient_id);
+    if (!patientData) return Response.json({ error: 'Patient not found' }, { status: 404 });
 
-    const patient = patients[0];
-    if (!patient) return Response.json({ error: 'Patient not found' }, { status: 404 });
-
-    const office = settings[0] || {};
+    const claims = await base44.asServiceRole.entities.Claim.filter({ patient_id }, '-date_of_service', 50);
+    const settingsList = await base44.asServiceRole.entities.OfficeSettings.list('-updated_date', 1);
+    const office = settingsList[0] || {};
 
     // Filter claims by date range
     const filteredClaims = claims.filter(c => {
@@ -40,8 +37,8 @@ Deno.serve(async (req) => {
     const diagList = (claim.diagnoses || []).map(d => `${d.code} - ${d.description}`).join('; ');
     const procList = (claim.service_lines || []).map(l => `${l.code} ${l.description} (x${l.units}${l.modifier ? ', mod: ' + l.modifier : ''})`).join('; ');
 
-    const patientAge = patient?.dob
-      ? Math.floor((new Date() - new Date(patient.dob)) / 31536000000)
+    const patientAge = patientData?.dob
+      ? Math.floor((new Date() - new Date(patientData.dob)) / 31536000000)
       : null;
 
     const visitHistory = filteredClaims.length > 1
@@ -68,9 +65,9 @@ You MUST include in the appropriate SOAP sections:
 
     const prompt = `You are a licensed chiropractic physician (DC) writing a legally and clinically defensible SOAP note. Write in the first person as the treating physician. Use precise clinical language.
 
-PATIENT: ${patient.first_name} ${patient.last_name}
-DOB: ${patient?.dob || 'N/A'}${patientAge ? ` (Age ${patientAge})` : ''}
-SEX: ${patient?.sex || 'N/A'}
+PATIENT: ${patientData.first_name} ${patientData.last_name}
+DOB: ${patientData?.dob || 'N/A'}${patientAge ? ` (Age ${patientAge})` : ''}
+SEX: ${patientData?.sex || 'N/A'}
 DATE RANGE: ${date_from} to ${date_to}
 VISIT COUNT: ${filteredClaims.length}
 ACCIDENT RELATED: ${isAccident ? 'YES' : 'NO'}
@@ -78,9 +75,9 @@ ${isAccident ? `ACCIDENT DATE: ${claim.accident_date || 'N/A'}\nACCIDENT TYPE: $
 DIAGNOSES (ICD-10): ${diagList || 'See claims'}
 PROCEDURES: ${procList || 'See claims'}
 RENDERING PROVIDER: ${office.rendering_provider || 'Treating Physician'}
-${patient?.chief_complaint ? `CHIEF COMPLAINT: ${patient.chief_complaint}` : ''}
-${patient?.occupation ? `OCCUPATION: ${patient.occupation}` : ''}
-${patient?.current_medications ? `CURRENT MEDICATIONS: ${patient.current_medications}` : ''}
+${patientData?.chief_complaint ? `CHIEF COMPLAINT: ${patientData.chief_complaint}` : ''}
+${patientData?.occupation ? `OCCUPATION: ${patientData.occupation}` : ''}
+${patientData?.current_medications ? `CURRENT MEDICATIONS: ${patientData.current_medications}` : ''}
 
 ${visitHistory ? `VISIT HISTORY:\n${visitHistory}` : ''}
 
@@ -122,23 +119,48 @@ Ensure comprehensive medical detail suitable for insurance submission.`;
       }
     });
 
-    console.log('AI Result:', result);
+    console.log('Raw AI Result type:', typeof result);
+    console.log('Raw AI Result keys:', Object.keys(result || {}));
+    
+    // Handle response - InvokeLLM wraps in {response: {...}} sometimes
+    let soapData = result;
+    if (result.response && !result.subjective) {
+      soapData = result.response;
+    }
+    
+    console.log('Final SOAP fields:', { 
+      hasSubjective: !!soapData.subjective,
+      hasObjective: !!soapData.objective,
+      hasAssessment: !!soapData.assessment,
+      hasPlan: !!soapData.plan,
+      subjectiveLen: soapData.subjective?.length || 0,
+      objectiveLen: soapData.objective?.length || 0,
+    });
 
-    if (!result.subjective || !result.objective || !result.assessment || !result.plan) {
-      return Response.json({ error: 'AI failed to generate complete SOAP note' }, { status: 500 });
+    // Validate we have content
+    if (!soapData.subjective || !soapData.objective || !soapData.assessment || !soapData.plan) {
+      console.error('Missing SOAP fields:', { 
+        subjective: !!soapData.subjective,
+        objective: !!soapData.objective,
+        assessment: !!soapData.assessment,
+        plan: !!soapData.plan
+      });
+      return Response.json({ 
+        error: 'AI incomplete response' 
+      }, { status: 500 });
     }
 
     const soapNote = await base44.asServiceRole.entities.SoapNote.create({
-      patient_id: patient.id,
-      patient_name: `${patient.first_name} ${patient.last_name}`,
+      patient_id: patientData.id,
+      patient_name: `${patientData.first_name} ${patientData.last_name}`,
       claim_id: claim.id,
       date_of_service: date_from,
       visit_type: filteredClaims.length > 1 ? 'Multi-Visit Summary' : claim.visit_type,
       provider_name: office.rendering_provider || '',
-      subjective: result.subjective || '',
-      objective: result.objective || '',
-      assessment: result.assessment || '',
-      plan: result.plan || '',
+      subjective: soapData.subjective || '',
+      objective: soapData.objective || '',
+      assessment: soapData.assessment || '',
+      plan: soapData.plan || '',
       diagnoses: claim.diagnoses || [],
       procedures: claim.service_lines || [],
       accident_related: isAccident || false,

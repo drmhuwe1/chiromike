@@ -69,10 +69,12 @@ export default function SoapNotes() {
       });
       if (res.data) {
         setNotes([res.data, ...notes]);
+        setExpanded(res.data.id); // Auto-expand the new note
         toast({ title: "SOAP note generated successfully" });
       }
     } catch (e) {
-      toast({ title: e.message || "Failed to generate SOAP note", variant: "destructive" });
+      console.error('Generation error:', e);
+      toast({ title: e.response?.data?.error || e.message || "Failed to generate SOAP note", variant: "destructive" });
     }
   };
 
