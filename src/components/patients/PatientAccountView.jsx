@@ -81,7 +81,6 @@ export default function PatientAccountView({ patient }) {
   const mostRecentClaim = filteredClaims[0] || claims[0] || null;
 
   return (
-    <>
     <div className="space-y-6 pb-10">
       {/* Header */}
       <div className="bg-card border border-border rounded-xl p-4">
@@ -177,16 +176,15 @@ export default function PatientAccountView({ patient }) {
           </tbody>
         </table>
       </div>
-    </div>
 
-    {showPayment && (
-      <PaymentModal
-        claim={mostRecentClaim || { id: null, date_of_service: new Date().toISOString().split("T")[0], total_charge: balance }}
-        patient={patient}
-        onClose={() => setShowPayment(false)}
-        onSuccess={() => { setShowPayment(false); }}
-      />
-    )}
-    </>
+      {showPayment && (
+        <PaymentModal
+          claim={mostRecentClaim || { id: null, date_of_service: new Date().toISOString().split("T")[0], total_charge: balance }}
+          patient={patient}
+          onClose={() => setShowPayment(false)}
+          onSuccess={() => { setShowPayment(false); }}
+        />
+      )}
+    </div>
   );
 }
