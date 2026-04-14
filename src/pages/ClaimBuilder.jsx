@@ -556,8 +556,9 @@ export default function ClaimBuilder() {
           <div className="flex flex-wrap gap-1.5 mb-2">
             {favDx.map(d => (
               <button key={d.id} onClick={() => addFavDx(d)}
-                className="px-2 py-1 text-xs bg-muted hover:bg-primary hover:text-primary-foreground border border-border rounded-md transition-colors">
-                <Star className="inline w-3 h-3 mr-0.5 opacity-60" />{d.code}
+                className="px-2.5 py-1.5 text-xs bg-muted hover:bg-primary hover:text-primary-foreground border border-border rounded-md transition-colors flex flex-col items-start gap-0.5">
+                <div><Star className="inline w-3 h-3 mr-0.5 opacity-60" />{d.code}</div>
+                <div className="text-xs opacity-75 max-w-[150px] truncate">{d.description}</div>
               </button>
             ))}
           </div>
@@ -607,8 +608,9 @@ export default function ClaimBuilder() {
           <div className="flex flex-wrap gap-1.5 mb-2">
             {favCodes.map(c => (
               <button key={c.id} onClick={() => addFavCode(c)}
-                className="px-2 py-1 text-xs bg-muted hover:bg-primary hover:text-primary-foreground border border-border rounded-md transition-colors">
-                <Star className="inline w-3 h-3 mr-0.5 opacity-60" />{c.code} ${c.default_charge?.toFixed(0)}
+                className="px-2.5 py-1.5 text-xs bg-muted hover:bg-primary hover:text-primary-foreground border border-border rounded-md transition-colors flex flex-col items-start gap-0.5">
+                <div><Star className="inline w-3 h-3 mr-0.5 opacity-60" />{c.code} ${c.default_charge?.toFixed(0)}</div>
+                <div className="text-xs opacity-75 max-w-[150px] truncate">{c.description}</div>
               </button>
             ))}
           </div>
