@@ -39,6 +39,7 @@ export default function ReExaminationPage() {
   const [generatingPlans, setGeneratingPlans] = useState(false);
 
   useEffect(() => {
+    const presetId = new URLSearchParams(window.location.search).get("patient");
     Promise.all([
       base44.entities.Patient.list("-updated_date", 200),
       base44.entities.OfficeSettings.list("-updated_date", 1)
@@ -46,6 +47,10 @@ export default function ReExaminationPage() {
       setPatients(patientData);
       if (settingsData[0]?.rendering_provider) {
         setExam(prev => ({ ...prev, examiner_name: settingsData[0].rendering_provider }));
+      }
+      if (presetId) {
+        const match = patientData.find(p => p.id === presetId);
+        if (match) selectPatient(match);
       }
       setLoading(false);
     });

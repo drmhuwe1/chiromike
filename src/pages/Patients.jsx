@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, FileText, ChevronRight, Link2, Send, Trash2, Wallet, CreditCard } from "lucide-react";
+import { Plus, Search, FileText, ChevronRight, Link2, Send, Trash2, Wallet, CreditCard, Stethoscope, RefreshCw } from "lucide-react";
 import PatientForm from "../components/patients/PatientForm";
 import PatientCases from "../components/patients/PatientCases";
 import IntakeAlertBanner from "../components/patients/IntakeAlertBanner";
@@ -209,10 +209,26 @@ export default function Patients() {
                           <Button
                             size="sm"
                             variant="outline"
+                            onClick={() => navigate(`/new-patient-exam?patient=${p.id}`)}
+                            className="gap-1.5 text-purple-700 border-purple-300 hover:bg-purple-50"
+                          >
+                            <Stethoscope className="w-4 h-4" /> New Patient Exam
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => navigate(`/re-examination?patient=${p.id}`)}
+                            className="gap-1.5 text-blue-700 border-blue-300 hover:bg-blue-50"
+                          >
+                            <RefreshCw className="w-4 h-4" /> Re-Evaluation
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
                             onClick={() => navigate(`/patient-account?patient=${p.id}`)}
                             className="gap-1.5 text-green-700 border-green-300 hover:bg-green-50"
                           >
-                            <Wallet className="w-4 h-4" /> Patient Account & Payments
+                            <Wallet className="w-4 h-4" /> Account & Payments
                           </Button>
                         </div>
                       </td>
