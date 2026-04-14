@@ -20,9 +20,12 @@ const quickActions = [
 export default function Dashboard() {
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold tracking-tight">Welcome to ChiroMike</h1>
-        <p className="text-muted-foreground mt-1">Fast chiropractic claim entry for Huwe Chiropractic</p>
+      <div className="mb-8 flex items-center gap-4">
+        <img src="https://media.base44.com/images/public/69dbc37eaf437642fe866557/37f9ccc00_ChiroMike.png" alt="ChiroMike Logo" className="h-20 w-auto" />
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Welcome to ChiroMike</h1>
+          <p className="text-muted-foreground mt-1">Fast chiropractic claim entry for Huwe Chiropractic</p>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
