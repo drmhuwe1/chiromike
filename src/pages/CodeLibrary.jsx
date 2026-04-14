@@ -300,12 +300,13 @@ export default function CodeLibrary() {
           )}
 
           {/* Procedure Table */}
-          {tab === "procedures" && (
-            <div className="bg-card border border-border rounded-xl overflow-hidden">
-              {loading ? (
-                <div className="flex justify-center py-10"><div className="w-6 h-6 border-2 border-muted border-t-primary rounded-full animate-spin" /></div>
-              ) : (
-                <table className="w-full text-sm">
+           {tab === "procedures" && (
+             <div className="bg-card border border-border rounded-xl overflow-hidden flex flex-col max-h-96">
+               {loading ? (
+                 <div className="flex justify-center py-10"><div className="w-6 h-6 border-2 border-muted border-t-primary rounded-full animate-spin" /></div>
+               ) : (
+                 <div className="overflow-y-auto">
+                   <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b bg-muted/40">
                       <th className="text-left py-2.5 px-3 font-medium text-xs">⭐</th>
@@ -339,19 +340,21 @@ export default function CodeLibrary() {
                     {filteredProcs.length === 0 && (
                       <tr><td colSpan={7} className="py-10 text-center text-muted-foreground">No procedures found</td></tr>
                     )}
-                  </tbody>
-                </table>
-              )}
-            </div>
-          )}
+                    </tbody>
+                    </table>
+                    </div>
+                    )}
+                    </div>
+                    )}
 
-          {/* Diagnosis Table */}
-          {tab === "diagnoses" && (
-            <div className="bg-card border border-border rounded-xl overflow-hidden">
-              {loading ? (
-                <div className="flex justify-center py-10"><div className="w-6 h-6 border-2 border-muted border-t-primary rounded-full animate-spin" /></div>
-              ) : (
-                <table className="w-full text-sm">
+                    {/* Diagnosis Table */}
+                    {tab === "diagnoses" && (
+                      <div className="bg-card border border-border rounded-xl overflow-hidden flex flex-col max-h-96">
+                        {loading ? (
+                          <div className="flex justify-center py-10"><div className="w-6 h-6 border-2 border-muted border-t-primary rounded-full animate-spin" /></div>
+                        ) : (
+                          <div className="overflow-y-auto">
+                            <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b bg-muted/40">
                       <th className="text-left py-2.5 px-3 font-medium text-xs">⭐</th>
@@ -381,13 +384,14 @@ export default function CodeLibrary() {
                     {filteredDx.length === 0 && (
                       <tr><td colSpan={5} className="py-10 text-center text-muted-foreground">No diagnoses found</td></tr>
                     )}
-                  </tbody>
-                </table>
-              )}
-            </div>
-          )}
+                    </tbody>
+                    </table>
+                    </div>
+                    )}
+                    </div>
+                    )}
 
-          <p className="text-xs text-muted-foreground">⭐ Starred items appear as quick-tap favorites in the claim builder.</p>
+                    <p className="text-xs text-muted-foreground">⭐ Starred items appear as quick-tap favorites in the claim builder.</p>
         </div>
       )}
     </div>
