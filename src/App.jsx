@@ -5,6 +5,7 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
+import LoginPage from '@/components/LoginPage';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import Patients from './pages/Patients';
@@ -47,10 +48,19 @@ const AuthenticatedApp = () => {
   if (authError) {
     if (authError.type === 'user_not_registered') {
       return <UserNotRegisteredError />;
+    } else if (authError.type === 'user_not_authorized') {
+      return (
+        <div className="min-h-screen bg-background flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-card border border-border rounded-2xl shadow-xl p-8 text-center space-y-4">
+            <h1 className="text-2xl font-bold">Access Denied</h1>
+            <p className="text-muted-foreground">{authError.message}</p>
+            <p className="text-sm text-muted-foreground">Please contact your administrator for access.</p>
+          </div>
+        </div>
+      );
     } else if (authError.type === 'auth_required') {
-      // Redirect to login automatically
-      navigateToLogin();
-      return null;
+      // Show login page for auth required
+      return <LoginPage />;
     }
   }
 

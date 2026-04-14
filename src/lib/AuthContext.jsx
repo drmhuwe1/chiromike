@@ -2,6 +2,7 @@ import React, { createContext, useState, useContext, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { appParams } from '@/lib/app-params';
 import { createAxiosClient } from '@base44/sdk/dist/utils/axios-client';
+import { isEmailWhitelisted } from '@/lib/emailWhitelist';
 
 const AuthContext = createContext();
 
@@ -92,6 +93,21 @@ export const AuthProvider = ({ children }) => {
       // Now check if the user is authenticated
       setIsLoadingAuth(true);
       const currentUser = await base44.auth.me();
+      
+      // Validate email against whitelist
+      if (currentUser && currentUser.email && !isEmailWhitelisted(currentUser.email)) {
+        console.warn(`Unauthorized user attempted access: ${currentUser.email}`);
+        setAuthError({
+          type: 'user_not_authorized',
+          message: 'Your email is not authorized to access this app'
+        });
+        setIsLoadingAuth(false);
+        setIsAuthenticated(false);
+        // Logout the unauthorized user
+        base44.auth.logout();
+        return;
+      }
+      
       setUser(currentUser);
       setIsAuthenticated(true);
       setIsLoadingAuth(false);
