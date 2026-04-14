@@ -3,8 +3,10 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Search, Printer, FileText, ChevronDown, ChevronUp, Send, Plus, X } from "lucide-react";
 import FaxModal from "../components/claim/FaxModal";
+import SoapEditModal from "../components/soap/SoapEditModal";
 import { useToast } from "@/components/ui/use-toast";
 
 export default function SoapNotes() {
@@ -15,6 +17,7 @@ export default function SoapNotes() {
   const [printing, setPrinting] = useState(null);
   const [faxTarget, setFaxTarget] = useState(null); // { soapNote, claim }
   const [generating, setGenerating] = useState(null); // { patientId, dateFrom, dateTo, formType }
+  const [editingNote, setEditingNote] = useState(null);
   const [patients, setPatients] = useState([]);
   const [patientSearch, setPatientSearch] = useState("");
   const { toast } = useToast();
@@ -87,7 +90,7 @@ export default function SoapNotes() {
           <h1 className="text-2xl font-bold tracking-tight">SOAP Notes</h1>
           <p className="text-sm text-muted-foreground">AI-generated clinical notes stored by patient and date</p>
         </div>
-        <Button onClick={() => setGenerating({ patientId: "", dateOfService: new Date().toISOString().split("T")[0], formType: "claim" })}>
+        <Button onClick={() => setGenerating({ patientId: "", dateFrom: new Date().toISOString().split("T")[0], dateTo: new Date().toISOString().split("T")[0], formType: "claim" })}>
           <Plus className="w-4 h-4 mr-2" /> Generate SOAP Note
         </Button>
       </div>
@@ -143,8 +146,21 @@ export default function SoapNotes() {
                       Signed: {note.doctor_signature} — {note.date_of_service}
                     </div>
                   )}
-                  <div className="pt-2">
-                    <Button size="sm" variant="outline" className="text-blue-600 border-blue-200 hover:bg-blue-50" onClick={() => handleFax(note)}>
+                  <div className="pt-2 flex gap-2">
+                    <Button 
+                      size="sm" 
+                      className="text-blue-600 border-blue-200 hover:bg-blue-50" 
+                      variant="outline"
+                      onClick={() => setEditingNote(note)}
+                    >
+                      Edit Fields
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="text-blue-600 border-blue-200 hover:bg-blue-50" 
+                      onClick={() => handleFax(note)}
+                    >
                       <Send className="w-3.5 h-3.5 mr-1.5" /> Fax Patient File
                     </Button>
                   </div>
@@ -173,6 +189,19 @@ export default function SoapNotes() {
           soapNote={faxTarget.soapNote}
           claim={faxTarget.claim}
           onClose={() => setFaxTarget(null)}
+        />
+      )}
+
+      {/* Edit SOAP Note modal */}
+      {editingNote && (
+        <SoapEditModal
+          note={editingNote}
+          onSave={async (updated) => {
+            await base44.entities.SoapNote.update(editingNote.id, updated);
+            await refreshNotes();
+            toast({ title: "SOAP note updated" });
+          }}
+          onClose={() => setEditingNote(null)}
         />
       )}
 
@@ -284,9 +313,9 @@ function Section({ label, text, color }) {
     purple: "border-purple-200 bg-purple-50",
   };
   return (
-    <div className={`border rounded-lg p-3 ${colors[color]}`}>
+    <div className={`border rounded-lg p-3 ${colors[color]} cursor-pointer hover:opacity-90`} onClick={() => {}}>
       <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-1">{label}</p>
-      <p className="whitespace-pre-line leading-relaxed">{text}</p>
+      <p className="whitespace-pre-line leading-relaxed text-xs">{text}</p>
     </div>
   );
 }
