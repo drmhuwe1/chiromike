@@ -342,19 +342,18 @@ export default function NewPatientExamPage() {
             onToggle={() => toggleSection("ortho")}
           >
             <div className="space-y-3">
-              {/* Quick Presets */}
+              {/* Quick Add buttons */}
               <div>
                 <p className="text-xs text-muted-foreground mb-2">Quick Add:</p>
                 <div className="flex flex-wrap gap-1.5">
-                  {["Spurling's", "SLR", "Straight Leg Raise", "Distraction", "Compression"].map(test => (
+                  {["Spurling's", "SLR", "Distraction", "Compression", "Braggard's", "Kemp's", "Patrick's"].map(test => (
                     <button
                       key={test}
-                      onClick={() => {
-                        setExam(prev => ({
-                          ...prev,
-                          orthopedic_tests: [...(prev.orthopedic_tests || []), { test_name: test, result: "", notes: "" }]
-                        }));
-                      }}
+                      type="button"
+                      onClick={() => setExam(prev => ({
+                        ...prev,
+                        orthopedic_tests: [...(prev.orthopedic_tests || []), { test_name: test, result: "", notes: "" }]
+                      }))}
                       className="px-2 py-1 text-xs bg-primary/10 text-primary border border-primary/30 rounded hover:bg-primary/20 transition-colors"
                     >
                       + {test}
@@ -363,32 +362,61 @@ export default function NewPatientExamPage() {
                 </div>
               </div>
 
-              {/* Test List */}
-              <div className="space-y-2">
-                {exam.orthopedic_tests?.map((test, idx) => (
-                  <div key={idx} className="space-y-2">
-                    <div className="flex gap-2 text-sm">
-                      <select className="flex-1 border rounded px-2 py-1 text-xs" value={test.test_name} onChange={e => updateOrthoTest(idx, "test_name", e.target.value)}>
-                        <option value="">Select test...</option>
-                        {ORTHO_TESTS.map(t => <option key={t} value={t}>{t}</option>)}
-                      </select>
-                      <select className="w-24 border rounded px-2 py-1 text-xs" value={test.result} onChange={e => updateOrthoTest(idx, "result", e.target.value)}>
-                        <option value="">Result</option>
-                        <option value="Positive">Positive</option>
-                        <option value="Negative">Negative</option>
-                      </select>
-                      <Button size="sm" variant="ghost" onClick={() => removeOrthoTest(idx)}>×</Button>
-                    </div>
-                    <div className="flex gap-2">
-                      <Input placeholder="Notes" className="flex-1 h-8 text-xs" value={test.notes} onChange={e => updateOrthoTest(idx, "notes", e.target.value)} />
-                      <VoiceDictation label="🎤" onTranscript={t => updateOrthoTest(idx, "notes", test.notes ? test.notes + ' ' + t : t)} />
-                    </div>
-                  </div>
-                ))}
+              {/* Add from full list dropdown */}
+              <div className="flex gap-2 items-center">
+                <select
+                  className="flex-1 border border-input rounded px-2 py-1.5 text-xs bg-background"
+                  value=""
+                  onChange={e => {
+                    if (!e.target.value) return;
+                    setExam(prev => ({
+                      ...prev,
+                      orthopedic_tests: [...(prev.orthopedic_tests || []), { test_name: e.target.value, result: "", notes: "" }]
+                    }));
+                    e.target.value = "";
+                  }}
+                >
+                  <option value="">— Add from full list —</option>
+                  {ORTHO_TESTS.map(t => <option key={t} value={t}>{t}</option>)}
+                </select>
+                <Button size="sm" variant="outline" onClick={addOrthoTest} className="text-xs whitespace-nowrap">
+                  <Plus className="w-3 h-3 mr-1" /> Custom
+                </Button>
               </div>
-              <Button size="sm" variant="outline" onClick={addOrthoTest} className="w-full text-xs">
-                <Plus className="w-3 h-3 mr-1" /> Add Custom Test
-              </Button>
+
+              {/* Test rows */}
+              {exam.orthopedic_tests?.length > 0 && (
+                <div className="space-y-2 border-t pt-2">
+                  {exam.orthopedic_tests.map((test, idx) => (
+                    <div key={idx} className="bg-muted/30 rounded-lg p-2 space-y-2">
+                      <div className="flex gap-2 items-center">
+                        <span className="flex-1 text-sm font-medium">
+                          {test.test_name || <span className="text-muted-foreground italic">Unnamed test</span>}
+                        </span>
+                        <select
+                          className="w-28 border border-input rounded px-2 py-1 text-xs bg-background"
+                          value={test.result}
+                          onChange={e => updateOrthoTest(idx, "result", e.target.value)}
+                        >
+                          <option value="">Result...</option>
+                          <option value="Positive">Positive</option>
+                          <option value="Negative">Negative</option>
+                        </select>
+                        <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-destructive hover:text-destructive" onClick={() => removeOrthoTest(idx)}>×</Button>
+                      </div>
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="Notes / findings..."
+                          className="flex-1 h-7 text-xs"
+                          value={test.notes}
+                          onChange={e => updateOrthoTest(idx, "notes", e.target.value)}
+                        />
+                        <VoiceDictation label="🎤" onTranscript={t => updateOrthoTest(idx, "notes", test.notes ? test.notes + ' ' + t : t)} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </Section>
 
