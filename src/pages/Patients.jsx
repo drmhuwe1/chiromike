@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, FileText, Copy, ChevronRight, Link2, Send, Trash2, Wallet, CreditCard } from "lucide-react";
+import { Plus, Search, FileText, ChevronRight, Link2, Send, Trash2, Wallet, CreditCard } from "lucide-react";
 import PatientForm from "../components/patients/PatientForm";
 import PatientCases from "../components/patients/PatientCases";
 import IntakeAlertBanner from "../components/patients/IntakeAlertBanner";
@@ -165,13 +165,6 @@ export default function Patients() {
                           title="New Claim"
                         >
                           <FileText className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost" size="sm"
-                          onClick={() => handleDuplicate(p)}
-                          title="Duplicate"
-                        >
-                          <Copy className="w-4 h-4" />
                         </Button>
                         <Button
                           variant="ghost" size="sm"
