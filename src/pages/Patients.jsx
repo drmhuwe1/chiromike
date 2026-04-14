@@ -50,13 +50,14 @@ export default function Patients() {
   });
 
   const handleSave = async (data) => {
+    let savedPatient;
     if (editPatient) {
       await base44.entities.Patient.update(editPatient.id, data);
+      savedPatient = editPatient;
     } else {
-      await base44.entities.Patient.create(data);
+      savedPatient = await base44.entities.Patient.create(data);
     }
-    setShowForm(false);
-    setEditPatient(null);
+    setEditPatient(savedPatient);
     loadPatients();
   };
 
