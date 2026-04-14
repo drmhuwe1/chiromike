@@ -85,10 +85,18 @@ export default function CodeLibrary() {
     setLookingUp(true);
     try {
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Look up the medical description for CPT code ${editingProc.code}. Return ONLY the description, nothing else.`,
+        prompt: `Look up the CPT code ${editingProc.code} for chiropractic services. Return ONLY a JSON object with "description" and "modifier" (if applicable for chiropractic). Use common chiropractic modifiers like 25, 59, 76, 77, 91 when relevant, or leave modifier empty if none applies.`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            description: { type: "string" },
+            modifier: { type: "string" }
+          }
+        }
       });
-      setP("description", result || "");
-      toast({ title: "Description found" });
+      setP("description", result?.description || "");
+      if (result?.modifier) setP("default_modifier", result.modifier);
+      toast({ title: "Description and modifier found" });
     } catch (e) {
       toast({ title: "Lookup failed", variant: "destructive" });
     }
@@ -121,10 +129,18 @@ export default function CodeLibrary() {
     setLookingUp(true);
     try {
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Find the CPT code for this chiropractic procedure: "${editingProc.description}". Return ONLY the code number, nothing else.`,
+        prompt: `Find the CPT code for this chiropractic procedure: "${editingProc.description}". Return ONLY a JSON object with "code" and "modifier" (if applicable for chiropractic) or leave modifier empty if none applies.`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            code: { type: "string" },
+            modifier: { type: "string" }
+          }
+        }
       });
-      setP("code", result?.trim() || "");
-      toast({ title: "Code found" });
+      setP("code", result?.code?.trim() || "");
+      if (result?.modifier) setP("default_modifier", result.modifier);
+      toast({ title: "Code and modifier found" });
     } catch (e) {
       toast({ title: "Lookup failed", variant: "destructive" });
     }
