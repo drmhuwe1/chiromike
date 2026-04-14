@@ -1,9 +1,10 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { 
   LayoutDashboard, Users, FileText, Settings, BookOpen, 
-  Library, Zap, BarChart3, Menu, X, Wallet, HelpCircle, ShieldCheck, ClipboardList, Stethoscope, Calendar
+  Library, Zap, BarChart3, Menu, X, Wallet, HelpCircle, ShieldCheck, ClipboardList, Stethoscope, Calendar, LogOut
 } from "lucide-react";
 import { useState } from "react";
+import { base44 } from "@/api/base44Client";
 
 const navItems = [
   { path: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -51,7 +52,16 @@ export default function Layout() {
           <h1 className="text-xl font-bold text-sidebar-primary-foreground tracking-tight">
             ChiroMike
           </h1>
-          <p className="text-xs text-sidebar-foreground/60 mt-0.5">Huwe Chiropractic</p>
+            <p className="text-xs text-sidebar-foreground/60 mt-0.5">Huwe Chiropractic</p>
+        </div>
+        <div className="px-5 py-3 border-b border-sidebar-border">
+          <button
+            onClick={() => base44.auth.logout()}
+            className="flex items-center gap-2 text-xs text-sidebar-foreground/60 hover:text-sidebar-foreground transition-colors w-full"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            Log Out
+          </button>
         </div>
 
         <nav className="flex-1 py-3 px-3 space-y-0.5 overflow-y-auto">
