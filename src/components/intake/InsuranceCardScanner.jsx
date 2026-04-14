@@ -8,6 +8,8 @@ export default function InsuranceCardScanner({ onExtracted, onPhotoUploaded }) {
   const [error, setError] = useState("");
   const frontRef = useRef(null);
   const backRef = useRef(null);
+  const cameraFrontRef = useRef(null);
+  const cameraBackRef = useRef(null);
 
   const handleScan = async (file, side) => {
     if (!file) return;
@@ -59,26 +61,38 @@ Return the data as JSON. If a field is not visible or unclear, return null for t
               ref={side === "front" ? frontRef : backRef}
               type="file"
               accept="image/*"
+              className="hidden"
+              onChange={e => handleScan(e.target.files[0], side)}
+            />
+            <input
+              ref={side === "front" ? cameraFrontRef : cameraBackRef}
+              type="file"
+              accept="image/*"
               capture="environment"
               className="hidden"
               onChange={e => handleScan(e.target.files[0], side)}
             />
-            <button
-              type="button"
-              onClick={() => (side === "front" ? frontRef : backRef).current?.click()}
-              disabled={scanning}
-              className="w-full border-2 border-dashed border-border rounded-xl p-4 flex flex-col items-center gap-2 hover:border-primary hover:bg-primary/5 transition-colors disabled:opacity-50"
-            >
-              {scanning && side === "front" ? (
-                <Loader2 className="w-6 h-6 text-primary animate-spin" />
-              ) : (
-                <Camera className="w-6 h-6 text-muted-foreground" />
-              )}
-              <span className="text-sm font-medium capitalize">{side} of Card</span>
-              <span className="text-xs text-muted-foreground flex items-center gap-1">
-                <Upload className="w-3 h-3" /> Tap to upload photo
-              </span>
-            </button>
+            <div className="space-y-2">
+              <button
+                type="button"
+                onClick={() => (side === "front" ? cameraFrontRef : cameraBackRef).current?.click()}
+                disabled={scanning}
+                className="w-full border-2 border-dashed border-border rounded-lg p-3 flex flex-col items-center gap-2 hover:border-primary hover:bg-primary/5 transition-colors disabled:opacity-50"
+              >
+                <Camera className="w-5 h-5 text-primary" />
+                <span className="text-xs font-medium">Camera</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => (side === "front" ? frontRef : backRef).current?.click()}
+                disabled={scanning}
+                className="w-full border-2 border-dashed border-border rounded-lg p-3 flex flex-col items-center gap-2 hover:border-primary hover:bg-primary/5 transition-colors disabled:opacity-50"
+              >
+                <Upload className="w-5 h-5 text-muted-foreground" />
+                <span className="text-xs font-medium">Upload</span>
+              </button>
+              <p className="text-xs text-muted-foreground text-center capitalize">{side} of Card</p>
+            </div>
           </div>
         ))}
       </div>

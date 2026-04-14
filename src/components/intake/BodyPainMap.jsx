@@ -44,29 +44,43 @@ export default function BodyPainMap({ selected = [], onChange }) {
       <p className="text-sm text-muted-foreground text-center">Tap/click the areas where you feel pain</p>
       <div className="relative">
         <svg viewBox="80 10 240 430" width="220" height="380" className="block mx-auto">
-          {/* Body outline */}
+          {/* Anatomically accurate human figure */}
           {/* Head */}
-          <ellipse cx="200" cy="42" rx="26" ry="28" fill="#e8edf5" stroke="#94a3b8" strokeWidth="1.5" />
+          <ellipse cx="200" cy="42" rx="20" ry="24" fill="none" stroke="#333" strokeWidth="2" />
+          {/* Eyes and nose */}
+          <circle cx="194" cy="38" r="1.5" fill="#333" />
+          <circle cx="206" cy="38" r="1.5" fill="#333" />
+          <line x1="200" y1="40" x2="200" y2="43" stroke="#333" strokeWidth="1" />
+          
           {/* Neck */}
-          <rect x="190" y="68" width="20" height="18" rx="4" fill="#e8edf5" stroke="#94a3b8" strokeWidth="1.5" />
-          {/* Torso */}
-          <path d="M155 100 Q145 110 138 130 L132 220 Q138 240 160 248 L168 260 L200 265 L232 260 L240 248 Q262 240 268 220 L262 130 Q255 110 245 100 Z" fill="#e8edf5" stroke="#94a3b8" strokeWidth="1.5" />
-          {/* Left arm */}
-          <path d="M155 100 Q135 115 125 145 L110 215 L118 220 L132 165 L155 115 Z" fill="#e8edf5" stroke="#94a3b8" strokeWidth="1.5" />
-          {/* Right arm */}
-          <path d="M245 100 Q265 115 275 145 L290 215 L282 220 L268 165 L245 115 Z" fill="#e8edf5" stroke="#94a3b8" strokeWidth="1.5" />
-          {/* Left hand */}
-          <ellipse cx="108" cy="228" rx="10" ry="14" fill="#e8edf5" stroke="#94a3b8" strokeWidth="1.5" />
-          {/* Right hand */}
-          <ellipse cx="292" cy="228" rx="10" ry="14" fill="#e8edf5" stroke="#94a3b8" strokeWidth="1.5" />
-          {/* Left leg */}
-          <path d="M168 260 L160 390 L172 393 L178 295 L200 290 L200 265 Z" fill="#e8edf5" stroke="#94a3b8" strokeWidth="1.5" />
-          {/* Right leg */}
-          <path d="M232 260 L240 390 L228 393 L222 295 L200 290 L200 265 Z" fill="#e8edf5" stroke="#94a3b8" strokeWidth="1.5" />
-          {/* Left foot */}
-          <ellipse cx="162" cy="408" rx="14" ry="10" fill="#e8edf5" stroke="#94a3b8" strokeWidth="1.5" />
-          {/* Right foot */}
-          <ellipse cx="238" cy="408" rx="14" ry="10" fill="#e8edf5" stroke="#94a3b8" strokeWidth="1.5" />
+          <rect x="195" y="65" width="10" height="15" fill="none" stroke="#333" strokeWidth="2" />
+          
+          {/* Shoulders and arms */}
+          <path d="M 155 82 L 145 105 L 130 185 L 125 245" stroke="#333" strokeWidth="2" fill="none" />
+          <path d="M 245 82 L 255 105 L 270 185 L 275 245" stroke="#333" strokeWidth="2" fill="none" />
+          
+          {/* Torso front */}
+          <path d="M 170 82 L 165 95 L 160 130 L 162 200 L 170 260" stroke="#333" strokeWidth="2" fill="none" />
+          <path d="M 230 82 L 235 95 L 240 130 L 238 200 L 230 260" stroke="#333" strokeWidth="2" fill="none" />
+          <ellipse cx="200" cy="130" rx="35" ry="45" fill="none" stroke="#333" strokeWidth="1.5" />
+          
+          {/* Chest line */}
+          <line x1="200" y1="90" x2="200" y2="165" stroke="#333" strokeWidth="1" />
+          
+          {/* Hands */}
+          <ellipse cx="125" cy="250" rx="8" ry="12" fill="none" stroke="#333" strokeWidth="1.5" />
+          <ellipse cx="275" cy="250" rx="8" ry="12" fill="none" stroke="#333" strokeWidth="1.5" />
+          
+          {/* Pelvis */}
+          <ellipse cx="200" cy="275" rx="40" ry="25" fill="none" stroke="#333" strokeWidth="2" />
+          
+          {/* Legs */}
+          <line x1="175" y1="298" x2="170" y2="390" stroke="#333" strokeWidth="2" />
+          <line x1="225" y1="298" x2="230" y2="390" stroke="#333" strokeWidth="2" />
+          
+          {/* Feet */}
+          <ellipse cx="168" cy="405" rx="12" ry="8" fill="none" stroke="#333" strokeWidth="1.5" />
+          <ellipse cx="232" cy="405" rx="12" ry="8" fill="none" stroke="#333" strokeWidth="1.5" />
 
           {/* Clickable regions */}
           {PAIN_REGIONS.map(region => (

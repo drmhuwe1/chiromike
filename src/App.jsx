@@ -22,6 +22,8 @@ import PrintReceipt from './pages/PrintReceipt';
 import CodeLibrary from './pages/CodeLibrary';
 import PatientIntake from './pages/PatientIntake';
 import PatientAccount from './pages/PatientAccount';
+import PaymentSuccess from './pages/PaymentSuccess';
+import PaymentCancelled from './pages/PaymentCancelled';
 import BillingDashboard from './pages/BillingDashboard';
 import HelpGuide from './pages/HelpGuide';
 import Compliance from './pages/Compliance';
@@ -29,8 +31,6 @@ import SoapNotes from './pages/SoapNotes';
 import NewPatientExam from './pages/NewPatientExam';
 import ReExamination from './pages/ReExamination';
 import FinancialReports from './pages/FinancialReports';
-import PaymentSuccess from './pages/PaymentSuccess';
-import PaymentCancelled from './pages/PaymentCancelled';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -67,6 +67,12 @@ const AuthenticatedApp = () => {
   // Render the main app
   return (
     <Routes>
+      {/* Public routes - no layout */}
+      <Route path="/intake" element={<PatientIntake />} />
+      <Route path="/payment-success" element={<PaymentSuccess />} />
+      <Route path="/payment-cancelled" element={<PaymentCancelled />} />
+      
+      {/* Protected app routes with layout */}
       <Route element={<Layout />}>
         <Route path="/" element={<Dashboard />} />
         <Route path="/patients" element={<Patients />} />
@@ -90,8 +96,6 @@ const AuthenticatedApp = () => {
         <Route path="/new-patient-exam" element={<NewPatientExam />} />
         <Route path="/re-examination" element={<ReExamination />} />
         <Route path="/financial-reports" element={<FinancialReports />} />
-        <Route path="/payment-success" element={<PaymentSuccess />} />
-        <Route path="/payment-cancelled" element={<PaymentCancelled />} />
         <Route path="*" element={<PageNotFound />} />
       </Route>
     </Routes>

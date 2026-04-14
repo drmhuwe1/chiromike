@@ -14,7 +14,7 @@ export default function SoapNotes() {
   const [expanded, setExpanded] = useState(null);
   const [printing, setPrinting] = useState(null);
   const [faxTarget, setFaxTarget] = useState(null); // { soapNote, claim }
-  const [generating, setGenerating] = useState(null); // { patientId, dateOfService, formType }
+  const [generating, setGenerating] = useState(null); // { patientId, dateFrom, dateTo, formType }
   const [patients, setPatients] = useState([]);
   const [patientSearch, setPatientSearch] = useState("");
   const { toast } = useToast();
@@ -50,12 +50,13 @@ export default function SoapNotes() {
     setFaxTarget({ soapNote: note, claim });
   };
 
-  const handleGenerateSoapNote = async (patientId, dateOfService, formType) => {
+  const handleGenerateSoapNote = async (patientId, dateFrom, dateTo, formType) => {
     setGenerating(null);
     try {
       const res = await base44.functions.invoke("generateSoapNote", {
         patient_id: patientId,
-        date_of_service: dateOfService,
+        date_from: dateFrom,
+        date_to: dateTo,
         form_type: formType, // "new_patient", "re_exam", or "claim"
       });
       setNotes([res.data, ...notes]);
@@ -206,14 +207,25 @@ export default function SoapNotes() {
               </div>
             </div>
 
-            <div>
-              <Label className="text-sm mb-2 block">Date of Service *</Label>
-              <Input
-                type="date"
-                value={generating.dateOfService}
-                onChange={e => setGenerating(prev => ({ ...prev, dateOfService: e.target.value }))}
-                className="text-sm"
-              />
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-sm mb-2 block">Date From *</Label>
+                <Input
+                  type="date"
+                  value={generating.dateFrom || new Date().toISOString().split("T")[0]}
+                  onChange={e => setGenerating(prev => ({ ...prev, dateFrom: e.target.value }))}
+                  className="text-sm"
+                />
+              </div>
+              <div>
+                <Label className="text-sm mb-2 block">Date To *</Label>
+                <Input
+                  type="date"
+                  value={generating.dateTo || new Date().toISOString().split("T")[0]}
+                  onChange={e => setGenerating(prev => ({ ...prev, dateTo: e.target.value }))}
+                  className="text-sm"
+                />
+              </div>
             </div>
 
             <div>
@@ -244,7 +256,7 @@ export default function SoapNotes() {
               <Button
                 className="flex-1"
                 disabled={!generating.patientId}
-                onClick={() => handleGenerateSoapNote(generating.patientId, generating.dateOfService, generating.formType)}
+                onClick={() => handleGenerateSoapNote(generating.patientId, generating.dateFrom, generating.dateTo, generating.formType)}
               >
                 Generate
               </Button>

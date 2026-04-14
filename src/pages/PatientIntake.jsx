@@ -74,7 +74,7 @@ export default function PatientIntake() {
     address_line1: "", city: "", state: "", zip: "",
     phone: "", email: "",
     occupation: "",
-    emergency_contact_name: "", emergency_contact_phone: "", emergency_contact_relation: "",
+    emergency_contact_name: "", emergency_contact_phone: "", emergency_contact_relation: "Spouse",
     how_heard: "",
     // Condition
     chief_complaint: "", pain_scale: 5, pain_areas: [],
@@ -238,7 +238,17 @@ export default function PatientIntake() {
                   </div>
                   <div>
                     <Label>Relationship</Label>
-                    <Input value={form.emergency_contact_relation} onChange={e => set("emergency_contact_relation", e.target.value)} placeholder="e.g. Spouse" />
+                    <Select value={form.emergency_contact_relation} onValueChange={v => set("emergency_contact_relation", v)}>
+                      <SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Spouse">Spouse</SelectItem>
+                        <SelectItem value="Parent">Parent</SelectItem>
+                        <SelectItem value="Child">Child</SelectItem>
+                        <SelectItem value="Sibling">Sibling</SelectItem>
+                        <SelectItem value="Friend">Friend</SelectItem>
+                        <SelectItem value="Other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div>
                     <Label>How did you hear about us?</Label>
@@ -275,14 +285,35 @@ export default function PatientIntake() {
 
               <div>
                 <Label>Describe the pain</Label>
-                <Textarea value={form.pain_description} onChange={e => set("pain_description", e.target.value)} rows={2}
-                  placeholder="e.g. Sharp, dull, burning, radiating down the leg..." />
+                <div className="space-y-2">
+                  <div className="grid grid-cols-2 gap-2">
+                    {["Sharp", "Dull", "Burning", "Throbbing", "Stabbing", "Radiating", "Tingling", "Numbness", "Aching", "Cramping"].map(type => (
+                      <button
+                        key={type}
+                        type="button"
+                        onClick={() => {
+                          const current = form.pain_description ? form.pain_description + ", " : "";
+                          set("pain_description", current + type);
+                        }}
+                        className={`px-3 py-2 text-xs rounded-lg border transition-colors ${
+                          form.pain_description?.includes(type)
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "border-border hover:bg-muted"
+                        }`}
+                      >
+                        {type}
+                      </button>
+                    ))}
+                  </div>
+                  <Textarea value={form.pain_description} onChange={e => set("pain_description", e.target.value)} rows={2}
+                    placeholder="Or describe in your own words..." />
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label>When did it start?</Label>
-                  <Input value={form.pain_onset} onChange={e => set("pain_onset", e.target.value)} placeholder="e.g. 2 weeks ago, Jan 2024" />
+                  <Input type="date" value={form.pain_onset} onChange={e => set("pain_onset", e.target.value)} />
                 </div>
                 <div>
                   <Label>How often?</Label>
