@@ -49,7 +49,7 @@ export default function EndOfYearFinancialReport({ claims, payments }) {
   const collectionRate = financials.totalCharges > 0 ? ((financials.totalPayments / financials.totalCharges) * 100).toFixed(1) : 0;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 w-full">
       <div className="flex justify-between items-center">
         <h2 className="text-lg font-bold">End of Year Financial Summary</h2>
         <Button onClick={handlePrint} variant="outline" size="sm"><Printer className="w-4 h-4 mr-2" /> Print</Button>
