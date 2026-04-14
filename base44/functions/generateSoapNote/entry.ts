@@ -6,27 +6,34 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { claim_id, pain_scale, functional_limitations, doctor_notes } = await req.json();
+    const { patient_id, date_from, date_to, form_type } = await req.json();
 
-    const [claims, settings] = await Promise.all([
-      base44.entities.Claim.filter({ id: claim_id }),
+    if (!patient_id) return Response.json({ error: 'patient_id required' }, { status: 400 });
+
+    const [patients, claims, settings] = await Promise.all([
+      base44.entities.Patient.filter({ id: patient_id }),
+      base44.entities.Claim.filter({ patient_id }, '-date_of_service', 50),
       base44.entities.OfficeSettings.list('-updated_date', 1),
     ]);
 
-    const claim = claims[0];
-    if (!claim) return Response.json({ error: 'Claim not found' }, { status: 404 });
-
-    const [patients, exams, prevClaims] = await Promise.all([
-      base44.entities.Patient.filter({ id: claim.patient_id }),
-      base44.entities.NewPatientExam.filter({ patient_id: claim.patient_id }, '-created_date', 10),
-      base44.entities.Claim.filter({ patient_id: claim.patient_id }, '-date_of_service', 5),
-    ]);
-    
     const patient = patients[0];
-    const office = settings[0] || {};
-    const mostRecentExam = exams[0]; // Latest exam for this patient
-    const visitHistory = prevClaims.filter(c => c.id !== claim.id).slice(0, 3); // Previous visits
+    if (!patient) return Response.json({ error: 'Patient not found' }, { status: 404 });
 
+    const office = settings[0] || {};
+
+    // Filter claims by date range
+    const filteredClaims = claims.filter(c => {
+      if (date_from && c.date_of_service < date_from) return false;
+      if (date_to && c.date_of_service > date_to) return false;
+      return true;
+    });
+
+    if (filteredClaims.length === 0) {
+      return Response.json({ error: 'No claims found in date range' }, { status: 404 });
+    }
+
+    // Use first claim as reference or create multi-visit note
+    const claim = filteredClaims[0];
     const isAutoPI = claim.visit_type === 'Auto' || claim.payer_type === 'Auto/PI';
     const isAccident = isAutoPI || claim.accident_related;
 
@@ -37,84 +44,55 @@ Deno.serve(async (req) => {
       ? Math.floor((new Date() - new Date(patient.dob)) / 31536000000)
       : null;
 
+    const visitHistory = filteredClaims.length > 1
+      ? filteredClaims.map((v, i) => `Visit ${i + 1} (${v.date_of_service}): ${v.visit_type}, Procedures: ${v.service_lines?.map(s => s.code).join(', ') || 'N/A'}, Total: $${(v.total_charge || 0).toFixed(2)}`).join('\n')
+      : '';
+
     const autoPromptExtra = isAutoPI ? `
 IMPORTANT — AUTO/PI INSURANCE DOCUMENTATION REQUIREMENTS:
 This note MUST satisfy the documentation standards required by auto liability insurers, PIP carriers, and plaintiff attorneys for chiropractic treatment causally related to a motor vehicle accident (MVA).
 
 You MUST include in the appropriate SOAP sections:
-- Mechanism of injury: describe the MVA impact direction, estimated speed/force if known, seatbelt use, airbag deployment, vehicle damage description (use clinical language such as "patient reports rear-end impact at moderate speed with resultant sudden acceleration-deceleration force applied to the cervical and lumbar spine")
-- Causation statement: clearly connect all diagnoses to the MVA using language such as "within reasonable chiropractic certainty, the patient's current symptoms and diagnoses are causally related to the motor vehicle accident of [accident date]"
-- Symptom onset and progression: date symptoms began (ideally same day or within 72 hours of accident), how symptoms have changed since onset
-- Neurological screening results (e.g. DTRs, sensation, grip strength, Spurling's, SLR, Kemp's)
-- ROM measurements with degrees for cervical and lumbar spine (e.g. "Cervical flexion 35°/60° normal, extension 20°/75° normal...")
-- Orthopedic test results (positive/negative): Cervical Compression, Distraction, Soto Hall, Valsalva, SLR, Braggard's as applicable
+- Mechanism of injury: describe the MVA impact direction, estimated speed/force if known, seatbelt use, airbag deployment, vehicle damage description
+- Causation statement: clearly connect all diagnoses to the MVA using language such as "within reasonable chiropractic certainty, the patient's current symptoms and diagnoses are causally related to the motor vehicle accident"
+- Symptom onset and progression: date symptoms began, how symptoms have changed since onset
+- Neurological screening results
+- ROM measurements with degrees for cervical and lumbar spine
+- Orthopedic test results (positive/negative)
 - Muscle palpation findings: specific regions, grades of spasm, trigger points
-- Treatment necessity statement: explain why chiropractic care is medically necessary and not solely for comfort
-- Functional limitations with specific ADL impact (work, sleep, driving, household, recreation)
-- Current pain scale numeric and comparison to initial presentation
-- Treatment plan with frequency and duration: e.g. "3x/week x 4 weeks, then reassess"
-- Prognosis: good/fair/guarded with rationale
-- Referral considerations if neurological signs are present` : '';
+- Treatment necessity statement
+- Functional limitations with specific ADL impact
+- Current pain scale numeric
+- Treatment plan with frequency and duration
+- Prognosis: good/fair/guarded with rationale` : '';
 
-    const examNotes = mostRecentExam ? `
-EXAMINATION FINDINGS (from intake exam):
-- Posture & Gait: ${mostRecentExam.posture_gait || 'Not recorded'}
-- Vital Signs: ${mostRecentExam.vital_signs?.bp || ''} BP${mostRecentExam.vital_signs?.hr ? ', ' + mostRecentExam.vital_signs.hr + ' HR' : ''}${mostRecentExam.vital_signs?.temp ? ', ' + mostRecentExam.vital_signs.temp + '°F temp' : ''}
-- Cervical ROM: Flexion ${mostRecentExam.cervical_rom?.flexion || '—'}, Extension ${mostRecentExam.cervical_rom?.extension || '—'}, Lateral ${mostRecentExam.cervical_rom?.left_lateral || '—'}/${mostRecentExam.cervical_rom?.right_lateral || '—'}, Rotation ${mostRecentExam.cervical_rom?.left_rotation || '—'}/${mostRecentExam.cervical_rom?.right_rotation || '—'}
-- Lumbar ROM: Flexion ${mostRecentExam.lumbar_rom?.flexion || '—'}, Extension ${mostRecentExam.lumbar_rom?.extension || '—'}, Lateral ${mostRecentExam.lumbar_rom?.left_lateral || '—'}/${mostRecentExam.lumbar_rom?.right_lateral || '—'}, Rotation ${mostRecentExam.lumbar_rom?.left_rotation || '—'}/${mostRecentExam.lumbar_rom?.right_rotation || '—'}
-- Orthopedic Tests: ${mostRecentExam.orthopedic_tests?.map(t => `${t.test_name} ${t.result}`).join(', ') || 'Not recorded'}
-- Neurological: DTR Cervical ${mostRecentExam.neurological_findings?.dtr_cervical || '—'}, Lumbar ${mostRecentExam.neurological_findings?.dtr_lumbar || '—'}, Sensory ${mostRecentExam.neurological_findings?.sensory || '—'}, Motor ${mostRecentExam.neurological_findings?.motor_strength || '—'}
-- Palpation: Cervical ${mostRecentExam.palpation_findings?.cervical_palpation || '—'}, Lumbar ${mostRecentExam.palpation_findings?.lumbar_palpation || '—'}, Sacroiliac ${mostRecentExam.palpation_findings?.sacroiliac || '—'}
-- Pain Scale at Exam: ${mostRecentExam.pain_scale || '—'}, Areas: ${mostRecentExam.pain_areas || '—'}
-- Clinical Impression: ${mostRecentExam.clinical_impression || '—'}
-` : '';
+    const prompt = `You are a licensed chiropractic physician (DC) writing a legally and clinically defensible SOAP note. Write in the first person as the treating physician. Use precise clinical language.
 
-    const visitHistoryNotes = visitHistory.length > 0 ? `
-VISIT HISTORY (Previous Claims):
-${visitHistory.map((v, i) => `Visit ${i + 1} (${v.date_of_service}): ${v.visit_type}, Procedures: ${v.service_lines?.map(s => s.code).join(', ') || 'N/A'}, Total: $${(v.total_charge || 0).toFixed(2)}`).join('\n')}
-` : '';
-
-    const prompt = `You are a licensed chiropractic physician (DC) writing a legally and clinically defensible SOAP note for a patient visit. Write in the first person as the treating physician. Use precise clinical language appropriate for insurance review, peer review, IME defense, and potential litigation.
-
-PATIENT: ${patient ? patient.first_name + ' ' + patient.last_name : 'Unknown'}
+PATIENT: ${patient.first_name} ${patient.last_name}
 DOB: ${patient?.dob || 'N/A'}${patientAge ? ` (Age ${patientAge})` : ''}
 SEX: ${patient?.sex || 'N/A'}
-DATE OF SERVICE: ${claim.date_of_service}
-VISIT TYPE: ${claim.visit_type}
-PAYER TYPE: ${claim.payer_type}
+DATE RANGE: ${date_from} to ${date_to}
+VISIT COUNT: ${filteredClaims.length}
 ACCIDENT RELATED: ${isAccident ? 'YES' : 'NO'}
-${isAccident ? `ACCIDENT DATE: ${claim.accident_date || 'N/A'}
-ACCIDENT TYPE: ${claim.accident_type || 'Auto'}` : ''}
-DIAGNOSES (ICD-10): ${diagList || 'See claim'}
-PROCEDURES PERFORMED TODAY: ${procList || 'See claim'}
-CURRENT PAIN SCALE: ${pain_scale !== null && pain_scale !== undefined ? pain_scale + ' / 10' : 'Not recorded'}
-FUNCTIONAL LIMITATIONS REPORTED: ${functional_limitations || 'Not specified'}
-PROVIDER NOTES: ${doctor_notes || 'None'}
+${isAccident ? `ACCIDENT DATE: ${claim.accident_date || 'N/A'}\nACCIDENT TYPE: ${claim.accident_type || 'Auto'}` : ''}
+DIAGNOSES (ICD-10): ${diagList || 'See claims'}
+PROCEDURES: ${procList || 'See claims'}
 RENDERING PROVIDER: ${office.rendering_provider || 'Treating Physician'}
-${isAccident && claim.accident_date ? `DAYS SINCE ACCIDENT: ${Math.floor((new Date(claim.date_of_service) - new Date(claim.accident_date)) / 86400000)}` : ''}
-${patient?.chief_complaint ? `CHIEF COMPLAINT ON FILE: ${patient.chief_complaint}` : ''}
-${patient?.pain_areas?.length ? `PAIN AREAS: ${patient.pain_areas.join(', ')}` : ''}
+${patient?.chief_complaint ? `CHIEF COMPLAINT: ${patient.chief_complaint}` : ''}
 ${patient?.occupation ? `OCCUPATION: ${patient.occupation}` : ''}
 ${patient?.current_medications ? `CURRENT MEDICATIONS: ${patient.current_medications}` : ''}
-${patient?.health_history?.length ? `HEALTH HISTORY: ${patient.health_history.join(', ')}` : ''}
-${patient?.surgeries ? `PRIOR SURGERIES: ${patient.surgeries}` : ''}
-${isAutoPI && patient?.attorney_name ? `PATIENT'S ATTORNEY: ${patient.attorney_name}` : ''}
-${isAutoPI && patient?.insurance_company ? `AUTO INSURER: ${patient.insurance_company}` : ''}
-${isAutoPI && patient?.insured_id ? `CLAIM/POLICY NUMBER: ${patient.insured_id}` : ''}
-${examNotes}
-${visitHistoryNotes}
 
-CLAIM NOTES: ${claim.claim_notes || 'None'}
+${visitHistory ? `VISIT HISTORY:\n${visitHistory}` : ''}
 
 ${autoPromptExtra}
 
-Write a COMPLETE, DETAILED SOAP note with four sections. Be thorough and specific. Do NOT use vague language. Include actual clinical findings, measurements, and clinical reasoning.
+Write a COMPLETE, DETAILED SOAP note covering the treatment period from ${date_from} to ${date_to}. Include progress across all visits if multiple visits occurred.
 
 Return JSON with exactly these four string fields:
-- subjective: Patient's reported complaints, history of present illness, mechanism of injury (for accidents: full MVA description), symptom onset/progression, aggravating and relieving factors, functional impact on daily activities, sleep, work. Reference the pain scale and specific symptoms.
-- objective: Physical examination findings including vital signs if relevant, posture and gait observation, spinal range of motion with degrees for all planes measured, orthopedic test results (positive/negative for each test performed), neurological screening (DTRs, sensation, motor strength), muscle palpation findings (specific regions, spasm grade, trigger points, tenderness levels), chiropractic analysis findings. List all procedures performed with clinical rationale.
-- assessment: Clinical impression, all ICD-10 diagnoses with full descriptions and severity, response to treatment so far, prognosis (good/fair/guarded with reasoning), causation statement for accident cases (use "within a reasonable degree of chiropractic certainty" language), barriers to recovery if any.
-- plan: Treatment rendered today (specific techniques, areas treated, modalities), home care instructions (ice/heat, stretching, activity restrictions), next appointment frequency and duration, total expected treatment course, short and long-term functional goals, referral recommendations if neurological involvement, re-examination schedule.`;
+- subjective: Patient's reported complaints, history, symptom progression across visits
+- objective: Physical examination findings, vital signs, ROM, orthopedic tests, neurological screening, palpation findings, all procedures performed
+- assessment: Clinical impression, all ICD-10 diagnoses, response to treatment, prognosis, causation statement for accident cases
+- plan: Treatment rendered, home care instructions, next appointment frequency, expected treatment course, functional goals, referral recommendations`;
 
     const result = await base44.asServiceRole.integrations.Core.InvokeLLM({
       prompt,
@@ -131,11 +109,11 @@ Return JSON with exactly these four string fields:
     });
 
     const soapNote = await base44.asServiceRole.entities.SoapNote.create({
-      patient_id: claim.patient_id,
-      patient_name: claim.patient_name,
+      patient_id: patient.id,
+      patient_name: `${patient.first_name} ${patient.last_name}`,
       claim_id: claim.id,
-      date_of_service: claim.date_of_service,
-      visit_type: claim.visit_type,
+      date_of_service: date_from,
+      visit_type: filteredClaims.length > 1 ? 'Multi-Visit Summary' : claim.visit_type,
       provider_name: office.rendering_provider || '',
       subjective: result.subjective,
       objective: result.objective,
@@ -146,13 +124,12 @@ Return JSON with exactly these four string fields:
       accident_related: isAccident || false,
       accident_date: claim.accident_date || '',
       accident_type: claim.accident_type || '',
-      pain_scale_current: pain_scale || null,
-      functional_limitations: functional_limitations || '',
       doctor_signature: office.rendering_provider || '',
     });
 
-    return Response.json({ soap_note: soapNote, office });
+    return Response.json({ data: soapNote });
   } catch (error) {
+    console.error('SOAP note generation error:', error.message);
     return Response.json({ error: error.message }, { status: 500 });
   }
 });

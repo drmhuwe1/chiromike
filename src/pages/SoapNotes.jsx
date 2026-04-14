@@ -30,6 +30,11 @@ export default function SoapNotes() {
     });
   }, []);
 
+  const refreshNotes = async () => {
+    const updated = await base44.entities.SoapNote.list("-date_of_service", 500);
+    setNotes(updated);
+  };
+
   const filtered = notes.filter(n => {
     const q = search.toLowerCase();
     return !q || n.patient_name?.toLowerCase().includes(q) || n.date_of_service?.includes(q);
@@ -57,10 +62,12 @@ export default function SoapNotes() {
         patient_id: patientId,
         date_from: dateFrom,
         date_to: dateTo,
-        form_type: formType, // "new_patient", "re_exam", or "claim"
+        form_type: formType,
       });
-      setNotes([res.data, ...notes]);
-      toast({ title: "SOAP note generated successfully" });
+      if (res.data) {
+        setNotes([res.data, ...notes]);
+        toast({ title: "SOAP note generated successfully" });
+      }
     } catch (e) {
       toast({ title: e.message || "Failed to generate SOAP note", variant: "destructive" });
     }

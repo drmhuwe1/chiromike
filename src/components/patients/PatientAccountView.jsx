@@ -3,10 +3,11 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Printer, CreditCard, PlusCircle, ChevronDown, ChevronUp } from "lucide-react";
+import { Printer, CreditCard, PlusCircle, ChevronDown, ChevronUp, FileText, Loader2 } from "lucide-react";
 import PatientStatementPrint from "./PatientStatementPrint";
 import PaymentModal from "../payment/PaymentModal";
 import PostPaymentModal from "./PostPaymentModal";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function PatientAccountView({ patient }) {
   const [claims, setClaims] = useState([]);
@@ -17,18 +18,23 @@ export default function PatientAccountView({ patient }) {
   const [endDate, setEndDate] = useState("");
   const [showPrint, setShowPrint] = useState(false);
   const [showStripePayment, setShowStripePayment] = useState(false);
-  const [postPaymentClaim, setPostPaymentClaim] = useState(null); // claim to post against, or "general"
+  const [postPaymentClaim, setPostPaymentClaim] = useState(null);
   const [expandedClaimId, setExpandedClaimId] = useState(null);
+  const [soapNotes, setSoapNotes] = useState([]);
+  const [generatingSoapNote, setGeneratingSoapNote] = useState(false);
+  const { toast } = useToast();
 
   const load = async () => {
-    const [c, p, s] = await Promise.all([
+    const [c, p, s, notes] = await Promise.all([
       base44.entities.Claim.filter({ patient_id: patient.id }, "-date_of_service", 500),
       base44.entities.Payment.filter({ patient_id: patient.id }, "-payment_date", 500),
-      base44.entities.OfficeSettings.list("-updated_date", 1)
+      base44.entities.OfficeSettings.list("-updated_date", 1),
+      base44.entities.SoapNote.filter({ patient_id: patient.id }, "-date_of_service", 50)
     ]);
     setClaims(c);
     setPayments(p);
     setOffice(s[0] || null);
+    setSoapNotes(notes);
     setLoading(false);
   };
 
@@ -102,6 +108,29 @@ export default function PatientAccountView({ patient }) {
 
   const mostRecentClaim = filteredClaims[0] || claims[0] || null;
 
+  const handleGenerateSoapNote = async () => {
+    if (!startDate || !endDate) {
+      toast({ title: "Please select both From and To dates", variant: "destructive" });
+      return;
+    }
+    setGeneratingSoapNote(true);
+    try {
+      const res = await base44.functions.invoke("generateSoapNote", {
+        patient_id: patient.id,
+        date_from: startDate,
+        date_to: endDate,
+        form_type: "claim"
+      });
+      if (res.data) {
+        setSoapNotes([res.data, ...soapNotes]);
+        toast({ title: "SOAP note generated successfully" });
+      }
+    } catch (e) {
+      toast({ title: e.message || "Failed to generate SOAP note", variant: "destructive" });
+    }
+    setGeneratingSoapNote(false);
+  };
+
   return (
     <div className="space-y-6 pb-10">
       {/* Header */}
@@ -115,10 +144,10 @@ export default function PatientAccountView({ patient }) {
         )}
       </div>
 
-      {/* Date Filter */}
+      {/* Date Filter & SOAP Note Generator */}
       <div className="bg-card border border-border rounded-xl p-4">
-        <Label className="text-sm font-semibold mb-3 block">Filter by Date</Label>
-        <div className="grid grid-cols-2 gap-4">
+        <Label className="text-sm font-semibold mb-3 block">Filter by Date & Generate SOAP Notes</Label>
+        <div className="grid grid-cols-2 gap-4 mb-3">
           <div>
             <Label className="text-xs text-muted-foreground">From</Label>
             <Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="mt-1 h-9" />
@@ -128,6 +157,22 @@ export default function PatientAccountView({ patient }) {
             <Input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="mt-1 h-9" />
           </div>
         </div>
+        <Button
+          onClick={handleGenerateSoapNote}
+          disabled={generatingSoapNote || !startDate || !endDate}
+          variant="outline"
+          className="w-full gap-2"
+        >
+          {generatingSoapNote ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" /> Generating...
+            </>
+          ) : (
+            <>
+              <FileText className="w-4 h-4" /> Generate SOAP Note for Date Range
+            </>
+          )}
+        </Button>
       </div>
 
       {/* Summary Cards */}
@@ -257,6 +302,31 @@ export default function PatientAccountView({ patient }) {
           </tbody>
         </table>
       </div>
+
+      {/* SOAP Notes */}
+      {soapNotes.length > 0 && (
+        <div className="bg-card border border-border rounded-xl overflow-hidden">
+          <div className="p-4 border-b border-border">
+            <h3 className="font-bold flex items-center gap-2"><FileText className="w-4 h-4" /> SOAP Notes ({soapNotes.length})</h3>
+          </div>
+          <div className="space-y-2 p-4">
+            {soapNotes.map(note => (
+              <div key={note.id} className="border border-border rounded-lg p-3 bg-muted/20">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="font-semibold text-sm">{note.visit_type} · {note.date_of_service}</p>
+                    <p className="text-xs text-muted-foreground mt-1">Provider: {note.provider_name}</p>
+                  </div>
+                </div>
+                <div className="mt-2 space-y-1 text-xs">
+                  <p><strong>Subjective:</strong> {note.subjective?.substring(0, 100)}...</p>
+                  <p><strong>Assessment:</strong> {note.assessment?.substring(0, 100)}...</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* All Payments History */}
       {filteredPayments.length > 0 && (
