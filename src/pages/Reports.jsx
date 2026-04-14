@@ -4,10 +4,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { FileText, Mail, Briefcase } from "lucide-react";
+import { FileText, Mail, Briefcase, BarChart3, DollarSign } from "lucide-react";
 import PatientBalancesReport from "../components/reports/PatientBalancesReport";
 import CollectionsLetterModal from "../components/reports/CollectionsLetterModal";
 import LegalCaseSummaryModal from "../components/reports/LegalCaseSummaryModal";
+import ARAgingReport from "../components/reports/ARAgingReport";
+import RevenueByPayerReport from "../components/reports/RevenueByPayerReport";
+import ProcedureUtilizationReport from "../components/reports/ProcedureUtilizationReport";
+import EndOfYearFinancialReport from "../components/reports/EndOfYearFinancialReport";
 
 export default function Reports() {
   const [claims, setClaims] = useState([]);
@@ -99,6 +103,30 @@ export default function Reports() {
         >
           <Briefcase className="w-4 h-4 inline mr-1" /> Legal Case Summary
         </button>
+        <button
+          onClick={() => setReportTab("ar-aging")}
+          className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${reportTab === "ar-aging" ? "bg-card shadow text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+        >
+          <BarChart3 className="w-4 h-4 inline mr-1" /> A/R Aging
+        </button>
+        <button
+          onClick={() => setReportTab("revenue-payer")}
+          className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${reportTab === "revenue-payer" ? "bg-card shadow text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+        >
+          <DollarSign className="w-4 h-4 inline mr-1" /> Revenue by Payer
+        </button>
+        <button
+          onClick={() => setReportTab("procedures")}
+          className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${reportTab === "procedures" ? "bg-card shadow text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+        >
+          <FileText className="w-4 h-4 inline mr-1" /> Procedures
+        </button>
+        <button
+          onClick={() => setReportTab("year-end")}
+          className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${reportTab === "year-end" ? "bg-card shadow text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+        >
+          <DollarSign className="w-4 h-4 inline mr-1" /> Year-End Summary
+        </button>
       </div>
 
       {reportTab === "collections" && (
@@ -188,8 +216,24 @@ export default function Reports() {
         </div>
       )}
 
+      {reportTab === "ar-aging" && (
+       <ARAgingReport claims={claims} payments={payments} />
+      )}
+
+      {reportTab === "revenue-payer" && (
+       <RevenueByPayerReport claims={claims} payments={payments} />
+      )}
+
+      {reportTab === "procedures" && (
+       <ProcedureUtilizationReport claims={claims} />
+      )}
+
+      {reportTab === "year-end" && (
+       <EndOfYearFinancialReport claims={claims} payments={payments} />
+      )}
+
       {reportTab === "balances" && (
-        <PatientBalancesReport patients={patients} claims={claims} payments={payments} />
+       <PatientBalancesReport patients={patients} claims={claims} payments={payments} />
       )}
 
       {reportTab === "claims" && (
