@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Search, Printer, FileText, ChevronDown, ChevronUp, Send, Plus, X } from "lucide-react";
 import FaxModal from "../components/claim/FaxModal";
-import SoapEditModal from "../components/soap/SoapEditModal";
+import SoapFieldEditModal from "../components/soap/SoapFieldEditModal";
 import { useToast } from "@/components/ui/use-toast";
 
 export default function SoapNotes() {
@@ -18,6 +18,7 @@ export default function SoapNotes() {
   const [faxTarget, setFaxTarget] = useState(null); // { soapNote, claim }
   const [generating, setGenerating] = useState(null); // { patientId, dateFrom, dateTo, formType }
   const [editingNote, setEditingNote] = useState(null);
+  const [editingField, setEditingField] = useState(null);
   const [patients, setPatients] = useState([]);
   const [patientSearch, setPatientSearch] = useState("");
   const { toast } = useToast();
@@ -134,10 +135,10 @@ export default function SoapNotes() {
 
               {expanded === note.id && (
                 <div className="border-t border-border px-4 pb-4 pt-3 space-y-3 text-sm">
-                  <Section label="S — Subjective" text={note.subjective} color="blue" onEdit={() => setEditingNote(note)} />
-                  <Section label="O — Objective" text={note.objective} color="green" onEdit={() => setEditingNote(note)} />
-                  <Section label="A — Assessment" text={note.assessment} color="amber" onEdit={() => setEditingNote(note)} />
-                  <Section label="P — Plan" text={note.plan} color="purple" onEdit={() => setEditingNote(note)} />
+                  <Section label="S — Subjective" text={note.subjective} color="blue" fieldKey="subjective" onEdit={(field) => { setEditingNote(note); setEditingField(field); }} />
+                  <Section label="O — Objective" text={note.objective} color="green" fieldKey="objective" onEdit={(field) => { setEditingNote(note); setEditingField(field); }} />
+                  <Section label="A — Assessment" text={note.assessment} color="amber" fieldKey="assessment" onEdit={(field) => { setEditingNote(note); setEditingField(field); }} />
+                  <Section label="P — Plan" text={note.plan} color="purple" fieldKey="plan" onEdit={(field) => { setEditingNote(note); setEditingField(field); }} />
                   {note.diagnoses?.length > 0 && (
                     <div className="text-xs text-muted-foreground">
                       <strong>Diagnoses:</strong> {note.diagnoses.map(d => d.code).join(", ")}
@@ -153,7 +154,7 @@ export default function SoapNotes() {
                       size="sm" 
                       className="text-blue-600 border-blue-200 hover:bg-blue-50" 
                       variant="outline"
-                      onClick={() => setEditingNote(note)}
+                      onClick={() => { setEditingNote(note); setEditingField("subjective"); }}
                     >
                       Edit Fields
                     </Button>
@@ -194,16 +195,17 @@ export default function SoapNotes() {
         />
       )}
 
-      {/* Edit SOAP Note modal */}
-      {editingNote && (
-        <SoapEditModal
+      {/* Edit SOAP Field modal */}
+      {editingNote && editingField && (
+        <SoapFieldEditModal
           note={editingNote}
-          onSave={async (updated) => {
-            await base44.entities.SoapNote.update(editingNote.id, updated);
+          field={editingField}
+          onSave={async (field, value) => {
+            await base44.entities.SoapNote.update(editingNote.id, { [field]: value });
             await refreshNotes();
-            toast({ title: "SOAP note updated" });
+            toast({ title: "Field updated" });
           }}
-          onClose={() => setEditingNote(null)}
+          onClose={() => { setEditingNote(null); setEditingField(null); }}
         />
       )}
 
@@ -307,7 +309,7 @@ export default function SoapNotes() {
       );
       }
 
-function Section({ label, text, color, onEdit }) {
+function Section({ label, text, color, fieldKey, onEdit }) {
   const colors = {
     blue: "border-blue-200 bg-blue-50",
     green: "border-green-200 bg-green-50",
@@ -317,7 +319,7 @@ function Section({ label, text, color, onEdit }) {
   return (
     <div 
       className={`border rounded-lg p-3 ${colors[color]} cursor-pointer hover:shadow-md transition-shadow`} 
-      onClick={onEdit}
+      onClick={() => onEdit(fieldKey)}
       role="button"
       tabIndex={0}
     >
