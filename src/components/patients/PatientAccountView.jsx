@@ -3,9 +3,10 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Printer, CreditCard } from "lucide-react";
+import { Printer, CreditCard, PlusCircle, ChevronDown, ChevronUp } from "lucide-react";
 import PatientStatementPrint from "./PatientStatementPrint";
 import PaymentModal from "../payment/PaymentModal";
+import PostPaymentModal from "./PostPaymentModal";
 
 export default function PatientAccountView({ patient }) {
   const [claims, setClaims] = useState([]);
@@ -15,22 +16,23 @@ export default function PatientAccountView({ patient }) {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [showPrint, setShowPrint] = useState(false);
-  const [showPayment, setShowPayment] = useState(false);
+  const [showStripePayment, setShowStripePayment] = useState(false);
+  const [postPaymentClaim, setPostPaymentClaim] = useState(null); // claim to post against, or "general"
+  const [expandedClaimId, setExpandedClaimId] = useState(null);
 
-  useEffect(() => {
-    const load = async () => {
-      const [c, p, s] = await Promise.all([
-        base44.entities.Claim.filter({ patient_id: patient.id }, "-date_of_service", 500),
-        base44.entities.Payment.filter({ patient_id: patient.id }, "-payment_date", 500),
-        base44.entities.OfficeSettings.list("-updated_date", 1)
-      ]);
-      setClaims(c);
-      setPayments(p);
-      setOffice(s[0] || null);
-      setLoading(false);
-    };
-    load();
-  }, [patient.id]);
+  const load = async () => {
+    const [c, p, s] = await Promise.all([
+      base44.entities.Claim.filter({ patient_id: patient.id }, "-date_of_service", 500),
+      base44.entities.Payment.filter({ patient_id: patient.id }, "-payment_date", 500),
+      base44.entities.OfficeSettings.list("-updated_date", 1)
+    ]);
+    setClaims(c);
+    setPayments(p);
+    setOffice(s[0] || null);
+    setLoading(false);
+  };
+
+  useEffect(() => { load(); }, [patient.id]);
 
   const filteredClaims = useMemo(() => {
     return claims.filter(c => {
@@ -40,18 +42,33 @@ export default function PatientAccountView({ patient }) {
     }).sort((a, b) => new Date(b.date_of_service) - new Date(a.date_of_service));
   }, [claims, startDate, endDate]);
 
-  const totalCharges = useMemo(() => 
+  // Group payments by claim_id for per-row display
+  const paymentsByClaimId = useMemo(() => {
+    const map = {};
+    payments.forEach(p => {
+      if (!map[p.claim_id]) map[p.claim_id] = [];
+      map[p.claim_id].push(p);
+    });
+    return map;
+  }, [payments]);
+
+  const filteredPayments = useMemo(() =>
+    payments.filter(p => {
+      if (startDate && p.payment_date < startDate) return false;
+      if (endDate && p.payment_date > endDate) return false;
+      return true;
+    }),
+    [payments, startDate, endDate]
+  );
+
+  const totalCharges = useMemo(() =>
     filteredClaims.reduce((sum, c) => sum + (c.total_charge || 0), 0),
     [filteredClaims]
   );
 
   const totalPayments = useMemo(() =>
-    payments.filter(p => {
-      if (startDate && p.payment_date < startDate) return false;
-      if (endDate && p.payment_date > endDate) return false;
-      return true;
-    }).reduce((sum, p) => sum + (p.payment_amount || 0), 0),
-    [payments, startDate, endDate]
+    filteredPayments.reduce((sum, p) => sum + (p.payment_amount || 0), 0),
+    [filteredPayments]
   );
 
   const balance = totalCharges - totalPayments;
@@ -68,11 +85,7 @@ export default function PatientAccountView({ patient }) {
         patient={patient}
         office={office}
         claims={filteredClaims}
-        payments={payments.filter(p => {
-          if (startDate && p.payment_date < startDate) return false;
-          if (endDate && p.payment_date > endDate) return false;
-          return true;
-        })}
+        payments={filteredPayments}
         onClose={() => setShowPrint(false)}
       />
     );
@@ -95,25 +108,15 @@ export default function PatientAccountView({ patient }) {
 
       {/* Date Filter */}
       <div className="bg-card border border-border rounded-xl p-4">
-        <Label className="text-sm font-semibold mb-3 block">Filter by Date of Service</Label>
+        <Label className="text-sm font-semibold mb-3 block">Filter by Date</Label>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <Label className="text-xs text-muted-foreground">From Date</Label>
-            <Input
-              type="date"
-              value={startDate}
-              onChange={e => setStartDate(e.target.value)}
-              className="mt-1 h-9"
-            />
+            <Label className="text-xs text-muted-foreground">From</Label>
+            <Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="mt-1 h-9" />
           </div>
           <div>
-            <Label className="text-xs text-muted-foreground">To Date</Label>
-            <Input
-              type="date"
-              value={endDate}
-              onChange={e => setEndDate(e.target.value)}
-              className="mt-1 h-9"
-            />
+            <Label className="text-xs text-muted-foreground">To</Label>
+            <Input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="mt-1 h-9" />
           </div>
         </div>
       </div>
@@ -136,53 +139,161 @@ export default function PatientAccountView({ patient }) {
         </div>
       </div>
 
-      {/* Claims Table */}
+      {/* Claims Table with per-row payment posting */}
       <div className="bg-card border border-border rounded-xl overflow-hidden">
         <div className="p-4 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <h3 className="font-bold">{filteredClaims.length} Visits</h3>
-          <div className="flex gap-2">
-            <Button onClick={() => setShowPayment(true)} className="gap-2 bg-green-600 hover:bg-green-700">
-              <CreditCard className="w-4 h-4" /> Collect Payment
+          <div className="flex flex-wrap gap-2">
+            <Button
+              onClick={() => setPostPaymentClaim("general")}
+              variant="outline"
+              className="gap-2 text-green-700 border-green-300 hover:bg-green-50"
+            >
+              <PlusCircle className="w-4 h-4" /> Post Manual Payment
+            </Button>
+            <Button
+              onClick={() => setShowStripePayment(true)}
+              className="gap-2 bg-green-600 hover:bg-green-700"
+            >
+              <CreditCard className="w-4 h-4" /> Collect via Stripe
             </Button>
             <Button onClick={() => setShowPrint(true)} variant="outline" className="gap-2">
               <Printer className="w-4 h-4" /> Statement PDF
             </Button>
           </div>
         </div>
+
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b bg-muted/50">
-              <th className="text-left py-2 px-4 font-medium">Date</th>
+              <th className="text-left py-2 px-4 font-medium">Date of Service</th>
               <th className="text-left py-2 px-4 font-medium">Type</th>
-              <th className="text-left py-2 px-4 font-medium">Procedures</th>
-              <th className="text-left py-2 px-4 font-medium">Diagnoses</th>
+              <th className="text-left py-2 px-4 font-medium hidden md:table-cell">Procedures</th>
               <th className="text-right py-2 px-4 font-medium">Charge</th>
+              <th className="text-right py-2 px-4 font-medium">Paid</th>
+              <th className="text-right py-2 px-4 font-medium">Balance</th>
+              <th className="py-2 px-4"></th>
             </tr>
           </thead>
           <tbody>
-            {filteredClaims.map(c => (
-              <tr key={c.id} className="border-b hover:bg-muted/30">
-                <td className="py-2 px-4 font-mono text-sm">{c.date_of_service}</td>
-                <td className="py-2 px-4">{c.visit_type}</td>
-                <td className="py-2 px-4 text-xs">
-                  {(c.service_lines || []).map(l => l.code).join(", ") || "—"}
-                </td>
-                <td className="py-2 px-4 text-xs">
-                  {(c.diagnoses || []).map(d => d.code).join(", ") || "—"}
-                </td>
-                <td className="py-2 px-4 text-right font-semibold">${(c.total_charge || 0).toFixed(2)}</td>
+            {filteredClaims.map(c => {
+              const claimPayments = paymentsByClaimId[c.id] || [];
+              const paidAmt = claimPayments.reduce((s, p) => s + (p.payment_amount || 0), 0);
+              const claimBalance = (c.total_charge || 0) - paidAmt;
+              const isExpanded = expandedClaimId === c.id;
+
+              return [
+                <tr key={c.id} className="border-b hover:bg-muted/30">
+                  <td className="py-2 px-4 font-mono text-sm">{c.date_of_service}</td>
+                  <td className="py-2 px-4">{c.visit_type}</td>
+                  <td className="py-2 px-4 text-xs hidden md:table-cell">
+                    {(c.service_lines || []).map(l => l.code).join(", ") || "—"}
+                  </td>
+                  <td className="py-2 px-4 text-right font-semibold">${(c.total_charge || 0).toFixed(2)}</td>
+                  <td className="py-2 px-4 text-right text-green-700 font-semibold">
+                    {paidAmt > 0 ? `$${paidAmt.toFixed(2)}` : "—"}
+                  </td>
+                  <td className={`py-2 px-4 text-right font-bold ${claimBalance > 0 ? 'text-destructive' : 'text-green-600'}`}>
+                    ${Math.abs(claimBalance).toFixed(2)}
+                    {claimBalance < 0 && <span className="text-xs font-normal"> CR</span>}
+                  </td>
+                  <td className="py-2 px-4">
+                    <div className="flex items-center gap-1 justify-end">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-xs text-green-700 border-green-300 hover:bg-green-50 px-2"
+                        onClick={() => setPostPaymentClaim(c)}
+                      >
+                        Post
+                      </Button>
+                      {claimPayments.length > 0 && (
+                        <button
+                          className="text-muted-foreground hover:text-foreground p-1"
+                          onClick={() => setExpandedClaimId(isExpanded ? null : c.id)}
+                        >
+                          {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>,
+                isExpanded && claimPayments.length > 0 && (
+                  <tr key={`${c.id}-payments`} className="border-b bg-green-50/50">
+                    <td colSpan={7} className="px-8 py-2">
+                      <div className="text-xs font-semibold text-muted-foreground mb-1">Posted Payments</div>
+                      <div className="space-y-1">
+                        {claimPayments.map(p => (
+                          <div key={p.id} className="flex justify-between text-xs text-green-900">
+                            <span>{p.payment_date} · {p.payment_type}{p.check_number ? ` · #${p.check_number}` : ""}</span>
+                            <span className="font-semibold">${(p.payment_amount || 0).toFixed(2)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </td>
+                  </tr>
+                )
+              ];
+            })}
+            {filteredClaims.length === 0 && (
+              <tr>
+                <td colSpan={7} className="py-8 text-center text-muted-foreground text-sm">No visits found</td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>
 
-      {showPayment && (
+      {/* All Payments History */}
+      {filteredPayments.length > 0 && (
+        <div className="bg-card border border-border rounded-xl overflow-hidden">
+          <div className="p-4 border-b border-border">
+            <h3 className="font-bold">Payment History ({filteredPayments.length})</h3>
+          </div>
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b bg-muted/50">
+                <th className="text-left py-2 px-4 font-medium">Payment Date</th>
+                <th className="text-left py-2 px-4 font-medium">DOS</th>
+                <th className="text-left py-2 px-4 font-medium">Type</th>
+                <th className="text-left py-2 px-4 font-medium hidden md:table-cell">Check #</th>
+                <th className="text-left py-2 px-4 font-medium hidden md:table-cell">Notes</th>
+                <th className="text-right py-2 px-4 font-medium">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredPayments.sort((a, b) => new Date(b.payment_date) - new Date(a.payment_date)).map(p => (
+                <tr key={p.id} className="border-b hover:bg-muted/30">
+                  <td className="py-2 px-4 font-mono text-xs">{p.payment_date}</td>
+                  <td className="py-2 px-4 font-mono text-xs">{p.date_of_service || "—"}</td>
+                  <td className="py-2 px-4 text-xs">{p.payment_type}</td>
+                  <td className="py-2 px-4 text-xs hidden md:table-cell">{p.check_number || "—"}</td>
+                  <td className="py-2 px-4 text-xs hidden md:table-cell text-muted-foreground truncate max-w-[150px]">{p.notes || "—"}</td>
+                  <td className="py-2 px-4 text-right font-semibold text-green-700">${(p.payment_amount || 0).toFixed(2)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Post Manual Payment Modal */}
+      {postPaymentClaim && (
+        <PostPaymentModal
+          patient={patient}
+          claim={postPaymentClaim === "general" ? null : postPaymentClaim}
+          onClose={() => setPostPaymentClaim(null)}
+          onSaved={() => { setPostPaymentClaim(null); load(); }}
+        />
+      )}
+
+      {/* Stripe Payment Modal */}
+      {showStripePayment && (
         <PaymentModal
           claim={mostRecentClaim || { id: null, date_of_service: new Date().toISOString().split("T")[0], total_charge: balance }}
           patient={patient}
-          onClose={() => setShowPayment(false)}
-          onSuccess={() => { setShowPayment(false); }}
+          onClose={() => setShowStripePayment(false)}
+          onSuccess={() => { setShowStripePayment(false); load(); }}
         />
       )}
     </div>
