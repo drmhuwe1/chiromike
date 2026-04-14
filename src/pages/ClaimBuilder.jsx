@@ -183,7 +183,9 @@ export default function ClaimBuilder() {
     const draft = localStorage.getItem('claimDraft');
     if (draft) {
       try {
-        setClaim(JSON.parse(draft));
+        const parsed = JSON.parse(draft);
+        // Always use today's date, never restore an old date from draft
+        setClaim(prev => ({ ...parsed, date_of_service: prev.date_of_service }));
       } catch (e) {
         console.error('Failed to load draft', e);
       }

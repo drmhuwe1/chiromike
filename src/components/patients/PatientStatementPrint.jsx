@@ -111,7 +111,7 @@ export default function PatientStatementPrint({ patient, office, claims, payment
                     {(claim.service_lines || []).map(l => `${l.code}`).join(", ") || "—"}
                   </td>
                   <td style={{ padding: "6px", fontSize: "10px" }}>
-                    {(claim.diagnoses || []).map(d => d.code).join(", ") || "—"}
+                    {(claim.diagnoses || []).map(d => d.description ? `${d.code} - ${d.description}` : d.code).join("; ") || "—"}
                   </td>
                   <td style={{ padding: "6px", textAlign: "right", fontWeight: "500" }}>
                     ${(claim.total_charge || 0).toFixed(2)}
