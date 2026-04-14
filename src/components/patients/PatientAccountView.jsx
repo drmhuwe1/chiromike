@@ -3,8 +3,9 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Printer, Download, Calendar } from "lucide-react";
+import { Printer, CreditCard } from "lucide-react";
 import PatientStatementPrint from "./PatientStatementPrint";
+import PaymentModal from "../payment/PaymentModal";
 
 export default function PatientAccountView({ patient }) {
   const [claims, setClaims] = useState([]);
@@ -14,6 +15,7 @@ export default function PatientAccountView({ patient }) {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [showPrint, setShowPrint] = useState(false);
+  const [showPayment, setShowPayment] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -76,8 +78,11 @@ export default function PatientAccountView({ patient }) {
     );
   }
 
+  const mostRecentClaim = filteredClaims[0] || claims[0] || null;
+
   return (
-    <div className="space-y-6">
+    <>
+    <div className="space-y-6 pb-10">
       {/* Header */}
       <div className="bg-card border border-border rounded-xl p-4">
         <h2 className="text-lg font-bold mb-1">{patient.first_name} {patient.last_name}</h2>
@@ -134,11 +139,16 @@ export default function PatientAccountView({ patient }) {
 
       {/* Claims Table */}
       <div className="bg-card border border-border rounded-xl overflow-hidden">
-        <div className="p-4 border-b border-border flex items-center justify-between">
+        <div className="p-4 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <h3 className="font-bold">{filteredClaims.length} Visits</h3>
-          <Button onClick={() => setShowPrint(true)} className="gap-2">
-            <Printer className="w-4 h-4" /> Generate Statement PDF
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => setShowPayment(true)} className="gap-2 bg-green-600 hover:bg-green-700">
+              <CreditCard className="w-4 h-4" /> Collect Payment
+            </Button>
+            <Button onClick={() => setShowPrint(true)} variant="outline" className="gap-2">
+              <Printer className="w-4 h-4" /> Statement PDF
+            </Button>
+          </div>
         </div>
         <table className="w-full text-sm">
           <thead>
@@ -168,5 +178,15 @@ export default function PatientAccountView({ patient }) {
         </table>
       </div>
     </div>
+
+    {showPayment && (
+      <PaymentModal
+        claim={mostRecentClaim || { id: null, date_of_service: new Date().toISOString().split("T")[0], total_charge: balance }}
+        patient={patient}
+        onClose={() => setShowPayment(false)}
+        onSuccess={() => { setShowPayment(false); }}
+      />
+    )}
+    </>
   );
 }
