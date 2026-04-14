@@ -35,8 +35,13 @@ import FinancialReports from './pages/FinancialReports';
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
 
-  // Show loading spinner while checking app public settings or auth
-  if (isLoadingPublicSettings || isLoadingAuth) {
+  // Allow intake and payment routes to render without auth checks
+  const isPublicRoute = window.location.pathname.startsWith('/intake') || 
+                        window.location.pathname === '/payment-success' || 
+                        window.location.pathname === '/payment-cancelled';
+
+  // Show loading spinner while checking app public settings or auth (skip for public routes)
+  if (!isPublicRoute && (isLoadingPublicSettings || isLoadingAuth)) {
     return (
       <div className="fixed inset-0 flex items-center justify-center">
         <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div>
@@ -44,8 +49,8 @@ const AuthenticatedApp = () => {
     );
   }
 
-  // Handle authentication errors
-  if (authError) {
+  // Handle authentication errors (skip for public routes)
+  if (!isPublicRoute && authError) {
     if (authError.type === 'user_not_registered') {
       return <UserNotRegisteredError />;
     } else if (authError.type === 'user_not_authorized') {
