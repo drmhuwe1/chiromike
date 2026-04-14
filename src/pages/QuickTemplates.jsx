@@ -97,48 +97,50 @@ export default function QuickTemplates() {
       </div>
 
       {editing && (
-        <div ref={editFormRef} className="bg-card border-2 border-primary rounded-xl p-6 mb-4 space-y-4 shadow-lg">
-          <div className="flex justify-between">
-            <h3 className="text-lg font-semibold">{editing.id ? "Edit" : "New"} Template</h3>
-            <Button variant="ghost" size="sm" onClick={() => setEditing(null)}><X className="w-4 h-4" /></Button>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div>
-              <Label>Template Name *</Label>
-              <Input value={editing.title} onChange={e => set("title", e.target.value)} />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="bg-card border border-border rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto p-6 space-y-4">
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-semibold">{editing.id ? "Edit" : "New"} Template</h3>
+              <Button variant="ghost" size="sm" onClick={() => setEditing(null)}><X className="w-4 h-4" /></Button>
             </div>
-            <div>
-              <Label>Category</Label>
-              <Select value={editing.category} onValueChange={v => set("category", v)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {templateCategories.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div>
+                <Label>Template Name *</Label>
+                <Input value={editing.title} onChange={e => set("title", e.target.value)} />
+              </div>
+              <div>
+                <Label>Category</Label>
+                <Select value={editing.category} onValueChange={v => set("category", v)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {templateCategories.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Payer Type</Label>
+                <Select value={editing.payer_type} onValueChange={v => set("payer_type", v)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {payerTypes.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            <div>
-              <Label>Payer Type</Label>
-              <Select value={editing.payer_type} onValueChange={v => set("payer_type", v)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {payerTypes.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          
-          <TemplateProcedureEditor 
-            procedures={editing.procedures || []} 
-            onChange={procs => set("procedures", procs)} 
-          />
 
-          <div>
-            <Label>Notes</Label>
-            <Textarea value={editing.notes || ""} onChange={e => set("notes", e.target.value)} rows={2} />
-          </div>
-          <div className="flex gap-3">
-            <Button onClick={handleSave}><Save className="w-4 h-4 mr-2" /> Save Template</Button>
-            <Button variant="outline" onClick={() => setEditing(null)}>Cancel</Button>
+            <TemplateProcedureEditor
+              procedures={editing.procedures || []}
+              onChange={procs => set("procedures", procs)}
+            />
+
+            <div>
+              <Label>Notes</Label>
+              <Textarea value={editing.notes || ""} onChange={e => set("notes", e.target.value)} rows={2} />
+            </div>
+            <div className="flex gap-3">
+              <Button onClick={handleSave}><Save className="w-4 h-4 mr-2" /> Save Template</Button>
+              <Button variant="outline" onClick={() => setEditing(null)}>Cancel</Button>
+            </div>
           </div>
         </div>
       )}
