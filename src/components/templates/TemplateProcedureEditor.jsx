@@ -25,7 +25,7 @@ export default function TemplateProcedureEditor({ procedures, onChange }) {
         </Button>
       </div>
       {procedures.length === 0 && (
-        <p className="text-sm text-muted-foreground py-3">No procedures added yet.</p>
+        <p className="text-sm text-muted-foreground py-3">Click <strong>+ Add Line</strong> to add a procedure with Code, Description, Charge, Units, and Modifier.</p>
       )}
       <div className="space-y-2">
         {procedures.map((proc, idx) => (

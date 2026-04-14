@@ -69,7 +69,8 @@ export default function QuickTemplates() {
         <h1 className="text-2xl font-bold tracking-tight">Quick Templates</h1>
         <Button onClick={() => setEditing({
           title: "", category: "Custom", payer_type: "Any",
-          procedures: [], default_diagnoses: [], notes: "", active: true,
+          procedures: [{ code: "", description: "", charge: 0, units: 1, modifier: "", diagnosis_pointers: "1" }],
+          default_diagnoses: [], notes: "", active: true,
         })}>
           <Plus className="w-4 h-4 mr-2" /> New Template
         </Button>
