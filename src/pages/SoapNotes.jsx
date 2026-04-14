@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Search, Printer, FileText, ChevronDown, ChevronUp, Send, Plus, X } from "lucide-react";
+import { Search, Printer, FileText, ChevronDown, ChevronUp, Send, Plus, X, Trash2 } from "lucide-react";
 import FaxModal from "../components/claim/FaxModal";
 import SoapFieldEditModal from "../components/soap/SoapFieldEditModal";
 import { useToast } from "@/components/ui/use-toast";
@@ -37,6 +37,16 @@ export default function SoapNotes() {
   const refreshNotes = async () => {
     const updated = await base44.entities.SoapNote.list("-date_of_service", 500);
     setNotes(updated);
+  };
+
+  const handleDeleteNote = async (note) => {
+    if (!window.confirm(`Delete SOAP note for ${note.patient_name} (${note.date_of_service})? This cannot be undone.`)) {
+      return;
+    }
+    await base44.entities.SoapNote.delete(note.id);
+    await refreshNotes();
+    setExpanded(null);
+    toast({ title: "SOAP note deleted" });
   };
 
   const filtered = notes.filter(n => {
@@ -128,6 +138,9 @@ export default function SoapNotes() {
                   </Button>
                   <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => handlePrint(note)} title="Print PDF">
                     <Printer className="w-3.5 h-3.5" />
+                  </Button>
+                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => handleDeleteNote(note)} title="Delete SOAP Note">
+                    <Trash2 className="w-3.5 h-3.5 text-destructive" />
                   </Button>
                 </div>
                 {expanded === note.id ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
