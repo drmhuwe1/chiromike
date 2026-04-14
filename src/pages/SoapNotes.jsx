@@ -2,8 +2,10 @@ import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Printer, FileText, ChevronDown, ChevronUp, Send } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Search, Printer, FileText, ChevronDown, ChevronUp, Send, Plus, X } from "lucide-react";
 import FaxModal from "../components/claim/FaxModal";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function SoapNotes() {
   const [notes, setNotes] = useState([]);
@@ -12,10 +14,18 @@ export default function SoapNotes() {
   const [expanded, setExpanded] = useState(null);
   const [printing, setPrinting] = useState(null);
   const [faxTarget, setFaxTarget] = useState(null); // { soapNote, claim }
+  const [generating, setGenerating] = useState(null); // { patientId, dateOfService, formType }
+  const [patients, setPatients] = useState([]);
+  const [patientSearch, setPatientSearch] = useState("");
+  const { toast } = useToast();
 
   useEffect(() => {
-    base44.entities.SoapNote.list("-date_of_service", 500).then(data => {
-      setNotes(data);
+    Promise.all([
+      base44.entities.SoapNote.list("-date_of_service", 500),
+      base44.entities.Patient.list("-updated_date", 500),
+    ]).then(([notesData, patientsData]) => {
+      setNotes(notesData);
+      setPatients(patientsData);
       setLoading(false);
     });
   }, []);
@@ -40,6 +50,28 @@ export default function SoapNotes() {
     setFaxTarget({ soapNote: note, claim });
   };
 
+  const handleGenerateSoapNote = async (patientId, dateOfService, formType) => {
+    setGenerating(null);
+    try {
+      const res = await base44.functions.invoke("generateSoapNote", {
+        patient_id: patientId,
+        date_of_service: dateOfService,
+        form_type: formType, // "new_patient", "re_exam", or "claim"
+      });
+      setNotes([res.data, ...notes]);
+      toast({ title: "SOAP note generated successfully" });
+    } catch (e) {
+      toast({ title: e.message || "Failed to generate SOAP note", variant: "destructive" });
+    }
+  };
+
+  const filteredPatients = patientSearch.length >= 2
+    ? patients.filter(p => {
+        const q = patientSearch.toLowerCase();
+        return p.first_name?.toLowerCase().includes(q) || p.last_name?.toLowerCase().includes(q);
+      }).slice(0, 15)
+    : [];
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -47,6 +79,9 @@ export default function SoapNotes() {
           <h1 className="text-2xl font-bold tracking-tight">SOAP Notes</h1>
           <p className="text-sm text-muted-foreground">AI-generated clinical notes stored by patient and date</p>
         </div>
+        <Button onClick={() => setGenerating({ patientId: "", dateOfService: new Date().toISOString().split("T")[0], formType: "claim" })}>
+          <Plus className="w-4 h-4 mr-2" /> Generate SOAP Note
+        </Button>
       </div>
 
       <div className="relative mb-4">
@@ -111,7 +146,7 @@ export default function SoapNotes() {
           ))}
           {filtered.length === 0 && (
             <div className="text-center py-12 text-muted-foreground">
-              No SOAP notes yet. Generate one from the New Claim page.
+              No SOAP notes yet. Click <strong>+ Generate SOAP Note</strong> to create one.
             </div>
           )}
         </div>
@@ -132,9 +167,95 @@ export default function SoapNotes() {
           onClose={() => setFaxTarget(null)}
         />
       )}
-    </div>
-  );
-}
+
+      {/* Generate SOAP Note modal */}
+      {generating && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="bg-card border border-border rounded-xl shadow-2xl w-full max-w-md space-y-4 p-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-lg font-bold">Generate SOAP Note</h2>
+              <Button variant="ghost" size="sm" onClick={() => setGenerating(null)}><X className="w-4 h-4" /></Button>
+            </div>
+
+            <div>
+              <Label className="text-sm mb-2 block">Patient *</Label>
+              <div className="relative">
+                <Input
+                  placeholder="Search patient..."
+                  value={patientSearch}
+                  onChange={e => setPatientSearch(e.target.value)}
+                  className="text-sm"
+                />
+                {patientSearch.length >= 2 && filteredPatients.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-popover border border-border rounded-md shadow-lg max-h-48 overflow-y-auto z-50">
+                    {filteredPatients.map(p => (
+                      <button
+                        key={p.id}
+                        type="button"
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-muted"
+                        onClick={() => {
+                          setGenerating(prev => ({ ...prev, patientId: p.id }));
+                          setPatientSearch(`${p.first_name} ${p.last_name}`);
+                        }}
+                      >
+                        {p.first_name} {p.last_name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <Label className="text-sm mb-2 block">Date of Service *</Label>
+              <Input
+                type="date"
+                value={generating.dateOfService}
+                onChange={e => setGenerating(prev => ({ ...prev, dateOfService: e.target.value }))}
+                className="text-sm"
+              />
+            </div>
+
+            <div>
+              <Label className="text-sm mb-2 block">Form Type *</Label>
+              <div className="space-y-2">
+                {[
+                  { value: "new_patient", label: "New Patient Exam" },
+                  { value: "re_exam", label: "Re-Examination" },
+                  { value: "claim", label: "New Claim/Visit" },
+                ].map(opt => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    className={`w-full text-left px-3 py-2 text-sm rounded border transition-colors ${
+                      generating.formType === opt.value
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "border-border hover:bg-muted"
+                    }`}
+                    onClick={() => setGenerating(prev => ({ ...prev, formType: opt.value }))}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <Button
+                className="flex-1"
+                disabled={!generating.patientId}
+                onClick={() => handleGenerateSoapNote(generating.patientId, generating.dateOfService, generating.formType)}
+              >
+                Generate
+              </Button>
+              <Button variant="outline" className="flex-1" onClick={() => setGenerating(null)}>Cancel</Button>
+            </div>
+          </div>
+        </div>
+      )}
+      </div>
+      );
+      }
 
 function Section({ label, text, color }) {
   const colors = {
