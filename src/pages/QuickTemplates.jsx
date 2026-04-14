@@ -147,7 +147,7 @@ export default function QuickTemplates() {
                 <h3 className="font-semibold">{t.title}</h3>
                 <div className="flex gap-1">
                   <Button variant="ghost" size="sm" onClick={() => handleDuplicate(t)}><Copy className="w-3.5 h-3.5" /></Button>
-                  <Button variant="ghost" size="sm" onClick={() => setEditing(t)}><Edit2 className="w-3.5 h-3.5" /></Button>
+                  <Button variant="ghost" size="sm" onClick={() => setEditing(JSON.parse(JSON.stringify(t)))}><Edit2 className="w-3.5 h-3.5" /></Button>
                   <Button variant="ghost" size="sm" onClick={() => handleDelete(t.id)}><Trash2 className="w-3.5 h-3.5" /></Button>
                 </div>
               </div>
@@ -155,9 +155,19 @@ export default function QuickTemplates() {
                 <Badge variant="secondary" className="text-xs">{t.category}</Badge>
                 <Badge variant="outline" className="text-xs">{t.payer_type}</Badge>
               </div>
-              <p className="text-xs text-muted-foreground">
-                {t.procedures?.length || 0} procedure{(t.procedures?.length || 0) !== 1 ? "s" : ""}
-              </p>
+              <div className="text-xs text-muted-foreground space-y-0.5">
+                {t.procedures?.length > 0 ? (
+                  t.procedures.map((p, i) => (
+                    <div key={i} className="flex justify-between">
+                      <span className="font-mono font-medium text-foreground">{p.code || "—"}</span>
+                      <span className="text-muted-foreground truncate mx-2 flex-1">{p.description}</span>
+                      <span className="font-semibold text-green-700 shrink-0">${(parseFloat(p.charge) || 0).toFixed(2)}</span>
+                    </div>
+                  ))
+                ) : (
+                  <span>No procedures</span>
+                )}
+              </div>
             </div>
           ))}
           {filtered.length === 0 && (
