@@ -43,14 +43,23 @@ export default function PatientAccountView({ patient }) {
   }, [claims, startDate, endDate]);
 
   // Group payments by claim_id for per-row display
+  // If a payment has no claim_id, try to match it to a claim by date_of_service
   const paymentsByClaimId = useMemo(() => {
     const map = {};
+    // Build a DOS -> claim_id lookup
+    const dosToClaim = {};
+    claims.forEach(c => {
+      if (c.date_of_service && !dosToClaim[c.date_of_service]) {
+        dosToClaim[c.date_of_service] = c.id;
+      }
+    });
     payments.forEach(p => {
-      if (!map[p.claim_id]) map[p.claim_id] = [];
-      map[p.claim_id].push(p);
+      const key = p.claim_id || dosToClaim[p.date_of_service] || "__unlinked__";
+      if (!map[key]) map[key] = [];
+      map[key].push(p);
     });
     return map;
-  }, [payments]);
+  }, [payments, claims]);
 
   const filteredPayments = useMemo(() =>
     payments.filter(p => {
