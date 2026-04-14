@@ -86,13 +86,26 @@ ${visitHistory ? `VISIT HISTORY:\n${visitHistory}` : ''}
 
 ${autoPromptExtra}
 
-Write a COMPLETE, DETAILED SOAP note covering the treatment period from ${date_from} to ${date_to}. Include progress across all visits if multiple visits occurred.
+Write a COMPLETE, DETAILED, MEDICALLY COMPREHENSIVE SOAP note covering the treatment period from ${date_from} to ${date_to}. This note must be suitable for insurance documentation and legal review if needed.
 
-Return JSON with exactly these four string fields:
-- subjective: Patient's reported complaints, history, symptom progression across visits
-- objective: Physical examination findings, vital signs, ROM, orthopedic tests, neurological screening, palpation findings, all procedures performed
-- assessment: Clinical impression, all ICD-10 diagnoses, response to treatment, prognosis, causation statement for accident cases
-- plan: Treatment rendered, home care instructions, next appointment frequency, expected treatment course, functional goals, referral recommendations`;
+CRITICAL REQUIREMENTS:
+- Include specific clinical findings with measurements where applicable
+- Reference all diagnoses and procedures documented in the claim
+- Use professional medical terminology
+- If multiple visits, summarize progress and treatment response across visits
+- For accident cases, include clear causation statements
+
+Return a JSON object with exactly these four REQUIRED string fields (all must be populated with substantive content):
+
+1. "subjective": Patient's chief complaints, history of present illness, symptom onset and progression, how symptoms have affected daily activities and work, response to previous treatments, comorbidities relevant to condition. Should be 200+ words.
+
+2. "objective": Vital signs if applicable, ROM measurements (cervical/lumbar with degrees), orthopedic test results (specific test names and positive/negative), neurological screening findings (DTR, sensory, motor strength), palpation findings (muscle spasm grades, trigger points by location), all procedures performed with dates. Should be 300+ words.
+
+3. "assessment": Clinical impression including mechanism of injury if applicable, all ICD-10 diagnosis codes with descriptions, clinical response to treatment (improvement percentage if possible), functional limitations, prognosis with rationale, causation statement for accident cases with specific reference to MVA impact. Should be 250+ words.
+
+4. "plan": Detailed treatment plan including specific procedures recommended, frequency and duration of treatment (e.g., "3x per week for 4 weeks, then 2x per week"), home care and ergonomic instructions, functional goals, expected treatment timeline, when to re-evaluate, indication for referral (if any). Should be 200+ words.
+
+Ensure comprehensive medical detail suitable for insurance submission.`;
 
     const result = await base44.asServiceRole.integrations.Core.InvokeLLM({
       prompt,
@@ -100,13 +113,20 @@ Return JSON with exactly these four string fields:
       response_json_schema: {
         type: 'object',
         properties: {
-          subjective: { type: 'string' },
-          objective: { type: 'string' },
-          assessment: { type: 'string' },
-          plan: { type: 'string' },
-        }
+          subjective: { type: 'string', description: 'Patient subjective findings' },
+          objective: { type: 'string', description: 'Objective examination findings' },
+          assessment: { type: 'string', description: 'Clinical assessment and diagnoses' },
+          plan: { type: 'string', description: 'Treatment plan and recommendations' },
+        },
+        required: ['subjective', 'objective', 'assessment', 'plan']
       }
     });
+
+    console.log('AI Result:', result);
+
+    if (!result.subjective || !result.objective || !result.assessment || !result.plan) {
+      return Response.json({ error: 'AI failed to generate complete SOAP note' }, { status: 500 });
+    }
 
     const soapNote = await base44.asServiceRole.entities.SoapNote.create({
       patient_id: patient.id,
@@ -115,10 +135,10 @@ Return JSON with exactly these four string fields:
       date_of_service: date_from,
       visit_type: filteredClaims.length > 1 ? 'Multi-Visit Summary' : claim.visit_type,
       provider_name: office.rendering_provider || '',
-      subjective: result.subjective,
-      objective: result.objective,
-      assessment: result.assessment,
-      plan: result.plan,
+      subjective: result.subjective || '',
+      objective: result.objective || '',
+      assessment: result.assessment || '',
+      plan: result.plan || '',
       diagnoses: claim.diagnoses || [],
       procedures: claim.service_lines || [],
       accident_related: isAccident || false,
@@ -129,7 +149,8 @@ Return JSON with exactly these four string fields:
 
     return Response.json({ data: soapNote });
   } catch (error) {
-    console.error('SOAP note generation error:', error.message);
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error('SOAP note generation error:', error);
+    console.error('Stack:', error.stack);
+    return Response.json({ error: error.message || 'Failed to generate SOAP note' }, { status: 500 });
   }
 });

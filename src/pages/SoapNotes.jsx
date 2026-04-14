@@ -132,10 +132,10 @@ export default function SoapNotes() {
 
               {expanded === note.id && (
                 <div className="border-t border-border px-4 pb-4 pt-3 space-y-3 text-sm">
-                  <Section label="S — Subjective" text={note.subjective} color="blue" />
-                  <Section label="O — Objective" text={note.objective} color="green" />
-                  <Section label="A — Assessment" text={note.assessment} color="amber" />
-                  <Section label="P — Plan" text={note.plan} color="purple" />
+                  <Section label="S — Subjective" text={note.subjective} color="blue" onEdit={() => setEditingNote(note)} />
+                  <Section label="O — Objective" text={note.objective} color="green" onEdit={() => setEditingNote(note)} />
+                  <Section label="A — Assessment" text={note.assessment} color="amber" onEdit={() => setEditingNote(note)} />
+                  <Section label="P — Plan" text={note.plan} color="purple" onEdit={() => setEditingNote(note)} />
                   {note.diagnoses?.length > 0 && (
                     <div className="text-xs text-muted-foreground">
                       <strong>Diagnoses:</strong> {note.diagnoses.map(d => d.code).join(", ")}
@@ -305,7 +305,7 @@ export default function SoapNotes() {
       );
       }
 
-function Section({ label, text, color }) {
+function Section({ label, text, color, onEdit }) {
   const colors = {
     blue: "border-blue-200 bg-blue-50",
     green: "border-green-200 bg-green-50",
@@ -313,9 +313,14 @@ function Section({ label, text, color }) {
     purple: "border-purple-200 bg-purple-50",
   };
   return (
-    <div className={`border rounded-lg p-3 ${colors[color]} cursor-pointer hover:opacity-90`} onClick={() => {}}>
+    <div 
+      className={`border rounded-lg p-3 ${colors[color]} cursor-pointer hover:shadow-md transition-shadow`} 
+      onClick={onEdit}
+      role="button"
+      tabIndex={0}
+    >
       <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-1">{label}</p>
-      <p className="whitespace-pre-line leading-relaxed text-xs">{text}</p>
+      <p className="whitespace-pre-line leading-relaxed text-sm">{text || "(empty - click to edit)"}</p>
     </div>
   );
 }
