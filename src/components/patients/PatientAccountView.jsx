@@ -332,7 +332,7 @@ export default function PatientAccountView({ patient }) {
 
       {/* Date Filter & SOAP Note Generator */}
       <div className="bg-card border border-border rounded-xl p-4">
-        <Label className="text-sm font-semibold mb-3 block">Filter by Date & Generate SOAP Notes</Label>
+        <Label className="text-sm font-semibold mb-3 block">Generate SOAP Note</Label>
         <div className="grid grid-cols-2 gap-4 mb-3">
           <div>
             <Label className="text-xs text-muted-foreground">From</Label>
@@ -343,22 +343,36 @@ export default function PatientAccountView({ patient }) {
             <Input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="mt-1 h-9" />
           </div>
         </div>
-        <Button
-          onClick={handleGenerateSoapNote}
-          disabled={generatingSoapNote || !startDate || !endDate}
-          variant="outline"
-          className="w-full gap-2"
-        >
-          {generatingSoapNote ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin" /> Generating...
-            </>
-          ) : (
-            <>
-              <FileText className="w-4 h-4" /> Generate SOAP Note for Date Range
-            </>
-          )}
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={handleGenerateSoapNote}
+            disabled={generatingSoapNote || !startDate || !endDate}
+            variant="outline"
+            className="flex-1 gap-2"
+          >
+            {generatingSoapNote ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" /> Generating...
+              </>
+            ) : (
+              <>
+                <FileText className="w-4 h-4" /> Generate
+              </>
+            )}
+          </Button>
+          <Button
+            onClick={() => {
+              const today = new Date().toISOString().split("T")[0];
+              setStartDate(today);
+              setEndDate(today);
+            }}
+            variant="outline"
+            className="px-3"
+            title="Quick-fill today's date"
+          >
+            Today
+          </Button>
+        </div>
       </div>
 
 
