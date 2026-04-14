@@ -136,11 +136,8 @@ export default function Patients() {
             <tbody>
               {filtered.map((p) => (
                 <>
-                  <tr key={p.id} className="border-b border-border hover:bg-muted/30 transition-colors">
-                    <td
-                      className="py-3 px-4 font-medium cursor-pointer hover:text-primary"
-                      onClick={() => setExpandedPatient(expandedPatient === p.id ? null : p.id)}
-                    >
+                  <tr key={p.id} className="border-b border-border hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => setExpandedPatient(expandedPatient === p.id ? null : p.id)}>
+                    <td className="py-3 px-4 font-medium text-primary">
                       {p.first_name} {p.last_name}
                     </td>
                     <td className="py-3 px-4 hidden md:table-cell text-muted-foreground">{p.dob || "—"}</td>
@@ -149,7 +146,7 @@ export default function Patients() {
                     <td className="py-3 px-4">
                       <PatientBalanceWidget patientId={p.id} claims={claims} payments={payments} />
                     </td>
-                    <td className="py-3 px-4">
+                    <td className="py-3 px-4" onClick={e => e.stopPropagation()}>
                       <div className="flex items-center justify-end gap-1">
                         <Button
                           variant="ghost" size="sm"

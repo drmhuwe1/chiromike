@@ -17,6 +17,7 @@ const initialState = {
   insurance_company: "", insurance_plan: "", insurance_id: "", insurance_group: "",
   insured_name: "", insured_dob: "", insured_id: "", insured_employer: "",
   attorney_name: "", attorney_phone: "", notes: "", active: true, diagnoses: [],
+  cases: [{ name: "Default", diagnoses: [] }],
 };
 
 function InsuranceComboInput({ value, onChange }) {
@@ -72,6 +73,7 @@ export default function PatientForm({ patient, onSave, onCancel }) {
   const [guarantorSearch, setGuarantorSearch] = useState("");
   const [showGuarantorDrop, setShowGuarantorDrop] = useState(false);
   const [showDxModal, setShowDxModal] = useState(null);
+  const [selectedCaseIdx, setSelectedCaseIdx] = useState(0);
 
   useEffect(() => {
     base44.entities.Patient.list("-updated_date", 300).then(setPatients);
@@ -301,15 +303,49 @@ export default function PatientForm({ patient, onSave, onCancel }) {
           </div>
         </div>
 
-        {/* Diagnosis Codes */}
+        {/* Cases & Diagnosis Codes */}
         <div>
-          <h3 className="text-sm font-medium text-muted-foreground mb-3">Diagnosis Codes (ICD-10)</h3>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-medium text-muted-foreground">Cases & Diagnoses (ICD-10)</h3>
+          </div>
+          
+          {/* Case Tabs */}
+          <div className="flex flex-wrap gap-2 mb-3 border-b border-border pb-2">
+            {(form.cases || [{ name: "Default", diagnoses: [] }]).map((c, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => setSelectedCaseIdx(idx)}
+                className={`px-3 py-1.5 text-sm rounded-t-lg transition-colors ${
+                  selectedCaseIdx === idx
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground hover:bg-muted/80"
+                }`}
+              >
+                {c.name}
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={() => {
+                const newCases = [...(form.cases || [])];
+                newCases.push({ name: `Case ${newCases.length + 1}`, diagnoses: [] });
+                set("cases", newCases);
+                setSelectedCaseIdx(newCases.length - 1);
+              }}
+              className="px-3 py-1.5 text-sm text-primary hover:underline flex items-center gap-1"
+            >
+              <Plus className="w-3 h-3" /> New Case
+            </button>
+          </div>
+
+          {/* Diagnoses for Selected Case */}
           <div className="space-y-2">
-            {(form.diagnoses || []).map((dx, idx) => (
+            {((form.cases || [{ diagnoses: [] }])[selectedCaseIdx]?.diagnoses || []).map((dx, idx) => (
               <div key={idx} className="flex gap-2 items-center">
                 <button
                   type="button"
-                  onClick={() => setShowDxModal(idx)}
+                  onClick={() => setShowDxModal(`${selectedCaseIdx}-${idx}`)}
                   className="h-8 w-28 font-mono text-sm px-2 rounded border border-input hover:bg-muted bg-white text-left truncate"
                   title="Click to search diagnosis codes"
                 >
@@ -320,22 +356,38 @@ export default function PatientForm({ patient, onSave, onCancel }) {
                   placeholder="Description"
                   value={dx.description}
                   onChange={e => {
-                    const updated = [...form.diagnoses];
-                    updated[idx] = { ...updated[idx], description: e.target.value };
-                    set("diagnoses", updated);
+                    const newCases = [...form.cases];
+                    newCases[selectedCaseIdx].diagnoses[idx] = {
+                      ...newCases[selectedCaseIdx].diagnoses[idx],
+                      description: e.target.value
+                    };
+                    set("cases", newCases);
                   }}
                 />
-                <button type="button" onClick={() => set("diagnoses", form.diagnoses.filter((_, i) => i !== idx))} className="text-destructive hover:opacity-70">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newCases = [...form.cases];
+                    newCases[selectedCaseIdx].diagnoses = newCases[selectedCaseIdx].diagnoses.filter((_, i) => i !== idx);
+                    set("cases", newCases);
+                  }}
+                  className="text-destructive hover:opacity-70"
+                >
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>
             ))}
             <button
               type="button"
-              onClick={() => { setShowDxModal(form.diagnoses.length); set("diagnoses", [...(form.diagnoses || []), { code: "", description: "" }]); }}
+              onClick={() => {
+                const newCases = [...form.cases];
+                newCases[selectedCaseIdx].diagnoses.push({ code: "", description: "" });
+                set("cases", newCases);
+                setShowDxModal(`${selectedCaseIdx}-${newCases[selectedCaseIdx].diagnoses.length - 1}`);
+              }}
               className="text-xs text-primary hover:underline flex items-center gap-1 mt-1"
             >
-              <Plus className="w-3 h-3" /> Add diagnosis
+              <Plus className="w-3 h-3" /> Add diagnosis to this case
             </button>
           </div>
         </div>
@@ -355,9 +407,10 @@ export default function PatientForm({ patient, onSave, onCancel }) {
       {showDxModal !== null && (
         <DiagnosisCodeSearchModal
           onSelect={(code) => {
-            const updated = [...form.diagnoses];
-            updated[showDxModal] = { code: code.code, description: code.description };
-            set("diagnoses", updated);
+            const [caseIdx, dxIdx] = showDxModal.split('-').map(Number);
+            const newCases = [...form.cases];
+            newCases[caseIdx].diagnoses[dxIdx] = { code: code.code, description: code.description };
+            set("cases", newCases);
             setShowDxModal(null);
           }}
           onClose={() => setShowDxModal(null)}
