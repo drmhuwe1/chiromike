@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, FileText, Copy, ChevronRight, Link2, Send } from "lucide-react";
+import { Plus, Search, FileText, Copy, ChevronRight, Link2, Send, Trash2 } from "lucide-react";
 import PatientForm from "../components/patients/PatientForm";
 import PatientCases from "../components/patients/PatientCases";
 import IntakeAlertBanner from "../components/patients/IntakeAlertBanner";
@@ -57,6 +57,12 @@ export default function Patients() {
     }
     setShowForm(false);
     setEditPatient(null);
+    loadPatients();
+  };
+
+  const handleDelete = async (patient) => {
+    if (!window.confirm(`Are you sure you want to delete ${patient.first_name} ${patient.last_name}? This cannot be undone.`)) return;
+    await base44.entities.Patient.delete(patient.id);
     loadPatients();
   };
 
@@ -173,6 +179,14 @@ export default function Patients() {
                           title="Edit"
                         >
                           <ChevronRight className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost" size="sm"
+                          onClick={() => handleDelete(p)}
+                          title="Delete Patient"
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>
                     </td>
