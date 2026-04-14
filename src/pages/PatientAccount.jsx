@@ -15,9 +15,14 @@ export default function PatientAccount() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    const presetId = new URLSearchParams(window.location.search).get("patient");
     base44.entities.Patient.list("-updated_date", 300).then(data => {
       setPatients(data);
       setLoading(false);
+      if (presetId) {
+        const match = data.find(p => p.id === presetId);
+        if (match) setSelectedPatient(match);
+      }
     });
   }, []);
 

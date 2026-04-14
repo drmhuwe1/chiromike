@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, FileText, Copy, ChevronRight, Link2, Send, Trash2 } from "lucide-react";
+import { Plus, Search, FileText, Copy, ChevronRight, Link2, Send, Trash2, Wallet } from "lucide-react";
 import PatientForm from "../components/patients/PatientForm";
 import PatientCases from "../components/patients/PatientCases";
 import IntakeAlertBanner from "../components/patients/IntakeAlertBanner";
@@ -196,6 +196,24 @@ export default function Patients() {
                       <td colSpan={6} className="px-4 pb-4 bg-muted/10">
                         <IntakeAlertBanner patient={p} />
                         <PatientCases patientId={p.id} />
+                        {/* Quick action buttons */}
+                        <div className="mt-4 flex flex-wrap gap-2 pt-3 border-t border-border">
+                          <Button
+                            size="sm"
+                            onClick={() => navigate(`/claim-builder?patient=${p.id}`)}
+                            className="gap-1.5"
+                          >
+                            <FileText className="w-4 h-4" /> New Claim
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => navigate(`/patient-account?patient=${p.id}`)}
+                            className="gap-1.5 text-green-700 border-green-300 hover:bg-green-50"
+                          >
+                            <Wallet className="w-4 h-4" /> Patient Account & Payments
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   )}
