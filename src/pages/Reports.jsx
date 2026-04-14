@@ -3,7 +3,11 @@ import { base44 } from "@/api/base44Client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { FileText, Mail, Briefcase } from "lucide-react";
 import PatientBalancesReport from "../components/reports/PatientBalancesReport";
+import CollectionsLetterModal from "../components/reports/CollectionsLetterModal";
+import LegalCaseSummaryModal from "../components/reports/LegalCaseSummaryModal";
 
 export default function Reports() {
   const [claims, setClaims] = useState([]);
@@ -14,6 +18,9 @@ export default function Reports() {
   const [dateTo, setDateTo] = useState("");
   const [typeFilter, setTypeFilter] = useState("All");
   const [reportTab, setReportTab] = useState("claims");
+  const [collectionsPatient, setCollectionsPatient] = useState(null);
+  const [legalPatient, setLegalPatient] = useState(null);
+  const [selectedPatient, setSelectedPatient] = useState("");
 
   useEffect(() => {
     Promise.all([
@@ -72,7 +79,7 @@ export default function Reports() {
           onClick={() => setReportTab("claims")}
           className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${reportTab === "claims" ? "bg-card shadow text-foreground" : "text-muted-foreground hover:text-foreground"}`}
         >
-          Claims Analysis
+          <FileText className="w-4 h-4 inline mr-1" /> Claims Analysis
         </button>
         <button
           onClick={() => setReportTab("balances")}
@@ -80,7 +87,106 @@ export default function Reports() {
         >
           Patient Balances
         </button>
+        <button
+          onClick={() => setReportTab("collections")}
+          className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${reportTab === "collections" ? "bg-card shadow text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+        >
+          <Mail className="w-4 h-4 inline mr-1" /> Collections
+        </button>
+        <button
+          onClick={() => setReportTab("legal")}
+          className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${reportTab === "legal" ? "bg-card shadow text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+        >
+          <Briefcase className="w-4 h-4 inline mr-1" /> Legal Case Summary
+        </button>
       </div>
+
+      {reportTab === "collections" && (
+        <div>
+          <div className="mb-6">
+            <Label className="text-sm mb-2 block">Select Patient</Label>
+            <select
+              value={selectedPatient}
+              onChange={e => {
+                setSelectedPatient(e.target.value);
+                if (e.target.value) {
+                  const patient = patients.find(p => p.id === e.target.value);
+                  if (patient) setCollectionsPatient(patient);
+                }
+              }}
+              className="w-full md:w-80 border border-border rounded px-3 py-2 text-sm bg-background"
+            >
+              <option value="">-- Select a patient --</option>
+              {patients.map(p => (
+                <option key={p.id} value={p.id}>
+                  {p.first_name} {p.last_name} — Balance: ${(
+                    claims.filter(c => c.patient_id === p.id).reduce((s, c) => s + (c.total_charge || 0), 0) -
+                    payments.filter(py => py.patient_id === p.id).reduce((s, py) => s + (py.payment_amount || 0), 0)
+                  ).toFixed(2)}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {selectedPatient && (
+            <Button
+              onClick={() => {
+                const p = patients.find(pt => pt.id === selectedPatient);
+                setCollectionsPatient(p);
+              }}
+              className="mb-6"
+            >
+              Generate Collections Letter
+            </Button>
+          )}
+
+          {!selectedPatient && (
+            <div className="text-center py-12 text-muted-foreground">
+              Select a patient to generate a collections letter.
+            </div>
+          )}
+        </div>
+      )}
+
+      {reportTab === "legal" && (
+        <div>
+          <div className="mb-6">
+            <Label className="text-sm mb-2 block">Select Patient (Injury Cases)</Label>
+            <select
+              value={selectedPatient}
+              onChange={e => setSelectedPatient(e.target.value)}
+              className="w-full md:w-80 border border-border rounded px-3 py-2 text-sm bg-background"
+            >
+              <option value="">-- Select a patient --</option>
+              {patients
+                .filter(p => claims.some(c => c.patient_id === p.id && c.accident_related))
+                .map(p => (
+                  <option key={p.id} value={p.id}>
+                    {p.first_name} {p.last_name}
+                  </option>
+                ))}
+            </select>
+          </div>
+
+          {selectedPatient && (
+            <Button
+              onClick={() => {
+                const p = patients.find(pt => pt.id === selectedPatient);
+                setLegalPatient(p);
+              }}
+              className="mb-6"
+            >
+              Generate Legal Case Summary
+            </Button>
+          )}
+
+          {!selectedPatient && (
+            <div className="text-center py-12 text-muted-foreground">
+              Select an injury case patient to generate a legal case summary report.
+            </div>
+          )}
+        </div>
+      )}
 
       {reportTab === "balances" && (
         <PatientBalancesReport patients={patients} claims={claims} payments={payments} />
@@ -177,6 +283,31 @@ export default function Reports() {
       </div>
       </div>
       )}
-    </div>
-  );
-}
+
+      {/* Collections Letter Modal */}
+      {collectionsPatient && (
+       <CollectionsLetterModal
+         patient={collectionsPatient}
+         claims={claims.filter(c => c.patient_id === collectionsPatient.id)}
+         payments={payments.filter(p => p.patient_id === collectionsPatient.id)}
+         onClose={() => {
+           setCollectionsPatient(null);
+           setSelectedPatient("");
+         }}
+       />
+      )}
+
+      {/* Legal Case Summary Modal */}
+      {legalPatient && (
+       <LegalCaseSummaryModal
+         patient={legalPatient}
+         claims={claims.filter(c => c.patient_id === legalPatient.id && c.accident_related)}
+         onClose={() => {
+           setLegalPatient(null);
+           setSelectedPatient("");
+         }}
+       />
+      )}
+      </div>
+      );
+      }
