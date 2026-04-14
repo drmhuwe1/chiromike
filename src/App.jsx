@@ -21,6 +21,7 @@ import PrintClaim from './pages/PrintClaim';
 import PrintReceipt from './pages/PrintReceipt';
 import CodeLibrary from './pages/CodeLibrary';
 import PatientIntake from './pages/PatientIntake';
+import IntakeKiosk from './pages/IntakeKiosk';
 import PatientAccount from './pages/PatientAccount';
 import PaymentSuccess from './pages/PaymentSuccess';
 import PaymentCancelled from './pages/PaymentCancelled';
@@ -74,6 +75,7 @@ const AuthenticatedApp = () => {
     <Routes>
       {/* Public routes - no layout */}
       <Route path="/intake" element={<PatientIntake />} />
+      <Route path="/intake-kiosk" element={<IntakeKiosk />} />
       <Route path="/payment-success" element={<PaymentSuccess />} />
       <Route path="/payment-cancelled" element={<PaymentCancelled />} />
       
