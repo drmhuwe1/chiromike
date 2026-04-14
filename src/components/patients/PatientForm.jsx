@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Plus, Trash2, X, Search } from "lucide-react";
+import { Plus, Trash2, X, Search, FileText, Stethoscope, RefreshCw, Wallet } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -403,6 +403,42 @@ export default function PatientForm({ patient, onSave, onCancel }) {
           <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
         </div>
       </form>
+
+      {patient && (
+        <div className="flex flex-wrap gap-2 pt-4 border-t border-border">
+          <Button
+            type="button"
+            onClick={() => window.location.href = `/claim-builder?patient=${patient.id}`}
+            className="gap-2"
+          >
+            <FileText className="w-4 h-4" /> New Claim
+          </Button>
+          <Button
+            type="button"
+            onClick={() => window.location.href = `/new-patient-exam?patient=${patient.id}`}
+            variant="outline"
+            className="gap-2 text-purple-700 border-purple-300 hover:bg-purple-50"
+          >
+            <Stethoscope className="w-4 h-4" /> New Patient Exam
+          </Button>
+          <Button
+            type="button"
+            onClick={() => window.location.href = `/re-examination?patient=${patient.id}`}
+            variant="outline"
+            className="gap-2 text-blue-700 border-blue-300 hover:bg-blue-50"
+          >
+            <RefreshCw className="w-4 h-4" /> Re-Evaluation
+          </Button>
+          <Button
+            type="button"
+            onClick={() => window.location.href = `/patient-account?patient=${patient.id}`}
+            variant="outline"
+            className="gap-2 text-green-700 border-green-300 hover:bg-green-50"
+          >
+            <Wallet className="w-4 h-4" /> Account & Payments
+          </Button>
+        </div>
+      )}
 
       {showDxModal !== null && (
         <DiagnosisCodeSearchModal
