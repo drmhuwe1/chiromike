@@ -133,6 +133,18 @@ export default function ClaimBuilder() {
     const caseDiagnoses = defaultCase?.diagnoses && defaultCase.diagnoses.length > 0 
       ? defaultCase.diagnoses 
       : patient.diagnoses || [];
+
+    // Enrich descriptions from DiagnosisCode library for any missing ones
+    let enrichedDiagnoses = caseDiagnoses;
+    const missingDesc = caseDiagnoses.filter(d => d.code && !d.description);
+    if (missingDesc.length > 0) {
+      const allDxCodes = await base44.entities.DiagnosisCode.filter({ active: true }, "-updated_date", 500);
+      const dxMap = Object.fromEntries(allDxCodes.map(d => [d.code, d.description]));
+      enrichedDiagnoses = caseDiagnoses.map(d => ({
+        ...d,
+        description: d.description || dxMap[d.code] || "",
+      }));
+    }
     
     setClaim(prev => ({
       ...prev,
@@ -146,12 +158,12 @@ export default function ClaimBuilder() {
       accident_related: defaultCase?.is_accident_related || patient.is_accident_related || false,
       accident_date: defaultCase?.accident_date || patient.accident_date || "",
       accident_type: defaultCase?.accident_type || patient.accident_type || "",
-      diagnoses: caseDiagnoses.map((d, i) => ({ code: d.code, description: d.description, pointer: String(i + 1) })),
+      diagnoses: enrichedDiagnoses.map((d, i) => ({ code: d.code, description: d.description, pointer: String(i + 1) })),
     }));
     
     // Persist diagnoses to localStorage
-    if (caseDiagnoses.length > 0) {
-      localStorage.setItem('persistedDiagnoses', JSON.stringify(caseDiagnoses));
+    if (enrichedDiagnoses.length > 0) {
+      localStorage.setItem('persistedDiagnoses', JSON.stringify(enrichedDiagnoses));
     }
     
     setPatientSearch("");
@@ -291,8 +303,7 @@ export default function ClaimBuilder() {
     setLoading(false);
     setSavedClaim(saved);
     localStorage.removeItem('claimDraft'); // Clear draft after saving
-    toast({ title: "Claim saved!" });
-    navigate("/saved-claims");
+    toast({ title: "Claim saved! You can now email, print, collect payment, or generate a SOAP note below." });
   };
 
   const handleSaveAndEmail = async () => {
