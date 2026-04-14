@@ -11,7 +11,7 @@ import { useToast } from "@/components/ui/use-toast";
 import TemplateProcedureEditor from "../components/templates/TemplateProcedureEditor";
 
 const templateCategories = ["Office Visit", "Insurance Treatment", "Cash Treatment", "Auto Claim", "Custom"];
-const payerTypes = ["Medicare", "BCBS", "Auto/PI", "Cash", "Other Commercial", "Any"];
+const payerTypes = ["Medicare", "BCBS", "Auto/PI", "Cash", "Other Commercial", "Patient", "Any"];
 
 export default function QuickTemplates() {
   const [templates, setTemplates] = useState([]);
