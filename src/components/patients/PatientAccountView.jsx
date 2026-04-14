@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Printer, CreditCard, PlusCircle, ChevronDown, ChevronUp, FileText, Loader2 } from "lucide-react";
+import { Printer, CreditCard, PlusCircle, ChevronDown, ChevronUp, FileText, Loader2, RefreshCw } from "lucide-react";
 import PatientStatementPrint from "./PatientStatementPrint";
 import PaymentModal from "../payment/PaymentModal";
 import PostPaymentModal from "./PostPaymentModal";
@@ -380,6 +380,30 @@ export default function PatientAccountView({ patient }) {
           onSuccess={() => { setShowStripePayment(false); load(); }}
         />
       )}
+
+      {/* Action Links */}
+      <div className="flex flex-wrap gap-2 pt-4 border-t border-border">
+        <Button
+          onClick={() => window.location.href = `/claim-builder?patient=${patient.id}`}
+          className="gap-2"
+        >
+          <FileText className="w-4 h-4" /> New Claim
+        </Button>
+        <Button
+          onClick={() => window.location.href = `/patient-account?patient=${patient.id}`}
+          variant="outline"
+          className="gap-2 text-green-700 border-green-300 hover:bg-green-50"
+        >
+          <CreditCard className="w-4 h-4" /> Patient Statement
+        </Button>
+        <Button
+          onClick={() => window.location.href = `/re-examination?patient=${patient.id}`}
+          variant="outline"
+          className="gap-2 text-blue-700 border-blue-300 hover:bg-blue-50"
+        >
+          <RefreshCw className="w-4 h-4" /> Re-Exam
+        </Button>
+      </div>
     </div>
   );
 }
