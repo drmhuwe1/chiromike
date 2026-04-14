@@ -17,6 +17,7 @@ export default function Calendar() {
     patient_id: "",
     patient_name: "",
     appointment_date: new Date().toISOString().split("T")[0],
+    appointment_time: "09:00",
     appointment_type: "Follow-up",
     duration_minutes: 30,
     notes: "",
@@ -68,12 +69,14 @@ export default function Calendar() {
       return;
     }
     try {
+      const fullDateTime = `${formData.appointment_date}T${formData.appointment_time || "09:00"}`;
       if (editingId) {
         const existingAppt = appointments.find(a => a.id === editingId);
         await base44.entities.Appointment.update(editingId, {
           patient_id: formData.patient_id,
           patient_name: formData.patient_name,
-          appointment_date: formData.appointment_date,
+          appointment_date: fullDateTime,
+          appointment_time: formData.appointment_time,
           appointment_type: formData.appointment_type,
           duration_minutes: formData.duration_minutes,
           notes: formData.notes,
@@ -89,6 +92,7 @@ export default function Calendar() {
       } else {
         await base44.entities.Appointment.create({
           ...formData,
+          appointment_date: fullDateTime,
           synced_to_calendar: false,
         });
         toast({ title: "Appointment added" });
@@ -99,6 +103,7 @@ export default function Calendar() {
         patient_id: "",
         patient_name: "",
         appointment_date: new Date().toISOString().split("T")[0],
+        appointment_time: "09:00",
         appointment_type: "Follow-up",
         duration_minutes: 30,
         notes: "",
@@ -118,10 +123,18 @@ export default function Calendar() {
 
   const handleEditAppointment = (appt) => {
     setEditingId(appt.id);
+    // Extract date and time parts
+    const dateStr = appt.appointment_date?.includes("T")
+      ? appt.appointment_date.split("T")[0]
+      : appt.appointment_date;
+    const timeStr = appt.appointment_date?.includes("T")
+      ? appt.appointment_date.split("T")[1]?.slice(0, 5)
+      : appt.appointment_time || "09:00";
     setFormData({
       patient_id: appt.patient_id,
       patient_name: appt.patient_name,
-      appointment_date: appt.appointment_date,
+      appointment_date: dateStr,
+      appointment_time: timeStr,
       appointment_type: appt.appointment_type,
       duration_minutes: appt.duration_minutes,
       notes: appt.notes || "",
@@ -152,6 +165,7 @@ export default function Calendar() {
       patient_id: "",
       patient_name: "",
       appointment_date: new Date().toISOString().split("T")[0],
+      appointment_time: "09:00",
       appointment_type: "Follow-up",
       duration_minutes: 30,
       notes: "",
@@ -164,13 +178,21 @@ export default function Calendar() {
   const days = Array.from({ length: daysInMonth(currentDate) }, (_, i) => i + 1);
   const blanks = Array.from({ length: firstDayOfMonth(currentDate) }, (_, i) => null);
 
+  const formatTime = (dateStr) => {
+    if (!dateStr || !dateStr.includes("T")) return null;
+    const d = new Date(dateStr);
+    return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+  };
+
   const getEventsForDay = (day) => {
     const dateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
     const google = googleEvents.filter(e => {
       const eventDate = new Date(e.start).toISOString().split("T")[0];
       return eventDate === dateStr;
-    });
-    const appts = appointments.filter(a => a.appointment_date === dateStr);
+    }).sort((a, b) => new Date(a.start) - new Date(b.start));
+    const appts = appointments
+      .filter(a => (a.appointment_date || "").startsWith(dateStr))
+      .sort((a, b) => (a.appointment_date || "").localeCompare(b.appointment_date || ""));
     return { google, appts };
   };
 
@@ -241,6 +263,7 @@ export default function Calendar() {
                         handleEditAppointment(a);
                       }}
                     >
+                      {formatTime(a.appointment_date) && <span className="font-semibold">{formatTime(a.appointment_date)} </span>}
                       {a.patient_name}
                     </div>
                   ))}
@@ -279,10 +302,17 @@ export default function Calendar() {
                     <div key={`day-appt-${i}`} className="bg-green-50 border border-green-200 rounded-lg p-4">
                       <div className="flex items-start justify-between mb-3">
                         <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            {formatTime(a.appointment_date) && (
+                              <span className="bg-green-600 text-white text-sm font-bold px-2 py-0.5 rounded">
+                                {formatTime(a.appointment_date)}
+                              </span>
+                            )}
+                            <span className="text-xs text-muted-foreground">{a.duration_minutes} min</span>
+                          </div>
                           <h3 className="font-semibold text-lg">{a.patient_name}</h3>
-                          <div className="text-sm text-muted-foreground space-y-1 mt-2">
-                            <div><span className="font-medium">Type:</span> {a.appointment_type}</div>
-                            <div><span className="font-medium">Duration:</span> {a.duration_minutes} min</div>
+                          <div className="text-sm text-muted-foreground mt-1">
+                            <span className="font-medium">Type:</span> {a.appointment_type}
                           </div>
                         </div>
                       </div>
@@ -308,7 +338,14 @@ export default function Calendar() {
                   {getEventsForDay(parseInt(selectedDayView.split("-")[2])).google.map((e, i) => (
                     <div key={`day-google-${i}`} className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                       <div className="flex items-start justify-between mb-2">
-                        <h3 className="font-semibold text-lg">{e.title}</h3>
+                        <div>
+                          {e.start && (
+                            <span className="bg-blue-600 text-white text-sm font-bold px-2 py-0.5 rounded mb-1 inline-block">
+                              {new Date(e.start).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })}
+                            </span>
+                          )}
+                          <h3 className="font-semibold text-lg">{e.title}</h3>
+                        </div>
                       </div>
                       {e.description && (
                         <p className="text-sm text-muted-foreground mb-3">{e.description}</p>
@@ -326,7 +363,7 @@ export default function Calendar() {
               )}
             </div>
             
-            <Button onClick={() => { setFormData(prev => ({ ...prev, appointment_date: selectedDayView })); setShowForm(true); setSelectedDayView(null); }} className="w-full gap-2">
+            <Button onClick={() => { setFormData(prev => ({ ...prev, appointment_date: selectedDayView, appointment_time: "09:00" })); setShowForm(true); setSelectedDayView(null); }} className="w-full gap-2">
               <Plus className="w-4 h-4" /> Add Appointment to This Day
             </Button>
           </div>
@@ -389,14 +426,25 @@ export default function Calendar() {
               </div>
             </div>
 
-            <div>
-              <Label className="text-sm">Date</Label>
-              <Input
-                type="date"
-                className="mt-1"
-                value={formData.appointment_date}
-                onChange={e => setFormData(prev => ({ ...prev, appointment_date: e.target.value }))}
-              />
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-sm">Date</Label>
+                <Input
+                  type="date"
+                  className="mt-1"
+                  value={formData.appointment_date}
+                  onChange={e => setFormData(prev => ({ ...prev, appointment_date: e.target.value }))}
+                />
+              </div>
+              <div>
+                <Label className="text-sm">Time</Label>
+                <Input
+                  type="time"
+                  className="mt-1"
+                  value={formData.appointment_time}
+                  onChange={e => setFormData(prev => ({ ...prev, appointment_time: e.target.value }))}
+                />
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
