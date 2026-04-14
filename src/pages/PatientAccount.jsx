@@ -63,6 +63,7 @@ export default function PatientAccount() {
                   >
                     <span className="font-medium">{p.first_name} {p.last_name}</span>
                     <span className="text-xs text-muted-foreground ml-2">{p.phone}</span>
+                    {p.dob && <span className="text-xs text-muted-foreground ml-2">DOB: {p.dob}</span>}
                   </button>
                 ))}
                 {filteredPatients.length === 0 && <p className="text-xs text-muted-foreground p-2">No patients found</p>}

@@ -166,7 +166,12 @@ export default function PatientAccountView({ patient }) {
             >
               <CreditCard className="w-4 h-4" /> Collect via Stripe
             </Button>
-            <Button onClick={() => setShowPrint(true)} variant="outline" className="gap-2">
+            <Button onClick={() => {
+              if (!startDate && !endDate) {
+                if (!window.confirm("No date filter is set — the statement will include ALL visits. Continue?")) return;
+              }
+              setShowPrint(true);
+            }} variant="outline" className="gap-2">
               <Printer className="w-4 h-4" /> Statement PDF
             </Button>
           </div>

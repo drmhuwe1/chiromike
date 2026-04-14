@@ -111,7 +111,11 @@ export default function PatientStatementPrint({ patient, office, claims, payment
                     {(claim.service_lines || []).map(l => `${l.code}`).join(", ") || "—"}
                   </td>
                   <td style={{ padding: "6px", fontSize: "10px" }}>
-                    {(claim.diagnoses || []).map(d => d.description ? `${d.code} - ${d.description}` : d.code).join("; ") || "—"}
+                    {(claim.diagnoses || []).length > 0
+                      ? (claim.diagnoses || []).map((d, i) => (
+                          <div key={i}>{d.description ? `${d.code} - ${d.description}` : d.code}</div>
+                        ))
+                      : "—"}
                   </td>
                   <td style={{ padding: "6px", textAlign: "right", fontWeight: "500" }}>
                     ${(claim.total_charge || 0).toFixed(2)}
@@ -121,6 +125,35 @@ export default function PatientStatementPrint({ patient, office, claims, payment
             </tbody>
           </table>
         </div>
+
+        {/* Payments Detail */}
+        {payments.length > 0 && (
+          <div style={{ marginBottom: "16px" }}>
+            <h3 style={{ fontWeight: "bold", marginBottom: "8px", fontSize: "12px" }}>PAYMENTS RECEIVED</h3>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "11px" }}>
+              <thead>
+                <tr style={{ borderBottom: "2px solid #000", backgroundColor: "#f5f5f5" }}>
+                  <th style={{ textAlign: "left", padding: "6px", fontWeight: "bold" }}>Payment Date</th>
+                  <th style={{ textAlign: "left", padding: "6px", fontWeight: "bold" }}>DOS</th>
+                  <th style={{ textAlign: "left", padding: "6px", fontWeight: "bold" }}>Type</th>
+                  <th style={{ textAlign: "left", padding: "6px", fontWeight: "bold" }}>Check #</th>
+                  <th style={{ textAlign: "right", padding: "6px", fontWeight: "bold" }}>Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {payments.sort((a, b) => new Date(b.payment_date) - new Date(a.payment_date)).map((p) => (
+                  <tr key={p.id} style={{ borderBottom: "1px solid #ddd" }}>
+                    <td style={{ padding: "6px", fontFamily: "monospace" }}>{p.payment_date}</td>
+                    <td style={{ padding: "6px", fontFamily: "monospace" }}>{p.date_of_service || "—"}</td>
+                    <td style={{ padding: "6px" }}>{p.payment_type}</td>
+                    <td style={{ padding: "6px" }}>{p.check_number || "—"}</td>
+                    <td style={{ padding: "6px", textAlign: "right", color: "#16a34a", fontWeight: "600" }}>${(p.payment_amount || 0).toFixed(2)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
 
         {/* Summary */}
         <div style={{ marginBottom: "16px" }}>
