@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +20,7 @@ export default function QuickTemplates() {
   const [catFilter, setCatFilter] = useState("All");
   const [editing, setEditing] = useState(null);
   const { toast } = useToast();
+  const editFormRef = useRef(null);
 
   const load = async () => {
     setLoading(true);
@@ -63,11 +64,16 @@ export default function QuickTemplates() {
 
   const set = (field, value) => setEditing(prev => ({ ...prev, [field]: value }));
 
+  const openEdit = (tmpl) => {
+    setEditing(JSON.parse(JSON.stringify(tmpl)));
+    setTimeout(() => editFormRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+  };
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold tracking-tight">Quick Templates</h1>
-        <Button onClick={() => setEditing({
+        <Button onClick={() => openEdit({
           title: "", category: "Custom", payer_type: "Any",
           procedures: [{ code: "", description: "", charge: 0, units: 1, modifier: "", diagnosis_pointers: "1" }],
           default_diagnoses: [], notes: "", active: true,
@@ -91,7 +97,7 @@ export default function QuickTemplates() {
       </div>
 
       {editing && (
-        <div className="bg-card border border-border rounded-xl p-6 mb-4 space-y-4">
+        <div ref={editFormRef} className="bg-card border-2 border-primary rounded-xl p-6 mb-4 space-y-4 shadow-lg">
           <div className="flex justify-between">
             <h3 className="text-lg font-semibold">{editing.id ? "Edit" : "New"} Template</h3>
             <Button variant="ghost" size="sm" onClick={() => setEditing(null)}><X className="w-4 h-4" /></Button>
@@ -147,7 +153,7 @@ export default function QuickTemplates() {
                 <h3 className="font-semibold">{t.title}</h3>
                 <div className="flex gap-1">
                   <Button variant="ghost" size="sm" onClick={() => handleDuplicate(t)}><Copy className="w-3.5 h-3.5" /></Button>
-                  <Button variant="ghost" size="sm" onClick={() => setEditing(JSON.parse(JSON.stringify(t)))}><Edit2 className="w-3.5 h-3.5" /></Button>
+                  <Button variant="ghost" size="sm" onClick={() => openEdit(t)}><Edit2 className="w-3.5 h-3.5" /></Button>
                   <Button variant="ghost" size="sm" onClick={() => handleDelete(t.id)}><Trash2 className="w-3.5 h-3.5" /></Button>
                 </div>
               </div>
