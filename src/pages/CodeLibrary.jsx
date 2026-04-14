@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
-import { Plus, Edit2, Trash2, Star, X, Save, Search } from "lucide-react";
+import { Plus, Edit2, Trash2, Star, X, Save, Search, Loader2, Lightbulb } from "lucide-react";
 import InsurersTab from "../components/codelibrary/InsurersTab";
 
 const procCategories = ["Chiropractic Manipulation", "Office Visit", "Therapy/Modality", "Auto Claim", "Cash Service", "Custom"];
@@ -20,6 +20,7 @@ export default function CodeLibrary() {
   const [editingProc, setEditingProc] = useState(null);
   const [editingDx, setEditingDx] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [lookingUp, setLookingUp] = useState(false);
   const { toast } = useToast();
 
   const load = async () => {
@@ -75,6 +76,78 @@ export default function CodeLibrary() {
 
   const setP = (f, v) => setEditingProc(p => ({ ...p, [f]: v }));
   const setD = (f, v) => setEditingDx(d => ({ ...d, [f]: v }));
+
+  const lookupProcDescription = async () => {
+    if (!editingProc.code.trim()) {
+      toast({ title: "Enter a CPT code first", variant: "destructive" });
+      return;
+    }
+    setLookingUp(true);
+    try {
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `Look up the medical description for CPT code ${editingProc.code}. Return ONLY the description, nothing else.`,
+      });
+      setP("description", result || "");
+      toast({ title: "Description found" });
+    } catch (e) {
+      toast({ title: "Lookup failed", variant: "destructive" });
+    }
+    setLookingUp(false);
+  };
+
+  const lookupDxDescription = async () => {
+    if (!editingDx.code.trim()) {
+      toast({ title: "Enter an ICD-10 code first", variant: "destructive" });
+      return;
+    }
+    setLookingUp(true);
+    try {
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `Look up the medical description for ICD-10 diagnosis code ${editingDx.code}. Return ONLY the description, nothing else.`,
+      });
+      setD("description", result || "");
+      toast({ title: "Description found" });
+    } catch (e) {
+      toast({ title: "Lookup failed", variant: "destructive" });
+    }
+    setLookingUp(false);
+  };
+
+  const reverseLookupProc = async () => {
+    if (!editingProc.description.trim()) {
+      toast({ title: "Enter a description first", variant: "destructive" });
+      return;
+    }
+    setLookingUp(true);
+    try {
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `Find the CPT code for this chiropractic procedure: "${editingProc.description}". Return ONLY the code number, nothing else.`,
+      });
+      setP("code", result?.trim() || "");
+      toast({ title: "Code found" });
+    } catch (e) {
+      toast({ title: "Lookup failed", variant: "destructive" });
+    }
+    setLookingUp(false);
+  };
+
+  const reverseLookupDx = async () => {
+    if (!editingDx.description.trim()) {
+      toast({ title: "Enter a description first", variant: "destructive" });
+      return;
+    }
+    setLookingUp(true);
+    try {
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `Find the ICD-10 diagnosis code for: "${editingDx.description}". Return ONLY the code, nothing else.`,
+      });
+      setD("code", result?.trim() || "");
+      toast({ title: "Code found" });
+    } catch (e) {
+      toast({ title: "Lookup failed", variant: "destructive" });
+    }
+    setLookingUp(false);
+  };
 
   const q = search.toLowerCase();
   const filteredProcs = procedures.filter(p => !q || p.code?.toLowerCase().includes(q) || p.description?.toLowerCase().includes(q));
@@ -133,11 +206,21 @@ export default function CodeLibrary() {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <div>
                   <Label className="text-xs">CPT Code *</Label>
-                  <Input className="h-8 mt-0.5" value={editingProc.code} onChange={e => setP("code", e.target.value)} placeholder="e.g. 98941" />
+                  <div className="flex gap-1 mt-0.5">
+                    <Input className="h-8 flex-1" value={editingProc.code} onChange={e => setP("code", e.target.value)} placeholder="e.g. 98941" />
+                    <Button size="sm" variant="outline" onClick={lookupProcDescription} disabled={lookingUp} className="px-2 h-8">
+                      {lookingUp ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Lightbulb className="w-3.5 h-3.5" />}
+                    </Button>
+                  </div>
                 </div>
                 <div className="col-span-2">
                   <Label className="text-xs">Description *</Label>
-                  <Input className="h-8 mt-0.5" value={editingProc.description} onChange={e => setP("description", e.target.value)} />
+                  <div className="flex gap-1 mt-0.5">
+                    <Input className="h-8 flex-1" value={editingProc.description} onChange={e => setP("description", e.target.value)} />
+                    <Button size="sm" variant="outline" onClick={reverseLookupProc} disabled={lookingUp} className="px-2 h-8" title="Reverse lookup code from description">
+                      {lookingUp ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Lightbulb className="w-3.5 h-3.5" />}
+                    </Button>
+                  </div>
                 </div>
                 <div>
                   <Label className="text-xs">Category</Label>
@@ -184,11 +267,21 @@ export default function CodeLibrary() {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <div>
                   <Label className="text-xs">ICD-10 Code *</Label>
-                  <Input className="h-8 mt-0.5" value={editingDx.code} onChange={e => setD("code", e.target.value)} placeholder="e.g. M54.5" />
+                  <div className="flex gap-1 mt-0.5">
+                    <Input className="h-8 flex-1" value={editingDx.code} onChange={e => setD("code", e.target.value)} placeholder="e.g. M54.5" />
+                    <Button size="sm" variant="outline" onClick={lookupDxDescription} disabled={lookingUp} className="px-2 h-8">
+                      {lookingUp ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Lightbulb className="w-3.5 h-3.5" />}
+                    </Button>
+                  </div>
                 </div>
                 <div className="col-span-2">
                   <Label className="text-xs">Description *</Label>
-                  <Input className="h-8 mt-0.5" value={editingDx.description} onChange={e => setD("description", e.target.value)} />
+                  <div className="flex gap-1 mt-0.5">
+                    <Input className="h-8 flex-1" value={editingDx.description} onChange={e => setD("description", e.target.value)} />
+                    <Button size="sm" variant="outline" onClick={reverseLookupDx} disabled={lookingUp} className="px-2 h-8" title="Reverse lookup code from description">
+                      {lookingUp ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Lightbulb className="w-3.5 h-3.5" />}
+                    </Button>
+                  </div>
                 </div>
                 <div>
                   <Label className="text-xs">Payer Notes</Label>
