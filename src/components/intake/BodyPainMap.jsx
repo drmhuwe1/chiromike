@@ -1,120 +1,178 @@
-import { useState } from "react";
+import React from 'react';
+import { X } from 'lucide-react';
 
-const PAIN_REGIONS = [
-  { id: "head", label: "Head", cx: 200, cy: 42, r: 28 },
-  { id: "neck", label: "Neck", cx: 200, cy: 82, r: 14 },
-  { id: "left_shoulder", label: "Left Shoulder", cx: 155, cy: 105, r: 18 },
-  { id: "right_shoulder", label: "Right Shoulder", cx: 245, cy: 105, r: 18 },
-  { id: "upper_back", label: "Upper Back", cx: 200, cy: 118, r: 22 },
-  { id: "chest", label: "Chest", cx: 200, cy: 140, r: 22 },
-  { id: "left_arm", label: "Left Arm", cx: 132, cy: 150, r: 18 },
-  { id: "right_arm", label: "Right Arm", cx: 268, cy: 150, r: 18 },
-  { id: "mid_back", label: "Mid Back", cx: 200, cy: 170, r: 20 },
-  { id: "left_elbow", label: "Left Elbow", cx: 118, cy: 185, r: 14 },
-  { id: "right_elbow", label: "Right Elbow", cx: 282, cy: 185, r: 14 },
-  { id: "abdomen", label: "Abdomen", cx: 200, cy: 195, r: 22 },
-  { id: "low_back", label: "Low Back", cx: 200, cy: 220, r: 22 },
-  { id: "left_wrist", label: "Left Wrist", cx: 108, cy: 220, r: 12 },
-  { id: "right_wrist", label: "Right Wrist", cx: 292, cy: 220, r: 12 },
-  { id: "left_hip", label: "Left Hip", cx: 168, cy: 252, r: 20 },
-  { id: "right_hip", label: "Right Hip", cx: 232, cy: 252, r: 20 },
-  { id: "left_thigh", label: "Left Thigh", cx: 165, cy: 290, r: 18 },
-  { id: "right_thigh", label: "Right Thigh", cx: 235, cy: 290, r: 18 },
-  { id: "left_knee", label: "Left Knee", cx: 163, cy: 325, r: 16 },
-  { id: "right_knee", label: "Right Knee", cx: 237, cy: 325, r: 16 },
-  { id: "left_calf", label: "Left Calf", cx: 162, cy: 360, r: 16 },
-  { id: "right_calf", label: "Right Calf", cx: 238, cy: 360, r: 16 },
-  { id: "left_ankle", label: "Left Ankle", cx: 160, cy: 393, r: 13 },
-  { id: "right_ankle", label: "Right Ankle", cx: 240, cy: 393, r: 13 },
-  { id: "left_foot", label: "Left Foot", cx: 155, cy: 418, r: 14 },
-  { id: "right_foot", label: "Right Foot", cx: 245, cy: 418, r: 14 },
+const BODY_AREAS = [
+  // Head & Neck
+  { id: 'head', label: 'Head', region: 'head' },
+  { id: 'neck', label: 'Neck', region: 'neck' },
+  
+  // Upper Body
+  { id: 'shoulder_left', label: 'Left Shoulder', region: 'shoulder' },
+  { id: 'shoulder_right', label: 'Right Shoulder', region: 'shoulder' },
+  { id: 'upper_back', label: 'Upper Back', region: 'back' },
+  { id: 'chest', label: 'Chest', region: 'front' },
+  { id: 'arm_left_upper', label: 'Left Upper Arm', region: 'arm' },
+  { id: 'arm_right_upper', label: 'Right Upper Arm', region: 'arm' },
+  { id: 'arm_left_lower', label: 'Left Lower Arm', region: 'arm' },
+  { id: 'arm_right_lower', label: 'Right Lower Arm', region: 'arm' },
+  { id: 'elbow_left', label: 'Left Elbow', region: 'joint' },
+  { id: 'elbow_right', label: 'Right Elbow', region: 'joint' },
+  { id: 'wrist_left', label: 'Left Wrist', region: 'joint' },
+  { id: 'wrist_right', label: 'Right Wrist', region: 'joint' },
+  { id: 'hand_left', label: 'Left Hand', region: 'hand' },
+  { id: 'hand_right', label: 'Right Hand', region: 'hand' },
+  
+  // Core
+  { id: 'mid_back', label: 'Mid Back', region: 'back' },
+  { id: 'lower_back', label: 'Lower Back', region: 'back' },
+  { id: 'abdomen', label: 'Abdomen', region: 'front' },
+  
+  // Lower Body
+  { id: 'hip_left', label: 'Left Hip', region: 'hip' },
+  { id: 'hip_right', label: 'Right Hip', region: 'hip' },
+  { id: 'thigh_left', label: 'Left Thigh', region: 'leg' },
+  { id: 'thigh_right', label: 'Right Thigh', region: 'leg' },
+  { id: 'knee_left', label: 'Left Knee', region: 'joint' },
+  { id: 'knee_right', label: 'Right Knee', region: 'joint' },
+  { id: 'shin_left', label: 'Left Shin', region: 'leg' },
+  { id: 'shin_right', label: 'Right Shin', region: 'leg' },
+  { id: 'calf_left', label: 'Left Calf', region: 'leg' },
+  { id: 'calf_right', label: 'Right Calf', region: 'leg' },
+  { id: 'ankle_left', label: 'Left Ankle', region: 'joint' },
+  { id: 'ankle_right', label: 'Right Ankle', region: 'joint' },
+  { id: 'foot_left', label: 'Left Foot', region: 'foot' },
+  { id: 'foot_right', label: 'Right Foot', region: 'foot' },
 ];
 
-export default function BodyPainMap({ selected = [], onChange }) {
-  const toggle = (id) => {
-    if (selected.includes(id)) {
-      onChange(selected.filter(s => s !== id));
+export default function BodyPainMap({ selected, onChange }) {
+  const toggle = (areaId) => {
+    if (selected.includes(areaId)) {
+      onChange(selected.filter(id => id !== areaId));
     } else {
-      onChange([...selected, id]);
+      onChange([...selected, areaId]);
     }
   };
 
-  return (
-    <div className="flex flex-col items-center gap-3">
-      <p className="text-sm text-muted-foreground text-center">Tap/click the areas where you feel pain</p>
-      <div className="relative">
-        <svg viewBox="80 10 240 430" width="220" height="380" className="block mx-auto">
-          {/* Anatomically accurate human figure */}
-          {/* Head */}
-          <ellipse cx="200" cy="42" rx="20" ry="24" fill="none" stroke="#333" strokeWidth="2" />
-          {/* Eyes and nose */}
-          <circle cx="194" cy="38" r="1.5" fill="#333" />
-          <circle cx="206" cy="38" r="1.5" fill="#333" />
-          <line x1="200" y1="40" x2="200" y2="43" stroke="#333" strokeWidth="1" />
-          
-          {/* Neck */}
-          <rect x="195" y="65" width="10" height="15" fill="none" stroke="#333" strokeWidth="2" />
-          
-          {/* Shoulders and arms */}
-          <path d="M 155 82 L 145 105 L 130 185 L 125 245" stroke="#333" strokeWidth="2" fill="none" />
-          <path d="M 245 82 L 255 105 L 270 185 L 275 245" stroke="#333" strokeWidth="2" fill="none" />
-          
-          {/* Torso front */}
-          <path d="M 170 82 L 165 95 L 160 130 L 162 200 L 170 260" stroke="#333" strokeWidth="2" fill="none" />
-          <path d="M 230 82 L 235 95 L 240 130 L 238 200 L 230 260" stroke="#333" strokeWidth="2" fill="none" />
-          <ellipse cx="200" cy="130" rx="35" ry="45" fill="none" stroke="#333" strokeWidth="1.5" />
-          
-          {/* Chest line */}
-          <line x1="200" y1="90" x2="200" y2="165" stroke="#333" strokeWidth="1" />
-          
-          {/* Hands */}
-          <ellipse cx="125" cy="250" rx="8" ry="12" fill="none" stroke="#333" strokeWidth="1.5" />
-          <ellipse cx="275" cy="250" rx="8" ry="12" fill="none" stroke="#333" strokeWidth="1.5" />
-          
-          {/* Pelvis */}
-          <ellipse cx="200" cy="275" rx="40" ry="25" fill="none" stroke="#333" strokeWidth="2" />
-          
-          {/* Legs */}
-          <line x1="175" y1="298" x2="170" y2="390" stroke="#333" strokeWidth="2" />
-          <line x1="225" y1="298" x2="230" y2="390" stroke="#333" strokeWidth="2" />
-          
-          {/* Feet */}
-          <ellipse cx="168" cy="405" rx="12" ry="8" fill="none" stroke="#333" strokeWidth="1.5" />
-          <ellipse cx="232" cy="405" rx="12" ry="8" fill="none" stroke="#333" strokeWidth="1.5" />
+  const getSelectedLabel = (areaId) => {
+    return BODY_AREAS.find(a => a.id === areaId)?.label || '';
+  };
 
-          {/* Clickable regions */}
-          {PAIN_REGIONS.map(region => (
-            <circle
-              key={region.id}
-              cx={region.cx}
-              cy={region.cy}
-              r={region.r}
-              fill={selected.includes(region.id) ? "rgba(220, 38, 38, 0.55)" : "transparent"}
-              stroke={selected.includes(region.id) ? "#dc2626" : "transparent"}
-              strokeWidth="2"
-              className="cursor-pointer hover:fill-red-200 transition-colors"
-              onClick={() => toggle(region.id)}
-            >
-              <title>{region.label}</title>
-            </circle>
-          ))}
-        </svg>
-      </div>
-      {selected.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 justify-center max-w-xs">
-          {selected.map(id => {
-            const r = PAIN_REGIONS.find(r => r.id === id);
-            return (
-              <span key={id} className="px-2 py-0.5 bg-red-100 text-red-700 text-xs rounded-full flex items-center gap-1">
-                {r?.label}
-                <button onClick={() => toggle(id)} className="hover:text-red-900 font-bold">×</button>
-              </span>
-            );
-          })}
+  return (
+    <div className="space-y-4">
+      <div className="bg-white rounded-lg p-6">
+        <p className="text-sm font-medium text-muted-foreground mb-4">Click on body areas to select pain locations</p>
+        
+        {/* Front View */}
+        <div className="flex justify-center mb-6">
+          <svg width="200" height="500" viewBox="0 0 200 500" className="border border-border rounded">
+            {/* Head */}
+            <circle cx="100" cy="40" r="25" fill="none" stroke="#333" strokeWidth="2" className="cursor-pointer hover:opacity-50" onClick={() => toggle('head')} style={{fill: selected.includes('head') ? '#e0e7ff' : 'none'}} />
+            
+            {/* Neck */}
+            <rect x="90" y="65" width="20" height="20" fill="none" stroke="#333" strokeWidth="2" className="cursor-pointer hover:opacity-50" onClick={() => toggle('neck')} style={{fill: selected.includes('neck') ? '#e0e7ff' : 'none'}} />
+            
+            {/* Chest & Torso */}
+            <ellipse cx="100" cy="130" rx="35" ry="45" fill="none" stroke="#333" strokeWidth="2" className="cursor-pointer hover:opacity-50" onClick={() => toggle('chest')} style={{fill: selected.includes('chest') ? '#e0e7ff' : 'none'}} />
+            
+            {/* Shoulders */}
+            <circle cx="70" cy="100" r="10" fill="none" stroke="#333" strokeWidth="2" className="cursor-pointer hover:opacity-50" onClick={() => toggle('shoulder_left')} style={{fill: selected.includes('shoulder_left') ? '#e0e7ff' : 'none'}} />
+            <circle cx="130" cy="100" r="10" fill="none" stroke="#333" strokeWidth="2" className="cursor-pointer hover:opacity-50" onClick={() => toggle('shoulder_right')} style={{fill: selected.includes('shoulder_right') ? '#e0e7ff' : 'none'}} />
+            
+            {/* Left Arm */}
+            <line x1="60" y1="110" x2="40" y2="200" stroke="#333" strokeWidth="8" className="cursor-pointer hover:opacity-50" onClick={() => toggle('arm_left_upper')} style={{stroke: selected.includes('arm_left_upper') ? '#a5b4fc' : '#333'}} />
+            <line x1="40" y1="200" x2="30" y2="290" stroke="#333" strokeWidth="8" className="cursor-pointer hover:opacity-50" onClick={() => toggle('arm_left_lower')} style={{stroke: selected.includes('arm_left_lower') ? '#a5b4fc' : '#333'}} />
+            
+            {/* Right Arm */}
+            <line x1="140" y1="110" x2="160" y2="200" stroke="#333" strokeWidth="8" className="cursor-pointer hover:opacity-50" onClick={() => toggle('arm_right_upper')} style={{stroke: selected.includes('arm_right_upper') ? '#a5b4fc' : '#333'}} />
+            <line x1="160" y1="200" x2="170" y2="290" stroke="#333" strokeWidth="8" className="cursor-pointer hover:opacity-50" onClick={() => toggle('arm_right_lower')} style={{stroke: selected.includes('arm_right_lower') ? '#a5b4fc' : '#333'}} />
+            
+            {/* Abdomen */}
+            <ellipse cx="100" cy="180" rx="25" ry="35" fill="none" stroke="#333" strokeWidth="2" className="cursor-pointer hover:opacity-50" onClick={() => toggle('abdomen')} style={{fill: selected.includes('abdomen') ? '#e0e7ff' : 'none'}} />
+            
+            {/* Hip & Pelvis */}
+            <path d="M 75 215 L 65 245 L 75 245 L 85 215 L 115 215 L 125 245 L 135 245 L 125 215 Z" fill="none" stroke="#333" strokeWidth="2" className="cursor-pointer hover:opacity-50" onClick={() => toggle('hip_left')} style={{fill: selected.includes('hip_left') ? '#e0e7ff' : 'none'}} />
+            
+            {/* Left Leg */}
+            <line x1="75" y1="245" x2="65" y2="380" stroke="#333" strokeWidth="10" className="cursor-pointer hover:opacity-50" onClick={() => toggle('thigh_left')} style={{stroke: selected.includes('thigh_left') ? '#a5b4fc' : '#333'}} />
+            <line x1="65" y1="380" x2="60" y2="460" stroke="#333" strokeWidth="8" className="cursor-pointer hover:opacity-50" onClick={() => toggle('shin_left')} style={{stroke: selected.includes('shin_left') ? '#a5b4fc' : '#333'}} />
+            
+            {/* Right Leg */}
+            <line x1="125" y1="245" x2="135" y2="380" stroke="#333" strokeWidth="10" className="cursor-pointer hover:opacity-50" onClick={() => toggle('thigh_right')} style={{stroke: selected.includes('thigh_right') ? '#a5b4fc' : '#333'}} />
+            <line x1="135" y1="380" x2="140" y2="460" stroke="#333" strokeWidth="8" className="cursor-pointer hover:opacity-50" onClick={() => toggle('shin_right')} style={{stroke: selected.includes('shin_right') ? '#a5b4fc' : '#333'}} />
+            
+            {/* Feet */}
+            <ellipse cx="60" cy="475" rx="8" ry="12" fill="none" stroke="#333" strokeWidth="2" className="cursor-pointer hover:opacity-50" onClick={() => toggle('foot_left')} style={{fill: selected.includes('foot_left') ? '#e0e7ff' : 'none'}} />
+            <ellipse cx="140" cy="475" rx="8" ry="12" fill="none" stroke="#333" strokeWidth="2" className="cursor-pointer hover:opacity-50" onClick={() => toggle('foot_right')} style={{fill: selected.includes('foot_right') ? '#e0e7ff' : 'none'}} />
+          </svg>
         </div>
-      )}
-      {selected.length === 0 && (
-        <p className="text-xs text-muted-foreground">No areas selected</p>
+
+        {/* Back View */}
+        <div className="flex justify-center mb-6">
+          <svg width="200" height="500" viewBox="0 0 200 500" className="border border-border rounded">
+            {/* Head */}
+            <circle cx="100" cy="40" r="25" fill="none" stroke="#333" strokeWidth="2" className="cursor-pointer hover:opacity-50" onClick={() => toggle('head')} style={{fill: selected.includes('head') ? '#e0e7ff' : 'none'}} />
+            
+            {/* Neck */}
+            <rect x="90" y="65" width="20" height="20" fill="none" stroke="#333" strokeWidth="2" className="cursor-pointer hover:opacity-50" onClick={() => toggle('neck')} style={{fill: selected.includes('neck') ? '#e0e7ff' : 'none'}} />
+            
+            {/* Upper Back */}
+            <path d="M 70 95 L 130 95 L 135 130 L 65 130 Z" fill="none" stroke="#333" strokeWidth="2" className="cursor-pointer hover:opacity-50" onClick={() => toggle('upper_back')} style={{fill: selected.includes('upper_back') ? '#e0e7ff' : 'none'}} />
+            
+            {/* Mid Back */}
+            <path d="M 65 130 L 135 130 L 140 165 L 60 165 Z" fill="none" stroke="#333" strokeWidth="2" className="cursor-pointer hover:opacity-50" onClick={() => toggle('mid_back')} style={{fill: selected.includes('mid_back') ? '#e0e7ff' : 'none'}} />
+            
+            {/* Lower Back */}
+            <path d="M 60 165 L 140 165 L 135 210 L 65 210 Z" fill="none" stroke="#333" strokeWidth="2" className="cursor-pointer hover:opacity-50" onClick={() => toggle('lower_back')} style={{fill: selected.includes('lower_back') ? '#e0e7ff' : 'none'}} />
+            
+            {/* Shoulders */}
+            <circle cx="50" cy="105" r="12" fill="none" stroke="#333" strokeWidth="2" className="cursor-pointer hover:opacity-50" onClick={() => toggle('shoulder_left')} style={{fill: selected.includes('shoulder_left') ? '#e0e7ff' : 'none'}} />
+            <circle cx="150" cy="105" r="12" fill="none" stroke="#333" strokeWidth="2" className="cursor-pointer hover:opacity-50" onClick={() => toggle('shoulder_right')} style={{fill: selected.includes('shoulder_right') ? '#e0e7ff' : 'none'}} />
+            
+            {/* Left Arm */}
+            <line x1="45" y1="120" x2="20" y2="220" stroke="#333" strokeWidth="8" className="cursor-pointer hover:opacity-50" onClick={() => toggle('arm_left_upper')} style={{stroke: selected.includes('arm_left_upper') ? '#a5b4fc' : '#333'}} />
+            <line x1="20" y1="220" x2="10" y2="310" stroke="#333" strokeWidth="8" className="cursor-pointer hover:opacity-50" onClick={() => toggle('arm_left_lower')} style={{stroke: selected.includes('arm_left_lower') ? '#a5b4fc' : '#333'}} />
+            
+            {/* Right Arm */}
+            <line x1="155" y1="120" x2="180" y2="220" stroke="#333" strokeWidth="8" className="cursor-pointer hover:opacity-50" onClick={() => toggle('arm_right_upper')} style={{stroke: selected.includes('arm_right_upper') ? '#a5b4fc' : '#333'}} />
+            <line x1="180" y1="220" x2="190" y2="310" stroke="#333" strokeWidth="8" className="cursor-pointer hover:opacity-50" onClick={() => toggle('arm_right_lower')} style={{stroke: selected.includes('arm_right_lower') ? '#a5b4fc' : '#333'}} />
+            
+            {/* Hip & Pelvis */}
+            <path d="M 70 215 L 60 245 L 70 245 L 80 215 L 120 215 L 130 245 L 140 245 L 130 215 Z" fill="none" stroke="#333" strokeWidth="2" className="cursor-pointer hover:opacity-50" onClick={() => toggle('hip_right')} style={{fill: selected.includes('hip_right') ? '#e0e7ff' : 'none'}} />
+            
+            {/* Left Leg */}
+            <line x1="70" y1="245" x2="55" y2="380" stroke="#333" strokeWidth="10" className="cursor-pointer hover:opacity-50" onClick={() => toggle('thigh_left')} style={{stroke: selected.includes('thigh_left') ? '#a5b4fc' : '#333'}} />
+            <line x1="55" y1="380" x2="50" y2="460" stroke="#333" strokeWidth="8" className="cursor-pointer hover:opacity-50" onClick={() => toggle('calf_left')} style={{stroke: selected.includes('calf_left') ? '#a5b4fc' : '#333'}} />
+            
+            {/* Right Leg */}
+            <line x1="130" y1="245" x2="145" y2="380" stroke="#333" strokeWidth="10" className="cursor-pointer hover:opacity-50" onClick={() => toggle('thigh_right')} style={{stroke: selected.includes('thigh_right') ? '#a5b4fc' : '#333'}} />
+            <line x1="145" y1="380" x2="150" y2="460" stroke="#333" strokeWidth="8" className="cursor-pointer hover:opacity-50" onClick={() => toggle('calf_right')} style={{stroke: selected.includes('calf_right') ? '#a5b4fc' : '#333'}} />
+            
+            {/* Feet */}
+            <ellipse cx="50" cy="475" rx="8" ry="12" fill="none" stroke="#333" strokeWidth="2" className="cursor-pointer hover:opacity-50" onClick={() => toggle('foot_left')} style={{fill: selected.includes('foot_left') ? '#e0e7ff' : 'none'}} />
+            <ellipse cx="150" cy="475" rx="8" ry="12" fill="none" stroke="#333" strokeWidth="2" className="cursor-pointer hover:opacity-50" onClick={() => toggle('foot_right')} style={{fill: selected.includes('foot_right') ? '#e0e7ff' : 'none'}} />
+          </svg>
+        </div>
+      </div>
+
+      {/* Selected Areas */}
+      {selected.length > 0 ? (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <p className="text-sm font-semibold text-blue-900 mb-2">{selected.length} area(s) selected:</p>
+          <div className="flex flex-wrap gap-2">
+            {selected.map(areaId => (
+              <button
+                key={areaId}
+                onClick={() => toggle(areaId)}
+                className="inline-flex items-center gap-1 px-3 py-1 bg-blue-600 text-white text-sm rounded-full hover:bg-blue-700 transition-colors"
+              >
+                {getSelectedLabel(areaId)}
+                <X className="w-3 h-3" />
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <p className="text-center text-sm text-muted-foreground py-4">No areas selected</p>
       )}
     </div>
   );
