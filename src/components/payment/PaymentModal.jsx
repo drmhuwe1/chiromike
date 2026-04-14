@@ -61,7 +61,12 @@ export default function PaymentModal({ claim, patient, onClose, onSuccess }) {
       });
 
       if (res.data.checkout_url) {
-        window.location.href = res.data.checkout_url;
+        // If running inside an iframe (preview), open in new tab instead
+        if (window.self !== window.top) {
+          window.open(res.data.checkout_url, "_blank");
+        } else {
+          window.location.href = res.data.checkout_url;
+        }
       }
     } catch (e) {
       setStatus("error");
