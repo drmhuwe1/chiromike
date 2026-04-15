@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import AppFooter from "./AppFooter";
 
 const navItems = [
   { path: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -112,10 +113,11 @@ export default function Layout() {
         </header>
 
         {/* Page content */}
-        <main id="main-content" className="flex-1 overflow-y-auto">
-          <div className="p-4 lg:p-6 pb-16 lg:pb-10 max-w-7xl mx-auto">
+        <main id="main-content" className="flex-1 overflow-y-auto flex flex-col">
+          <div className="flex-1 p-4 lg:p-6 pb-6 lg:pb-8 max-w-7xl mx-auto w-full">
             <Outlet />
           </div>
+          <AppFooter />
         </main>
       </div>
     </div>
