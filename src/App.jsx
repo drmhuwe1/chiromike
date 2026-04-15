@@ -32,6 +32,9 @@ import SoapNotes from './pages/SoapNotes';
 import NewPatientExam from './pages/NewPatientExam';
 import ReExamination from './pages/ReExamination';
 import FinancialReports from './pages/FinancialReports';
+import Privacy from './pages/Privacy';
+import Terms from './pages/Terms';
+import CookieConsent from './components/CookieConsent';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -74,6 +77,8 @@ const AuthenticatedApp = () => {
   return (
     <Routes>
       {/* Public routes - no layout */}
+      <Route path="/privacy" element={<Privacy />} />
+      <Route path="/terms" element={<Terms />} />
       <Route path="/intake" element={<PatientIntake />} />
       <Route path="/intake-kiosk" element={<IntakeKiosk />} />
       <Route path="/payment-success" element={<PaymentSuccess />} />
@@ -119,6 +124,7 @@ function App() {
           <AuthenticatedApp />
         </Router>
         <Toaster />
+        <CookieConsent />
       </QueryClientProvider>
     </AuthProvider>
   )

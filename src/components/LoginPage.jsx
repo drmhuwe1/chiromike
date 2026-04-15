@@ -75,6 +75,11 @@ export default function LoginPage() {
             <p className="text-xs text-muted-foreground">
               For access, contact your administrator
             </p>
+            <p className="text-xs text-muted-foreground">
+              <a href="/privacy" className="underline hover:text-foreground">Privacy Policy</a>
+              {" · "}
+              <a href="/terms" className="underline hover:text-foreground">Terms of Service</a>
+            </p>
           </div>
         </div>
 
