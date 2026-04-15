@@ -22,7 +22,7 @@ export default function Dashboard() {
   return (
     <div>
       <div className="mb-8 flex items-center gap-4">
-        <img src="https://media.base44.com/images/public/69dbc37eaf437642fe866557/b98a22851_ChatGPTImageApr13202611_09_56PM.png" alt="ChiroMike Logo" className="h-20 w-auto" />
+        <img src="https://media.base44.com/images/public/69dbc37eaf437642fe866557/b98a22851_ChatGPTImageApr13202611_09_56PM.png" alt="ChiroMike Logo" className="h-20 w-auto" width="80" height="80" />
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Welcome to ChiroMike</h1>
           <p className="text-muted-foreground mt-1">Fast chiropractic claim entry for Huwe Chiropractic</p>
