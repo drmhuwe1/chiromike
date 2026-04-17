@@ -35,6 +35,7 @@ import FinancialReports from './pages/FinancialReports';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
 import CookieConsent from './components/CookieConsent';
+import PWAInstallBadge from './components/PWAInstallBadge';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -125,6 +126,7 @@ function App() {
         </Router>
         <Toaster />
         <CookieConsent />
+        <PWAInstallBadge />
       </QueryClientProvider>
     </AuthProvider>
   )
