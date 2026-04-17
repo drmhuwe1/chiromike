@@ -10,6 +10,7 @@ export default function AppFooter() {
         <Link to="/claim-builder" className="hover:text-foreground transition-colors">New Claim</Link>
         <Link to="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link>
         <Link to="/terms" className="hover:text-foreground transition-colors">Terms of Service</Link>
+        <Link to="/baa" className="hover:text-foreground transition-colors">BAA</Link>
       </nav>
     </footer>
   );

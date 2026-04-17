@@ -34,6 +34,7 @@ import ReExamination from './pages/ReExamination';
 import FinancialReports from './pages/FinancialReports';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
+import BAA from './pages/BAA';
 import CookieConsent from './components/CookieConsent';
 import PWAInstallBadge from './components/PWAInstallBadge';
 
@@ -80,6 +81,7 @@ const AuthenticatedApp = () => {
       {/* Public routes - no layout */}
       <Route path="/privacy" element={<Privacy />} />
       <Route path="/terms" element={<Terms />} />
+      <Route path="/baa" element={<BAA />} />
       <Route path="/intake" element={<PatientIntake />} />
       <Route path="/intake-kiosk" element={<IntakeKiosk />} />
       <Route path="/payment-success" element={<PaymentSuccess />} />
