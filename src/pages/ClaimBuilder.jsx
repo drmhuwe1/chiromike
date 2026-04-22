@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
-import { Save, Printer, Copy, CalendarDays, Search, User, Plus, Trash2, Star, Zap, Mail, Sparkles, ChevronDown, CreditCard } from "lucide-react";
+import { Save, Printer, Copy, CalendarDays, Search, User, Plus, Trash2, Star, Zap, Mail, Sparkles, ChevronDown, CreditCard, RefreshCw } from "lucide-react";
 import PayerAlertBanner from "../components/claim/PayerAlertBanner";
 import SoapNoteModal from "../components/claim/SoapNoteModal";
 import VoiceDictation from "../components/VoiceDictation";
@@ -14,6 +14,8 @@ import PaymentModal from "../components/payment/PaymentModal";
 import ScheduleNextVisitModal from "../components/claim/ScheduleNextVisitModal";
 import ProcedureCodeSearchModal from "../components/claim/ProcedureCodeSearchModal";
 import DiagnosisCodeSearchModal from "../components/claim/DiagnosisCodeSearchModal";
+import InsuranceDocChecklistModal from "../components/claim/InsuranceDocChecklistModal";
+import RecurringBillingModal from "../components/claim/RecurringBillingModal";
 
 const CANNED_NOTES = [
   "Patient presents for follow-up chiropractic care. Responding well to treatment with gradual improvement in pain and function. Continue current treatment plan.",
@@ -67,6 +69,9 @@ export default function ClaimBuilder() {
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [showProcCodeModal, setShowProcCodeModal] = useState(null); // null or line index
   const [showDxCodeModal, setShowDxCodeModal] = useState(null); // null or diagnosis index
+  const [showDocChecklist, setShowDocChecklist] = useState(false);
+  const [showRecurringModal, setShowRecurringModal] = useState(false);
+  const [pendingSaveAction, setPendingSaveAction] = useState(null); // function to call after checklist
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -298,14 +303,26 @@ export default function ClaimBuilder() {
     }
   };
 
-  const handleSave = async () => {
+  const isInsuranceClaim = !isCash && claim.visit_type !== "Auto";
+
+  const doSave = async () => {
     if (!claim.patient_id) { toast({ title: "Select a patient", variant: "destructive" }); return; }
     setLoading(true);
     const saved = await base44.entities.Claim.create({ ...claim, total_charge: totalCharge, status: "Saved" });
     setLoading(false);
     setSavedClaim(saved);
-    localStorage.removeItem('claimDraft'); // Clear draft after saving
+    localStorage.removeItem('claimDraft');
     toast({ title: "Claim saved! You can now email, print, collect payment, or generate a SOAP note below." });
+  };
+
+  const handleSave = async () => {
+    if (!claim.patient_id) { toast({ title: "Select a patient", variant: "destructive" }); return; }
+    if (isInsuranceClaim) {
+      setPendingSaveAction(() => doSave);
+      setShowDocChecklist(true);
+    } else {
+      await doSave();
+    }
   };
 
   const handleSaveAndEmail = async () => {
@@ -322,13 +339,22 @@ export default function ClaimBuilder() {
     setEmailing(false);
   };
 
-  const handleSaveAndPrint = async () => {
+  const doSaveAndPrint = async () => {
     if (!claim.patient_id) { toast({ title: "Select a patient", variant: "destructive" }); return; }
     setLoading(true);
     const saved = await base44.entities.Claim.create({ ...claim, total_charge: totalCharge, status: "Saved" });
     setLoading(false);
-    const isCash = claim.visit_type?.includes("Cash");
     navigate(isCash ? `/print-receipt?id=${saved.id}` : `/print-claim?id=${saved.id}`);
+  };
+
+  const handleSaveAndPrint = async () => {
+    if (!claim.patient_id) { toast({ title: "Select a patient", variant: "destructive" }); return; }
+    if (isInsuranceClaim) {
+      setPendingSaveAction(() => doSaveAndPrint);
+      setShowDocChecklist(true);
+    } else {
+      await doSaveAndPrint();
+    }
   };
 
   const isCash = claim.visit_type?.includes("Cash");
@@ -713,9 +739,14 @@ export default function ClaimBuilder() {
               </Button>
             </div>
             {isCash && (
-              <Button onClick={() => setShowPaymentModal(true)} className="w-full h-10 bg-green-600 hover:bg-green-700 text-white">
-                <CreditCard className="w-4 h-4 mr-2" /> Collect Payment (Stripe)
-              </Button>
+              <>
+                <Button onClick={() => setShowPaymentModal(true)} className="w-full h-10 bg-green-600 hover:bg-green-700 text-white">
+                  <CreditCard className="w-4 h-4 mr-2" /> Collect Payment (Stripe)
+                </Button>
+                <Button onClick={() => setShowRecurringModal(true)} className="w-full h-10 bg-blue-600 hover:bg-blue-700 text-white">
+                  <RefreshCw className="w-4 h-4 mr-2" /> Set Up Monthly Membership
+                </Button>
+              </>
             )}
             <div className="flex items-center gap-2 px-1">
               <input type="checkbox" id="hcfa-toggle" checked={includeHcfa} onChange={e => setIncludeHcfa(e.target.checked)} className="w-4 h-4 accent-blue-600" />
@@ -821,6 +852,24 @@ export default function ClaimBuilder() {
             setShowProcCodeModal(null);
           }}
           onClose={() => setShowProcCodeModal(null)}
+        />
+      )}
+
+      {showDocChecklist && (
+        <InsuranceDocChecklistModal
+          onConfirm={async () => {
+            setShowDocChecklist(false);
+            if (pendingSaveAction) await pendingSaveAction();
+            setPendingSaveAction(null);
+          }}
+          onCancel={() => { setShowDocChecklist(false); setPendingSaveAction(null); }}
+        />
+      )}
+
+      {showRecurringModal && (
+        <RecurringBillingModal
+          patient={selectedPatient}
+          onClose={() => setShowRecurringModal(false)}
         />
       )}
 
