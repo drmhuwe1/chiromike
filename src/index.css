@@ -87,10 +87,7 @@
   }
 }
 
-/* Accessibility: neutralize any positive tabindex values from third-party libraries */
-[tabindex]:not([tabindex="-1"]):not([tabindex="0"]) {
-  tabindex: 0;
-}
+/* Note: positive tabindex values are avoided throughout this app by convention */
 
 /* Do Not Track: visual policy statement (DNT is honored by not loading tracking scripts) */
 @media print {

@@ -1,4 +1,14 @@
 User-agent: *
-Disallow: /
+Allow: /
+Allow: /about
+Allow: /contact
+Allow: /privacy
+Allow: /terms
+Allow: /baa
+Allow: /sla
+Disallow: /intake
+Disallow: /intake-kiosk
+Disallow: /payment-success
+Disallow: /payment-cancelled
 
 Sitemap: https://chiromike.org/sitemap.xml

@@ -2,7 +2,19 @@ import { Link } from "react-router-dom";
 
 export default function Terms() {
   return (
-    <div className="max-w-3xl mx-auto py-10 px-4 space-y-6">
+    <div className="min-h-screen bg-background">
+      <header className="border-b border-border bg-card">
+        <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
+          <Link to="/" className="text-lg font-bold text-primary">ChiroMike</Link>
+          <nav aria-label="Primary navigation" className="flex flex-wrap gap-x-6 gap-y-1 text-sm font-medium">
+            <Link to="/about" className="text-muted-foreground hover:text-primary transition-colors">About</Link>
+            <Link to="/contact" className="text-muted-foreground hover:text-primary transition-colors">Contact</Link>
+            <Link to="/privacy" className="text-muted-foreground hover:text-primary transition-colors">Privacy</Link>
+            <Link to="/terms" className="text-foreground hover:text-primary transition-colors">Terms</Link>
+          </nav>
+        </div>
+      </header>
+      <div className="max-w-3xl mx-auto py-10 px-4 space-y-6">
       <div>
         <Link to="/" className="text-sm text-primary hover:underline">← Back</Link>
         <h1 className="text-2xl font-bold mt-3">Terms of Service</h1>
@@ -33,6 +45,7 @@ export default function Terms() {
         <h2 className="text-lg font-semibold">5. Changes</h2>
         <p className="text-sm text-muted-foreground">These terms may be updated at any time. Continued use of the system constitutes acceptance of the current terms.</p>
       </section>
+      </div>
     </div>
   );
 }
