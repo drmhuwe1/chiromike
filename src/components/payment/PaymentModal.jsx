@@ -3,38 +3,53 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import { X, Loader2, ChevronDown, ChevronUp } from "lucide-react";
+import { X, Loader2, Plus, Trash2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+
+const QUICK_ITEMS = [
+  { label: "Cash Exam", amount: 110 },
+  { label: "Maintenance Tx", amount: 45 },
+  { label: "Maint/Laser Tx", amount: 65 },
+  { label: "6 Visit Tx Plan", amount: 325 },
+  { label: "12 Visit Tx Plan", amount: 650 },
+  { label: "Copay ($20)", amount: 20 },
+];
 
 export default function PaymentModal({ claim, patient, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [dosDate, setDosDate] = useState(claim?.date_of_service || "");
-  const [status, setStatus] = useState(null); // "processing", "success", "error"
   const [errorMsg, setErrorMsg] = useState("");
-  const [claims, setClaims] = useState([]);
-  const [selectedClaimIds, setSelectedClaimIds] = useState([claim?.id]);
-  const [showHistory, setShowHistory] = useState(false);
+  const [cartItems, setCartItems] = useState([]);
+  const [customLabel, setCustomLabel] = useState("");
+  const [customAmount, setCustomAmount] = useState("");
   const { toast } = useToast();
 
+  // Pre-load from claim total if available
   useEffect(() => {
-    const loadPatientClaims = async () => {
-      const patientClaims = await base44.entities.Claim.filter({ patient_id: patient.id }, "-date_of_service", 100);
-      setClaims(patientClaims);
-    };
-    if (patient?.id) loadPatientClaims();
-  }, [patient?.id]);
+    if (claim?.total_charge > 0) {
+      setCartItems([{ label: claim.visit_type || "Visit Charge", amount: claim.total_charge }]);
+    }
+  }, []);
 
-  const selectedClaims = claims.filter(c => selectedClaimIds.includes(c.id));
-  const amount = selectedClaims.reduce((sum, c) => sum + (c.total_charge || 0), 0);
-  const unpaidClaims = claims.filter(c => (c.amount_paid || 0) < (c.total_charge || 0));
+  const total = cartItems.reduce((sum, item) => sum + item.amount, 0);
 
-  const toggleClaimSelection = (claimId) => {
-    setSelectedClaimIds(prev =>
-      prev.includes(claimId)
-        ? prev.filter(id => id !== claimId)
-        : [...prev, claimId]
-    );
+  const addQuickItem = (item) => {
+    setCartItems(prev => [...prev, { ...item }]);
+  };
+
+  const addCustomItem = () => {
+    const amt = parseFloat(customAmount);
+    if (!customLabel.trim() || isNaN(amt) || amt <= 0) {
+      toast({ title: "Enter a description and valid amount", variant: "destructive" });
+      return;
+    }
+    setCartItems(prev => [...prev, { label: customLabel.trim(), amount: amt }]);
+    setCustomLabel("");
+    setCustomAmount("");
+  };
+
+  const removeItem = (idx) => {
+    setCartItems(prev => prev.filter((_, i) => i !== idx));
   };
 
   const handleCheckout = async () => {
@@ -42,26 +57,29 @@ export default function PaymentModal({ claim, patient, onClose, onSuccess }) {
       toast({ title: "Patient email required to send receipt", variant: "destructive" });
       return;
     }
-    if (selectedClaimIds.length === 0) {
-      toast({ title: "Select at least one claim to charge", variant: "destructive" });
+    if (cartItems.length === 0) {
+      toast({ title: "Add at least one item to charge", variant: "destructive" });
+      return;
+    }
+    if (total <= 0) {
+      toast({ title: "Total must be greater than $0", variant: "destructive" });
       return;
     }
 
     setLoading(true);
-    setStatus("processing");
+    setErrorMsg("");
 
     try {
-      // Create checkout session for the primary claim
       const res = await base44.functions.invoke("createPaymentCheckout", {
-        claim_id: claim.id,
+        claim_id: claim?.id || null,
         patient_id: patient.id,
         patient_email: patient.email,
-        amount: Math.round(amount * 100), // Stripe expects cents
+        amount: Math.round(total * 100),
         date_of_service: dosDate,
+        description: cartItems.map(i => `${i.label} $${i.amount.toFixed(2)}`).join(", "),
       });
 
       if (res.data.checkout_url) {
-        // If running inside an iframe (preview), open in new tab instead
         if (window.self !== window.top) {
           window.open(res.data.checkout_url, "_blank");
         } else {
@@ -69,10 +87,8 @@ export default function PaymentModal({ claim, patient, onClose, onSuccess }) {
         }
       }
     } catch (e) {
-      setStatus("error");
       setErrorMsg(e.message || "Failed to create payment");
       setLoading(false);
-      toast({ title: "Error", description: errorMsg, variant: "destructive" });
     }
   };
 
@@ -92,86 +108,104 @@ export default function PaymentModal({ claim, patient, onClose, onSuccess }) {
           </div>
         )}
 
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-          <p className="text-xs text-amber-700 uppercase font-semibold tracking-wide">Total Amount Due</p>
-          <p className="text-3xl font-bold text-amber-900 mt-1">${amount.toFixed(2)}</p>
-          <p className="text-xs text-amber-600 mt-2">{selectedClaimIds.length} claim(s) selected</p>
-        </div>
-
-        <div>
-          <Label className="text-sm">Patient</Label>
-          <div className="mt-1 px-3 py-2 bg-muted rounded-md text-sm font-medium">
-            {patient?.first_name} {patient?.last_name}
+        {/* Patient + Date */}
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label className="text-xs text-muted-foreground">Patient</Label>
+            <div className="mt-1 px-3 py-2 bg-muted rounded-md text-sm font-medium">
+              {patient?.first_name} {patient?.last_name}
+            </div>
+          </div>
+          <div>
+            <Label className="text-xs text-muted-foreground">Date of Service</Label>
+            <Input type="date" value={dosDate} onChange={e => setDosDate(e.target.value)} className="mt-1 h-9" disabled={loading} />
           </div>
         </div>
 
+        {/* Quick Add Buttons */}
         <div>
-          <Label className="text-sm">Date of Service</Label>
-          <Input
-            type="date"
-            value={dosDate}
-            onChange={e => setDosDate(e.target.value)}
-            className="mt-1"
-            disabled={loading}
-          />
-          <p className="text-xs text-muted-foreground mt-1">Primary visit date for this payment</p>
+          <Label className="text-xs text-muted-foreground uppercase tracking-wide">Quick Add</Label>
+          <div className="flex flex-wrap gap-2 mt-2">
+            {QUICK_ITEMS.map(item => (
+              <button
+                key={item.label}
+                onClick={() => addQuickItem(item)}
+                disabled={loading}
+                className="px-3 py-1.5 text-xs font-medium bg-muted hover:bg-primary hover:text-primary-foreground border border-border rounded-lg transition-colors"
+              >
+                {item.label} — ${item.amount}
+              </button>
+            ))}
+          </div>
         </div>
 
-        {unpaidClaims.length > 1 && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-            <button
-              onClick={() => setShowHistory(!showHistory)}
-              className="w-full flex items-center justify-between text-sm font-semibold text-blue-900 hover:text-blue-700"
-            >
-              <span>💰 {unpaidClaims.length} Unpaid Visits Available</span>
-              {showHistory ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-            </button>
+        {/* Custom Amount */}
+        <div>
+          <Label className="text-xs text-muted-foreground uppercase tracking-wide">Custom Charge</Label>
+          <div className="flex gap-2 mt-2">
+            <Input
+              placeholder="Description (e.g. Copay)"
+              value={customLabel}
+              onChange={e => setCustomLabel(e.target.value)}
+              className="h-9 flex-1"
+              disabled={loading}
+            />
+            <Input
+              type="number"
+              placeholder="$0.00"
+              value={customAmount}
+              onChange={e => setCustomAmount(e.target.value)}
+              className="h-9 w-28"
+              step="0.01"
+              min="0"
+              disabled={loading}
+              onKeyDown={e => e.key === "Enter" && addCustomItem()}
+            />
+            <Button size="sm" variant="outline" onClick={addCustomItem} disabled={loading} className="h-9 px-3">
+              <Plus className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
 
-            {showHistory && (
-              <div className="mt-3 space-y-2 pt-3 border-t border-blue-200">
-                {unpaidClaims.map(c => {
-                  const balance = (c.total_charge || 0) - (c.amount_paid || 0);
-                  return (
-                    <label key={c.id} className="flex items-center gap-3 p-2 rounded hover:bg-blue-100 cursor-pointer">
-                      <Checkbox
-                        checked={selectedClaimIds.includes(c.id)}
-                        onCheckedChange={() => toggleClaimSelection(c.id)}
-                        disabled={loading}
-                      />
-                      <div className="flex-1 text-xs">
-                        <div className="font-medium">{c.date_of_service} • {c.visit_type}</div>
-                        <div className="text-blue-700">Balance: ${balance.toFixed(2)}</div>
-                      </div>
-                    </label>
-                  );
-                })}
+        {/* Cart */}
+        {cartItems.length > 0 && (
+          <div className="bg-muted/40 border border-border rounded-xl p-3 space-y-2">
+            <Label className="text-xs text-muted-foreground uppercase tracking-wide">Cart</Label>
+            {cartItems.map((item, idx) => (
+              <div key={idx} className="flex items-center justify-between text-sm">
+                <span className="font-medium">{item.label}</span>
+                <div className="flex items-center gap-3">
+                  <span className="font-semibold">${item.amount.toFixed(2)}</span>
+                  <button onClick={() => removeItem(idx)} disabled={loading} className="text-destructive hover:opacity-70">
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
-            )}
+            ))}
+            <div className="border-t border-border pt-2 flex justify-between font-bold text-base">
+              <span>Total</span>
+              <span>${total.toFixed(2)}</span>
+            </div>
           </div>
         )}
 
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-900">
-          <strong>Payment Methods:</strong> Tap (NFC), Apple Pay, Google Pay, Samsung Pay, and all major cards.
+          <strong>Accepts:</strong> Tap (NFC), Apple Pay, Google Pay, Samsung Pay, and all major cards.
         </div>
 
-        <div className="flex gap-3 pt-2">
+        <div className="flex gap-3 pt-1">
           <Button
             onClick={handleCheckout}
-            disabled={loading || !dosDate || selectedClaimIds.length === 0}
+            disabled={loading || !dosDate || cartItems.length === 0}
             className="flex-1 h-11"
           >
             {loading ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Processing...
-              </>
+              <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Processing...</>
             ) : (
-              <>
-                💳 Proceed to Payment (${amount.toFixed(2)})
-              </>
+              <>💳 Charge ${total.toFixed(2)}</>
             )}
           </Button>
-          <Button variant="outline" onClick={onClose} disabled={loading} className="flex-1">
+          <Button variant="outline" onClick={onClose} disabled={loading} className="flex-1 h-11">
             Cancel
           </Button>
         </div>
