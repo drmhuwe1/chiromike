@@ -1,10 +1,9 @@
 import { BadgeCheck, AlertTriangle } from "lucide-react";
 
 const PLAN_DETAILS = {
-  Basic:    { amount: "$35/mo", visits: 4 },
-  Standard: { amount: "$60/mo", visits: 8 },
-  Plus:     { amount: "$90/mo", visits: 12 },
-  Premium:  { amount: "$100/mo", visits: 16 },
+  "Maintenance Plan": { amount: "$150/mo", description: "Perfect for consistent care" },
+  "Wellness Plan":    { amount: "$200/mo", description: "Enhanced therapeutic care" },
+  "Family Plan":      { amount: "$300/mo", description: "Flexible for families" },
 };
 
 export default function MembershipAlertBanner({ patient }) {
@@ -18,8 +17,8 @@ export default function MembershipAlertBanner({ patient }) {
       <div className="flex items-center gap-3 bg-blue-50 border border-blue-300 rounded-xl px-4 py-2.5">
         <BadgeCheck className="w-5 h-5 text-blue-600 flex-shrink-0" />
         <div>
-          <span className="font-semibold text-blue-800 text-sm">Active Membership: {membership_plan} Plan</span>
-          <span className="text-blue-600 text-xs ml-2">({details.amount} · up to {details.visits} visits/mo)</span>
+          <span className="font-semibold text-blue-800 text-sm">Active Membership: {membership_plan}</span>
+          <span className="text-blue-600 text-xs ml-2">({details.amount} — {details.description})</span>
         </div>
       </div>
     );

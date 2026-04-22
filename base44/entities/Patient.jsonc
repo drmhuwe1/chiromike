@@ -271,10 +271,9 @@
       "type": "string",
       "title": "Membership Plan",
       "enum": [
-        "Basic",
-        "Standard",
-        "Plus",
-        "Premium"
+        "Maintenance Plan",
+        "Wellness Plan",
+        "Family Plan"
       ]
     },
     "membership_status": {

@@ -3,10 +3,9 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 const stripe = await import('npm:stripe@17.0.0').then(m => new m.default(Deno.env.get('STRIPE_SECRET_KEY')));
 
 const PLAN_NAME_MAP = {
-  'price_1M45fDGRpSbA8EZgv2smNpb2': 'Basic',
-  'price_1M45fDGRpSbA8EZgJGuW8mb1': 'Standard',
-  'price_1M45fDGRpSbA8EZg0jf9qbTG': 'Plus',
-  'price_1M45fDGRpSbA8EZgwYi1XLD5': 'Premium',
+  'price_1M45fDGRpSbA8EZgv2smNpb2': 'Maintenance Plan',
+  'price_1M45fDGRpSbA8EZgJGuW8mb1': 'Wellness Plan',
+  'price_1M45fDGRpSbA8EZg0jf9qbTG': 'Family Plan',
 };
 
 Deno.serve(async (req) => {

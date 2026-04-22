@@ -5,10 +5,9 @@ import { RefreshCw, ExternalLink, AlertCircle } from "lucide-react";
 
 // These map to the Stripe products/prices you have configured
 const SUBSCRIPTION_PLANS = [
-  { name: "Membership - Basic", price_id: "price_1M45fDGRpSbA8EZgv2smNpb2", amount: "$35/mo", visits: 4 },
-  { name: "Membership - Standard", price_id: "price_1M45fDGRpSbA8EZgJGuW8mb1", amount: "$60/mo", visits: 8 },
-  { name: "Membership - Plus", price_id: "price_1M45fDGRpSbA8EZg0jf9qbTG", amount: "$90/mo", visits: 12 },
-  { name: "Membership - Premium", price_id: "price_1M45fDGRpSbA8EZgwYi1XLD5", amount: "$100/mo", visits: 16 },
+  { name: "Maintenance Plan", price_id: "price_1M45fDGRpSbA8EZgv2smNpb2", amount: "$150/mo", description: "Perfect for consistent care" },
+  { name: "Wellness Plan",    price_id: "price_1M45fDGRpSbA8EZgJGuW8mb1", amount: "$200/mo", description: "Enhanced therapeutic care" },
+  { name: "Family Plan",      price_id: "price_1M45fDGRpSbA8EZg0jf9qbTG", amount: "$300/mo", description: "Flexible for families" },
 ];
 
 export default function RecurringBillingModal({ patient, onClose }) {
@@ -79,7 +78,7 @@ export default function RecurringBillingModal({ patient, onClose }) {
               />
               <div className="flex-1">
                 <span className="text-sm font-semibold">{plan.name}</span>
-                <span className="text-xs text-muted-foreground ml-2">— up to {plan.visits} visits/mo</span>
+                <span className="text-xs text-muted-foreground ml-2">— {plan.description} · {plan.amount}</span>
               </div>
             </label>
           ))}
