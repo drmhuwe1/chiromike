@@ -1,0 +1,85 @@
+{
+  "name": "PatientPackage",
+  "type": "object",
+  "properties": {
+    "patient_id": {
+      "type": "string",
+      "title": "Patient ID"
+    },
+    "patient_name": {
+      "type": "string",
+      "title": "Patient Name"
+    },
+    "package_type": {
+      "type": "string",
+      "title": "Package Type",
+      "enum": [
+        "Laser Package",
+        "Adjustment Package",
+        "Laser Lipo Package"
+      ]
+    },
+    "total_visits": {
+      "type": "number",
+      "title": "Total Visits in Package"
+    },
+    "visits_used": {
+      "type": "number",
+      "title": "Visits Used",
+      "default": 0
+    },
+    "visit_log": {
+      "type": "array",
+      "title": "Visit Log",
+      "items": {
+        "type": "object",
+        "properties": {
+          "visit_number": {
+            "type": "number"
+          },
+          "date": {
+            "type": "string"
+          },
+          "claim_id": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "purchase_date": {
+      "type": "string",
+      "format": "date",
+      "title": "Purchase Date"
+    },
+    "stripe_session_id": {
+      "type": "string",
+      "title": "Stripe Session ID"
+    },
+    "amount_paid": {
+      "type": "number",
+      "title": "Amount Paid"
+    },
+    "status": {
+      "type": "string",
+      "title": "Status",
+      "enum": [
+        "active",
+        "completed",
+        "expired"
+      ],
+      "default": "active"
+    },
+    "notes": {
+      "type": "string",
+      "title": "Notes"
+    }
+  },
+  "required": [
+    "patient_id",
+    "package_type",
+    "total_visits"
+  ]
+}

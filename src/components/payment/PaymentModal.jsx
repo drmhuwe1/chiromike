@@ -3,8 +3,14 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { X, Loader2, Plus, Trash2 } from "lucide-react";
+import { X, Loader2, Plus, Trash2, Package } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+
+const PACKAGE_VISIT_COUNT = {
+  "Laser Package": 12,
+  "Adjustment Package": 12,
+  "Laser Lipo Package": 10,
+};
 
 const QUICK_ITEMS = [
   { label: "Cash Exam", amount: 110 },
@@ -13,6 +19,9 @@ const QUICK_ITEMS = [
   { label: "6 Visit Tx Plan", amount: 325 },
   { label: "12 Visit Tx Plan", amount: 650 },
   { label: "Copay ($20)", amount: 20 },
+  { label: "Laser Package (12 visits)", amount: 650, packageType: "Laser Package" },
+  { label: "Adjustment Package (12 visits)", amount: 450, packageType: "Adjustment Package" },
+  { label: "Laser Lipo Package (10 visits)", amount: 500, packageType: "Laser Lipo Package" },
 ];
 
 export default function PaymentModal({ claim, patient, onClose, onSuccess }) {
@@ -80,6 +89,22 @@ export default function PaymentModal({ claim, patient, onClose, onSuccess }) {
       });
 
       if (res.data.checkout_url) {
+        // Create PatientPackage records for any package items
+        const packageItems = cartItems.filter(i => i.packageType);
+        for (const item of packageItems) {
+          await base44.entities.PatientPackage.create({
+            patient_id: patient.id,
+            patient_name: `${patient.first_name} ${patient.last_name}`,
+            package_type: item.packageType,
+            total_visits: PACKAGE_VISIT_COUNT[item.packageType] || 12,
+            visits_used: 0,
+            visit_log: [],
+            purchase_date: dosDate || new Date().toISOString().split("T")[0],
+            amount_paid: item.amount,
+            status: "active",
+          });
+        }
+
         if (window.self !== window.top) {
           window.open(res.data.checkout_url, "_blank");
         } else {
@@ -131,8 +156,13 @@ export default function PaymentModal({ claim, patient, onClose, onSuccess }) {
                 key={item.label}
                 onClick={() => addQuickItem(item)}
                 disabled={loading}
-                className="px-3 py-1.5 text-xs font-medium bg-muted hover:bg-primary hover:text-primary-foreground border border-border rounded-lg transition-colors"
+                className={`px-3 py-1.5 text-xs font-medium border rounded-lg transition-colors flex items-center gap-1 ${
+                  item.packageType
+                    ? "bg-purple-50 border-purple-300 text-purple-800 hover:bg-purple-100"
+                    : "bg-muted hover:bg-primary hover:text-primary-foreground border-border"
+                }`}
               >
+                {item.packageType && <Package className="w-3 h-3" />}
                 {item.label} — ${item.amount}
               </button>
             ))}
