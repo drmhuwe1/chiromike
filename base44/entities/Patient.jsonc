@@ -266,6 +266,38 @@
     "hipaa_consent": {
       "type": "boolean",
       "title": "HIPAA Consent"
+    },
+    "membership_plan": {
+      "type": "string",
+      "title": "Membership Plan",
+      "enum": [
+        "Basic",
+        "Standard",
+        "Plus",
+        "Premium"
+      ]
+    },
+    "membership_status": {
+      "type": "string",
+      "title": "Membership Status",
+      "enum": [
+        "active",
+        "cancelled",
+        "none"
+      ],
+      "default": "none"
+    },
+    "membership_stripe_subscription_id": {
+      "type": "string",
+      "title": "Stripe Subscription ID"
+    },
+    "membership_started_at": {
+      "type": "string",
+      "title": "Membership Start Date"
+    },
+    "membership_cancelled_at": {
+      "type": "string",
+      "title": "Membership Cancellation Date"
     }
   },
   "required": [

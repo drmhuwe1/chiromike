@@ -16,6 +16,7 @@ import ProcedureCodeSearchModal from "../components/claim/ProcedureCodeSearchMod
 import DiagnosisCodeSearchModal from "../components/claim/DiagnosisCodeSearchModal";
 import InsuranceDocChecklistModal from "../components/claim/InsuranceDocChecklistModal";
 import RecurringBillingModal from "../components/claim/RecurringBillingModal";
+import MembershipAlertBanner from "../components/claim/MembershipAlertBanner";
 
 const CANNED_NOTES = [
   "Patient presents for follow-up chiropractic care. Responding well to treatment with gradual improvement in pain and function. Continue current treatment plan.",
@@ -530,6 +531,9 @@ export default function ClaimBuilder() {
           )}
         </div>
       )}
+
+      {/* Membership Alert Banner */}
+      <MembershipAlertBanner patient={selectedPatient} />
 
       {/* Payer Alert Banner */}
       <PayerAlertBanner payerType={claim.payer_type} />
