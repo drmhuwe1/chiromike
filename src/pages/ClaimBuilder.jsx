@@ -304,6 +304,8 @@ export default function ClaimBuilder() {
     }
   };
 
+  const isCash = claim.visit_type?.includes("Cash");
+
   const isInsuranceClaim = !isCash && claim.visit_type !== "Auto";
 
   const doSave = async () => {
@@ -357,8 +359,6 @@ export default function ClaimBuilder() {
       await doSaveAndPrint();
     }
   };
-
-  const isCash = claim.visit_type?.includes("Cash");
 
   const filteredPatients = patientSearch && patientSearch.length >= 3
     ? patients.filter(p => {
