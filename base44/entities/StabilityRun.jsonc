@@ -1,0 +1,62 @@
+{
+  "name": "StabilityRun",
+  "type": "object",
+  "properties": {
+    "app_name": {
+      "type": "string",
+      "title": "App Name",
+      "default": "ChiroMike"
+    },
+    "triggered_by": {
+      "type": "string",
+      "title": "Triggered By",
+      "default": "scheduled"
+    },
+    "total_checks": {
+      "type": "number",
+      "title": "Total Checks"
+    },
+    "passed": {
+      "type": "number",
+      "title": "Passed"
+    },
+    "warned": {
+      "type": "number",
+      "title": "Warned"
+    },
+    "failed": {
+      "type": "number",
+      "title": "Failed"
+    },
+    "overall_status": {
+      "type": "string",
+      "title": "Overall Status",
+      "enum": [
+        "clear",
+        "warning",
+        "failure",
+        "unknown"
+      ]
+    },
+    "checks_json": {
+      "type": "string",
+      "title": "Checks JSON"
+    },
+    "fix_prompt": {
+      "type": "string",
+      "title": "Fix Prompt"
+    },
+    "email_sent": {
+      "type": "boolean",
+      "title": "Email Sent",
+      "default": false
+    },
+    "run_date": {
+      "type": "string",
+      "title": "Run Date"
+    }
+  },
+  "required": [
+    "app_name"
+  ]
+}

@@ -1,7 +1,7 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { 
   LayoutDashboard, Users, FileText, Settings, BookOpen, 
-  Library, Zap, BarChart3, Menu, X, Wallet, HelpCircle, ShieldCheck, ClipboardList, Stethoscope, Calendar, LogOut
+  Library, Zap, BarChart3, Menu, X, Wallet, HelpCircle, ShieldCheck, ClipboardList, Stethoscope, Calendar, LogOut, Activity
 } from "lucide-react";
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
@@ -25,6 +25,7 @@ const navItems = [
   { path: "/guide", label: "Feature Guide", icon: HelpCircle },
   { path: "/compliance", label: "HIPAA Compliance", icon: ShieldCheck },
   { path: "/settings", label: "Office Settings", icon: Settings },
+  { path: "/admin/stability", label: "Stability Monitor", icon: Activity },
 ];
 
 export default function Layout() {

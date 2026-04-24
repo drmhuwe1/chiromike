@@ -38,6 +38,7 @@ import BAA from './pages/BAA';
 import SLA from './pages/SLA';
 import About from './pages/About';
 import Contact from './pages/Contact';
+import AdminStability from './pages/AdminStability';
 import CookieConsent from './components/CookieConsent';
 import PWAInstallBadge from './components/PWAInstallBadge';
 
@@ -117,6 +118,7 @@ const AuthenticatedApp = () => {
         <Route path="/new-patient-exam" element={<NewPatientExam />} />
         <Route path="/re-examination" element={<ReExamination />} />
         <Route path="/financial-reports" element={<FinancialReports />} />
+        <Route path="/admin/stability" element={<AdminStability />} />
         <Route path="*" element={<PageNotFound />} />
       </Route>
     </Routes>
