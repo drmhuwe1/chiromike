@@ -55,10 +55,11 @@ export default function PostPaymentModal({ patient, claim, onClose, onSaved }) {
         notes: form.notes,
       });
 
-      // Also update claim's amount_paid if linked to a claim
+      // CM-2: Update claim amount_paid; only mark Paid if full charge is covered
       if (claim?.id) {
         const newPaid = (claim.amount_paid || 0) + (parseFloat(form.payment_amount) || 0);
-        await base44.entities.Claim.update(claim.id, { amount_paid: newPaid });
+        const newStatus = newPaid >= (claim.total_charge || 0) ? 'Paid' : claim.status;
+        await base44.entities.Claim.update(claim.id, { amount_paid: newPaid, status: newStatus });
       }
 
       toast({ title: "Payment posted successfully" });

@@ -30,7 +30,10 @@ export default function EndOfYearFinancialReport({ claims, payments }) {
       }
     });
 
-    const totalCharges = claims.reduce((s, c) => s + (c.total_charge || 0), 0);
+    // CM-4A: Filter charges to current year only (matching payment filter)
+    const totalCharges = claims
+      .filter(c => c.date_of_service && new Date(c.date_of_service).getFullYear() === year)
+      .reduce((s, c) => s + (c.total_charge || 0), 0);
     const totalPayments = Object.values(paymentByType).reduce((s, v) => s + v, 0);
     const totalAdjustments = payments.filter(p => p.payment_type === "Adjustment").reduce((s, p) => s + (p.payment_amount || 0), 0);
     const writeOffs = payments.filter(p => p.payment_type === "Denial").reduce((s, p) => s + (p.payment_amount || 0), 0);
@@ -128,9 +131,10 @@ export default function EndOfYearFinancialReport({ claims, payments }) {
                 <td className="py-2 px-1 md:px-2">Denials & Write-offs</td>
                 <td className="text-right py-2 px-1 md:px-2 font-semibold text-red-700">${financials.writeOffs.toFixed(2)}</td>
               </tr>
+              {/* CM-4B: Net Revenue = payments minus adjustments (adjustments reduce collectible revenue) */}
               <tr className="font-bold bg-gray-100 border-b-2 border-black">
                 <td className="py-3 px-1 md:px-2">NET REVENUE</td>
-                <td className="text-right py-3 px-1 md:px-2">${(financials.totalPayments + financials.totalAdjustments).toFixed(2)}</td>
+                <td className="text-right py-3 px-1 md:px-2">${(financials.totalPayments - financials.totalAdjustments).toFixed(2)}</td>
               </tr>
             </tbody>
           </table>

@@ -88,6 +88,25 @@ Deno.serve(async (req) => {
           notes: `Stripe payment - ${session.payment_intent}`,
         });
 
+        // CM-1: Update Claim.amount_paid so AR aging reflects Stripe payments
+        if (claim_id) {
+          try {
+            const existingClaims = await base44.asServiceRole.entities.Claim.filter({ id: claim_id });
+            if (existingClaims && existingClaims.length > 0) {
+              const claim = existingClaims[0];
+              const newAmountPaid = (claim.amount_paid || 0) + paymentAmount;
+              const newStatus = newAmountPaid >= (claim.total_charge || 0) ? 'Paid' : claim.status;
+              await base44.asServiceRole.entities.Claim.update(claim_id, {
+                amount_paid: newAmountPaid,
+                status: newStatus,
+              });
+              console.log(`✓ Claim ${claim_id} amount_paid updated to ${newAmountPaid}, status: ${newStatus}`);
+            }
+          } catch (claimUpdateErr) {
+            console.error('Could not update Claim.amount_paid:', claimUpdateErr.message);
+          }
+        }
+
         if (patient_email) {
           try {
             await base44.asServiceRole.integrations.Core.SendEmail({

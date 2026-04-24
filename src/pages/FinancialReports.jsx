@@ -56,8 +56,9 @@ export default function FinancialReports() {
     const totalPaid = filteredPayments.reduce((sum, p) => sum + (p.payment_amount || 0), 0);
     const outstanding = totalCharged - totalPaid;
 
+    // CM-3: Include Copay/Coinsurance and Deductible as patient-sourced payments
     const cashCollected = filteredPayments
-      .filter(p => p.payment_type === "Patient")
+      .filter(p => ["Patient", "Copay/Coinsurance", "Deductible"].includes(p.payment_type))
       .reduce((sum, p) => sum + (p.payment_amount || 0), 0);
 
     const insuranceCollected = filteredPayments
@@ -208,6 +209,7 @@ export default function FinancialReports() {
                 <MetricCard
                   label="Collection Rate"
                   value={`${((metrics.totalPaid / metrics.totalCharged) * 100).toFixed(1)}%`}
+                  subtitle="Charges by service date; payments by payment date"
                   color="purple"
                 />
               </div>
@@ -349,7 +351,7 @@ export default function FinancialReports() {
   );
 }
 
-function MetricCard({ label, value, color }) {
+function MetricCard({ label, value, color, subtitle }) {
   const colors = {
     blue: "bg-blue-50 border-blue-200 text-blue-700",
     green: "bg-green-50 border-green-200 text-green-700",
@@ -362,6 +364,7 @@ function MetricCard({ label, value, color }) {
     <div className={`border rounded-xl p-4 ${colors[color]}`}>
       <p className="text-sm font-medium opacity-80">{label}</p>
       <p className="text-2xl font-bold mt-2">{value}</p>
+      {subtitle && <p className="text-xs opacity-60 mt-1">{subtitle}</p>}
     </div>
   );
 }

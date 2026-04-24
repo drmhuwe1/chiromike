@@ -70,13 +70,12 @@ export default function PaymentPosting({ onPosted }) {
       insurance_company: selectedClaim.insurance_company,
     });
 
-    // Update claim status
+    // CM-2: Only mark as Paid if new total covers the full charge
+    const newPaid = (selectedClaim.amount_paid || 0) + (form.payment_amount || 0);
     const newStatus = form.payment_type === "Denial" ? "Denied"
-      : form.payment_type === "Insurance" || form.payment_type === "Patient" ? "Paid"
+      : (form.payment_type === "Insurance" || form.payment_type === "Patient") && newPaid >= (selectedClaim.total_charge || 0) ? "Paid"
       : selectedClaim.status;
 
-    // Update amount paid on claim
-    const newPaid = (selectedClaim.amount_paid || 0) + (form.payment_amount || 0);
     await base44.entities.Claim.update(selectedClaim.id, { status: newStatus, amount_paid: newPaid });
 
     toast({ title: "Payment posted!" });

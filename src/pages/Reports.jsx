@@ -271,9 +271,11 @@ export default function Reports() {
           <p className="text-sm text-muted-foreground">Total Charges</p>
           <p className="text-2xl font-bold">${stats.total.toFixed(2)}</p>
         </div>
+        {/* CM-5: Relabeled to distinguish from Payment-entity-derived "Total Collected" in FinancialReports */}
         <div className="bg-card border border-border rounded-xl p-4">
-          <p className="text-sm text-muted-foreground">Total Paid</p>
+          <p className="text-sm text-muted-foreground">Amt Paid (on Claim)</p>
           <p className="text-2xl font-bold">${stats.paid.toFixed(2)}</p>
+          <p className="text-xs text-muted-foreground mt-1">From claim records</p>
         </div>
         <div className="bg-card border border-border rounded-xl p-4">
           <p className="text-sm text-muted-foreground">Balance</p>
