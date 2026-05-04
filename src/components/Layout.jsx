@@ -74,7 +74,7 @@ export default function Layout() {
           </button>
         </div>
 
-        <nav className="flex-1 py-3 px-3 space-y-0.5 overflow-y-auto">
+        <nav aria-label="Sidebar navigation" className="flex-1 py-3 px-3 space-y-0.5 overflow-y-auto">
           {navItems.map((item) => {
             const isActive = location.pathname === item.path;
             const Icon = item.icon;
@@ -102,7 +102,7 @@ export default function Layout() {
       {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top bar */}
-        <header className="h-16 min-h-[64px] border-b border-border bg-card flex items-center px-4 lg:px-6 shrink-0">
+        <header role="banner" className="h-16 min-h-[64px] border-b border-border bg-card flex items-center px-4 lg:px-6 shrink-0 relative z-10">
           <button 
             className="lg:hidden mr-3 p-1.5 rounded-md hover:bg-muted"
             onClick={() => setMobileOpen(true)}
@@ -115,7 +115,7 @@ export default function Layout() {
         </header>
 
         {/* Page content */}
-        <main id="main-content" className="flex-1 overflow-y-auto flex flex-col">
+        <main id="main-content" role="main" className="flex-1 overflow-y-auto flex flex-col">
           <div className="flex-1 p-4 lg:p-6 pb-6 lg:pb-8 max-w-7xl mx-auto w-full">
             <Outlet />
           </div>
