@@ -1,17 +1,13 @@
-// ChiroMike Service Worker — SPA offline shell cache
-const CACHE_NAME = 'chiromike-v1';
+const CACHE_NAME = 'chiromike-v2';
+const SHELL = ['/', '/index.html'];
 
-// On install: cache the app shell
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) =>
-      cache.addAll(['/', '/index.html'])
-    )
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(SHELL))
   );
   self.skipWaiting();
 });
 
-// On activate: remove old caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
@@ -21,18 +17,14 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Fetch strategy:
-// - Same-origin navigation requests → serve cached index.html (SPA fallback)
-// - Same-origin static assets → cache-first
-// - Cross-origin (API, fonts, CDN) → network-only
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Skip non-GET and cross-origin requests entirely
+  // Skip non-GET and cross-origin requests
   if (request.method !== 'GET' || url.origin !== self.location.origin) return;
 
-  // SPA navigation: always return the cached shell
+  // For navigation requests (SPA): serve cached shell
   if (request.mode === 'navigate') {
     event.respondWith(
       caches.match('/index.html').then((cached) => cached || fetch(request))
@@ -40,12 +32,12 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Static assets: cache-first, fall back to network and cache the result
+  // For static assets: cache-first
   event.respondWith(
     caches.match(request).then((cached) => {
       if (cached) return cached;
       return fetch(request).then((response) => {
-        if (response && response.status === 200) {
+        if (response && response.status === 200 && response.type === 'basic') {
           const clone = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
         }

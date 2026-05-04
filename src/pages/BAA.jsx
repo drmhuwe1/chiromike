@@ -4,16 +4,16 @@ import { ArrowLeft, FileText } from "lucide-react";
 export default function BAA() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <div role="banner" className="w-full border-b border-border bg-card">
+      <header className="w-full border-b border-border bg-card">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link to="/" className="text-lg font-bold text-primary">ChiroMike</Link>
           <nav aria-label="Primary navigation" className="flex flex-wrap gap-x-6 gap-y-2 text-sm font-medium">
-            <Link to="/about" className="text-muted-foreground hover:text-primary transition-colors">About</Link>
-            <Link to="/privacy" className="text-muted-foreground hover:text-primary transition-colors">Privacy</Link>
-            <Link to="/terms" className="text-muted-foreground hover:text-primary transition-colors">Terms</Link>
+            <Link to="/about" className="text-foreground/70 hover:text-primary transition-colors">About</Link>
+            <Link to="/privacy" className="text-foreground/70 hover:text-primary transition-colors">Privacy</Link>
+            <Link to="/terms" className="text-foreground/70 hover:text-primary transition-colors">Terms</Link>
           </nav>
         </div>
-      </div>
+      </header>
       <main id="main-content" className="flex-1 py-10 px-4">
       <div className="max-w-3xl mx-auto">
         <div className="mb-6 flex items-center gap-3">

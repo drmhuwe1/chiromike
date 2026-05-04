@@ -1,17 +1,16 @@
 {
-  "name": "ChiroMike — Huwe Chiropractic",
+  "name": "ChiroMike",
   "short_name": "ChiroMike",
-  "description": "Practice management system for Huwe Chiropractic",
+  "description": "Chiropractic practice management for Huwe Chiropractic",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
+  "background_color": "#f8fafc",
   "theme_color": "#2563eb",
   "icons": [
     {
-      "src": "https://base44.com/logo_v2.svg",
+      "src": "/favicon.ico",
       "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "type": "image/x-icon"
     }
   ]
 }

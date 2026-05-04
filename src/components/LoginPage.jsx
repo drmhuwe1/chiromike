@@ -24,21 +24,24 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 flex flex-col">
       <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md focus:text-sm">Skip to main content</a>
-      <div role="banner" className="w-full py-4 px-6 border-b border-border bg-card/50">
-        <nav aria-label="Site navigation" className="max-w-4xl mx-auto flex flex-wrap gap-x-6 gap-y-2 text-sm font-medium justify-end">
-          <a href="/about" className="text-muted-foreground hover:text-primary transition-colors">About</a>
-          <a href="/privacy" className="text-muted-foreground hover:text-primary transition-colors">Privacy</a>
-          <a href="/terms" className="text-muted-foreground hover:text-primary transition-colors">Terms</a>
-          <a href="/contact" className="text-muted-foreground hover:text-primary transition-colors">Contact</a>
-        </nav>
-      </div>
+      <header className="w-full py-4 px-6 border-b border-border bg-card/50">
+        <div className="max-w-4xl mx-auto flex items-center justify-between">
+          <span className="text-base font-bold text-foreground">ChiroMike</span>
+          <nav aria-label="Site navigation" className="flex flex-wrap gap-x-6 gap-y-2 text-sm font-medium">
+            <a href="/about" className="text-foreground/70 hover:text-primary transition-colors">About</a>
+            <a href="/privacy" className="text-foreground/70 hover:text-primary transition-colors">Privacy</a>
+            <a href="/terms" className="text-foreground/70 hover:text-primary transition-colors">Terms</a>
+            <a href="/contact" className="text-foreground/70 hover:text-primary transition-colors">Contact</a>
+          </nav>
+        </div>
+      </header>
       <main id="main-content" className="flex-1 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="bg-card border border-border rounded-2xl shadow-xl p-8 space-y-6">
           {/* Header */}
           <div className="text-center space-y-2">
             <h1 className="text-3xl font-bold tracking-tight">ChiroMike</h1>
-            <p className="text-muted-foreground">Practice Management System</p>
+            <p className="text-foreground/60">Practice Management System</p>
           </div>
 
           {/* Logo/Icon */}
@@ -80,32 +83,35 @@ export default function LoginPage() {
 
           {/* Footer Info */}
           <div className="text-center space-y-2 pt-4 border-t border-border">
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-foreground/70">
               Sign in with your authorized account
             </p>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-foreground/70">
               For access, contact your administrator
             </p>
-            <p className="text-xs text-muted-foreground">
-              <a href="/privacy" className="underline hover:text-foreground">Privacy Policy</a>
-              {" · "}
-              <a href="/terms" className="underline hover:text-foreground">Terms of Service</a>
-            </p>
+            <nav aria-label="Legal links" className="flex flex-wrap justify-center gap-x-3 gap-y-1 text-xs">
+              <a href="/about" className="text-primary hover:underline">About</a>
+              <a href="/contact" className="text-primary hover:underline">Contact</a>
+              <a href="/privacy" className="text-primary hover:underline">Privacy Policy</a>
+              <a href="/terms" className="text-primary hover:underline">Terms of Service</a>
+              <a href="/baa" className="text-primary hover:underline">BAA</a>
+            </nav>
           </div>
         </div>
 
-        <p className="mt-6 text-center text-xs text-muted-foreground">
+        <p className="mt-6 text-center text-xs text-foreground/60">
           Secure access for authorized practitioners
         </p>
       </div>
       </main>
-      <footer role="contentinfo" className="py-4 px-6 border-t border-border bg-card/50 text-xs text-muted-foreground text-center space-y-1">
-        <nav aria-label="Footer links" className="flex flex-wrap justify-center gap-x-4 gap-y-1">
+      <footer role="contentinfo" className="py-4 px-6 border-t border-border bg-card/50 text-xs text-foreground/60 text-center space-y-1">
+        <nav aria-label="Footer navigation" className="flex flex-wrap justify-center gap-x-4 gap-y-1">
           <a href="/about" className="hover:underline hover:text-foreground">About</a>
           <a href="/contact" className="hover:underline hover:text-foreground">Contact</a>
           <a href="/privacy" className="hover:underline hover:text-foreground">Privacy Policy</a>
           <a href="/terms" className="hover:underline hover:text-foreground">Terms of Service</a>
           <a href="/baa" className="hover:underline hover:text-foreground">BAA</a>
+          <a href="/sla" className="hover:underline hover:text-foreground">SLA</a>
         </nav>
         <p>© {new Date().getFullYear()} Huwe Chiropractic — ChiroMike</p>
       </footer>
