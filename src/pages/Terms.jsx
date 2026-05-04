@@ -6,7 +6,7 @@ export default function Terms() {
       <header className="border-b border-border bg-card">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link to="/" className="text-lg font-bold text-primary">ChiroMike</Link>
-          <nav aria-label="Primary navigation" className="flex flex-wrap gap-x-6 gap-y-1 text-sm font-medium">
+          <nav aria-label="Primary navigation" className="flex flex-wrap gap-x-6 gap-y-2 text-sm font-medium">
             <Link to="/about" className="text-muted-foreground hover:text-primary transition-colors">About</Link>
             <Link to="/contact" className="text-muted-foreground hover:text-primary transition-colors">Contact</Link>
             <Link to="/privacy" className="text-muted-foreground hover:text-primary transition-colors">Privacy</Link>
