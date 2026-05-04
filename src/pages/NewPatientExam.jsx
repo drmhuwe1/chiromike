@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { Search, Plus, Save, ChevronDown, ChevronUp, Mic, Upload } from "lucide-react";
+import { logAudit } from "../utils/auditLog";
 import NotePolishModal from "../components/claim/NotePolishModal";
 import VoiceDictation from "../components/VoiceDictation";
 import OrthoTestsSection from "../components/exam/OrthoTestsSection";
@@ -121,6 +122,7 @@ export default function NewPatientExamPage() {
     setSaving(true);
     try {
       await base44.entities.NewPatientExam.create(exam);
+      logAudit("Created New Patient Exam", "NewPatientExam", exam.patient_id, exam.patient_name);
       toast({ title: "New Patient Exam saved successfully" });
       navigate("/patients");
     } catch (e) {

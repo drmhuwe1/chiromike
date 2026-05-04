@@ -8,6 +8,7 @@ import { Search, Printer, FileText, ChevronDown, ChevronUp, Send, Plus, X, Trash
 import FaxModal from "../components/claim/FaxModal";
 import SoapFieldEditModal from "../components/soap/SoapFieldEditModal";
 import { useToast } from "@/components/ui/use-toast";
+import { logAudit } from "../utils/auditLog";
 
 export default function SoapNotes() {
   const [notes, setNotes] = useState([]);
@@ -31,6 +32,7 @@ export default function SoapNotes() {
       setNotes(notesData);
       setPatients(patientsData);
       setLoading(false);
+      logAudit("Viewed SOAP notes", "SoapNote");
     });
   }, []);
 
