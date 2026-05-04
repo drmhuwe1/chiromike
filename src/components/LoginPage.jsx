@@ -23,7 +23,8 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 flex flex-col">
-      <header className="py-4 px-6 border-b border-border bg-card/50">
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md focus:text-sm">Skip to main content</a>
+      <header className="w-full py-4 px-6 border-b border-border bg-card/50">
         <nav aria-label="Site navigation" className="max-w-4xl mx-auto flex flex-wrap gap-x-6 gap-y-2 text-sm font-medium justify-end">
           <a href="/about" className="text-muted-foreground hover:text-primary transition-colors">About</a>
           <a href="/privacy" className="text-muted-foreground hover:text-primary transition-colors">Privacy</a>
@@ -42,7 +43,7 @@ export default function LoginPage() {
 
           {/* Logo/Icon */}
           <div className="flex justify-center">
-            <img src="https://media.base44.com/images/public/69dbc37eaf437642fe866557/b98a22851_ChatGPTImageApr13202611_09_56PM.png" alt="ChiroMike Logo" className="h-24 w-auto" />
+            <img src="https://media.base44.com/images/public/69dbc37eaf437642fe866557/b98a22851_ChatGPTImageApr13202611_09_56PM.png" alt="ChiroMike Logo" className="h-24 w-auto" width="96" height="96" />
           </div>
 
           {/* Error Message */}
