@@ -34,7 +34,23 @@
     </script>
   </head>
   <body>
-    <div id="root"></div>
+    <!-- Static nav for crawlers (hidden visually, visible to search engines before JS loads) -->
+    <div id="root">
+      <header>
+        <a href="/" aria-label="ChiroMike home">ChiroMike</a>
+      </header>
+      <nav aria-label="Site navigation">
+        <a href="/about">About</a>
+        <a href="/contact">Contact</a>
+        <a href="/privacy">Privacy Policy</a>
+        <a href="/terms">Terms of Service</a>
+        <a href="/baa">BAA</a>
+        <a href="/sla">SLA</a>
+      </nav>
+      <main>
+        <p>ChiroMike — Chiropractic Practice Management System for Huwe Chiropractic. Sign in to access patient management, billing, and clinical tools.</p>
+      </main>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
