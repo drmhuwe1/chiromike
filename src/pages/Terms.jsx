@@ -14,7 +14,7 @@ export default function Terms() {
           </nav>
         </div>
       </header>
-      <div className="max-w-3xl mx-auto py-10 px-4 space-y-6">
+      <main id="main-content" className="max-w-3xl mx-auto py-10 px-4 space-y-6">
       <div>
         <Link to="/" className="text-sm text-primary hover:underline">← Back</Link>
         <h1 className="text-2xl font-bold mt-3">Terms of Service</h1>
@@ -45,7 +45,7 @@ export default function Terms() {
         <h2 className="text-lg font-semibold">5. Changes</h2>
         <p className="text-sm text-muted-foreground">These terms may be updated at any time. Continued use of the system constitutes acceptance of the current terms.</p>
       </section>
-      </div>
+      </main>
     </div>
   );
 }

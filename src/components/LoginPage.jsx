@@ -22,7 +22,16 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 flex flex-col">
+      <header className="py-4 px-6 border-b border-border bg-card/50">
+        <nav aria-label="Site navigation" className="max-w-4xl mx-auto flex flex-wrap gap-x-6 gap-y-2 text-sm font-medium justify-end">
+          <a href="/about" className="text-muted-foreground hover:text-primary transition-colors">About</a>
+          <a href="/privacy" className="text-muted-foreground hover:text-primary transition-colors">Privacy</a>
+          <a href="/terms" className="text-muted-foreground hover:text-primary transition-colors">Terms</a>
+          <a href="/contact" className="text-muted-foreground hover:text-primary transition-colors">Contact</a>
+        </nav>
+      </header>
+      <main id="main-content" className="flex-1 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="bg-card border border-border rounded-2xl shadow-xl p-8 space-y-6">
           {/* Header */}
@@ -84,11 +93,16 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Background decoration */}
-        <div className="mt-8 text-center text-xs text-muted-foreground">
-          <p>Secure access for authorized practitioners</p>
-        </div>
+        <p className="mt-6 text-center text-xs text-muted-foreground">
+          Secure access for authorized practitioners
+        </p>
       </div>
+      </main>
+      <footer className="py-4 px-6 border-t border-border bg-card/50 text-xs text-muted-foreground text-center">
+        © {new Date().getFullYear()} Huwe Chiropractic — ChiroMike &nbsp;·&nbsp;
+        <a href="/privacy" className="hover:underline">Privacy</a> &nbsp;·&nbsp;
+        <a href="/terms" className="hover:underline">Terms</a>
+      </footer>
     </div>
   );
 }

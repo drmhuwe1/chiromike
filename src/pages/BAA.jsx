@@ -3,7 +3,18 @@ import { ArrowLeft, FileText } from "lucide-react";
 
 export default function BAA() {
   return (
-    <div className="min-h-screen bg-background py-10 px-4">
+    <div className="min-h-screen bg-background flex flex-col">
+      <header className="border-b border-border bg-card">
+        <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
+          <Link to="/" className="text-lg font-bold text-primary">ChiroMike</Link>
+          <nav aria-label="Primary navigation" className="flex flex-wrap gap-x-6 gap-y-2 text-sm font-medium">
+            <Link to="/about" className="text-muted-foreground hover:text-primary transition-colors">About</Link>
+            <Link to="/privacy" className="text-muted-foreground hover:text-primary transition-colors">Privacy</Link>
+            <Link to="/terms" className="text-muted-foreground hover:text-primary transition-colors">Terms</Link>
+          </nav>
+        </div>
+      </header>
+      <main id="main-content" className="flex-1 py-10 px-4">
       <div className="max-w-3xl mx-auto">
         <div className="mb-6 flex items-center gap-3">
           <Link to="/" className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1">
@@ -137,6 +148,12 @@ export default function BAA() {
           </p>
         </div>
       </div>
+      </main>
+      <footer className="border-t border-border bg-card py-4 px-6 text-xs text-muted-foreground text-center">
+        © {new Date().getFullYear()} Huwe Chiropractic — ChiroMike &nbsp;·&nbsp;
+        <Link to="/privacy" className="hover:underline">Privacy</Link> &nbsp;·&nbsp;
+        <Link to="/terms" className="hover:underline">Terms</Link>
+      </footer>
     </div>
   );
 }

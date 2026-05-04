@@ -15,10 +15,11 @@
     <meta name="referrer" content="no-referrer" />
     <link rel="canonical" href="https://chiromike.org" />
     <link rel="apple-touch-icon" href="/favicon.ico" />
-    <!-- Google Fonts -->
+    <!-- Google Fonts — loaded non-blocking to avoid render-blocking CSS -->
     <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" /></noscript>
     <!-- JSON-LD Structured Data -->
     <script type="application/ld+json">
     {

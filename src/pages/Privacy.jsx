@@ -14,7 +14,7 @@ export default function Privacy() {
           </nav>
         </div>
       </header>
-      <div className="max-w-3xl mx-auto py-10 px-4 space-y-6">
+      <main id="main-content" className="max-w-3xl mx-auto py-10 px-4 space-y-6">
       <div>
         <Link to="/" className="text-sm text-primary hover:underline">← Back</Link>
         <h1 className="text-2xl font-bold mt-3">Privacy Policy</h1>
@@ -45,7 +45,7 @@ export default function Privacy() {
         <h2 className="text-lg font-semibold">5. Contact</h2>
         <p className="text-sm text-muted-foreground">For privacy-related questions, contact Huwe Chiropractic directly.</p>
       </section>
-      </div>
+      </main>
     </div>
   );
 }
