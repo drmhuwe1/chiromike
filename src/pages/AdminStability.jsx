@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
   CheckCircle2, AlertTriangle, XCircle, RefreshCw, 
-  Mail, Copy, ChevronDown, ChevronRight, Clock, Activity
+  Mail, Copy, ChevronDown, ChevronRight, Clock, Activity, Wrench
 } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 
@@ -20,6 +20,23 @@ const CHECK_BORDER = { pass: "border-green-400", warn: "border-amber-400", fail:
 
 function CheckRow({ check }) {
   const [open, setOpen] = useState(check.status !== "pass");
+  const [copied, setCopied] = useState(false);
+
+  const copyCheckFix = (e) => {
+    e.stopPropagation();
+    const prompt = `# ChiroMike — Fix Request for Check [${check.id}]: ${check.name}
+
+Status detected: ${check.status.toUpperCase()} (Severity: ${check.severity})
+Issue: ${check.result}
+${check.fix ? `\nRequired fix:\n${check.fix}` : ""}
+
+Please fix ONLY this specific issue. Do NOT change any other code, logic, or features.
+After fixing, the stability monitor check [${check.id}] should pass.`;
+    navigator.clipboard.writeText(prompt);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
     <div className={`border-l-4 ${CHECK_BORDER[check.status] || "border-gray-300"} bg-card rounded-r-lg mb-2`}>
       <button
@@ -34,6 +51,15 @@ function CheckRow({ check }) {
           check.severity === "medium" ? "bg-blue-100 text-blue-700" :
           "bg-gray-100 text-gray-600"
         }`}>{check.severity}</span>
+        {check.status !== "pass" && (
+          <button
+            onClick={copyCheckFix}
+            className="flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-amber-100 hover:bg-amber-200 text-amber-800 border border-amber-300 transition-colors"
+            title="Copy fix prompt for this check"
+          >
+            {copied ? <><Copy className="w-3 h-3" /> Copied!</> : <><Wrench className="w-3 h-3" /> Fix Prompt</>}
+          </button>
+        )}
         {open ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
       </button>
       {open && (
