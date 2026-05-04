@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Printer } from "lucide-react";
 
-export default function ARAgingReport({ claims, patients, payments }) {
+export default function ARAgingReport({ claims, patients: _patients, payments }) {
   const handlePrint = () => {
     window.print();
   };

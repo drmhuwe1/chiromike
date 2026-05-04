@@ -4,7 +4,7 @@ import {
   Library, Zap, BarChart3, Menu, Wallet, HelpCircle, ShieldCheck, ClipboardList, Stethoscope, Calendar, LogOut, Activity
 } from "lucide-react";
 import { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { useAuth } from "@/lib/AuthContext";
 import AppFooter from "./AppFooter";
 
 const navItems = [
@@ -31,6 +31,7 @@ const navItems = [
 export default function Layout() {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { logout } = useAuth();
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
@@ -65,7 +66,7 @@ export default function Layout() {
         </div>
         <div className="px-5 py-3 border-b border-sidebar-border">
           <button
-            onClick={() => base44.auth.logout()}
+            onClick={() => logout()}
             className="flex items-center gap-2 text-xs text-sidebar-foreground/60 hover:text-sidebar-foreground transition-colors w-full"
           >
             <LogOut className="w-3.5 h-3.5" />

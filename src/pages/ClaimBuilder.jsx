@@ -123,7 +123,7 @@ export default function ClaimBuilder() {
       if (duplicateId) {
         const claims = await base44.entities.Claim.filter({ id: duplicateId });
         if (claims[0]) {
-          const { id, created_date, updated_date, created_by, status, ...rest } = claims[0];
+          const { id: _id, created_date: _createdDate, updated_date: _updatedDate, created_by: _createdBy, status: _status, ...rest } = claims[0];
           setClaim(prev => ({ ...prev, ...rest, date_of_service: today, status: "Draft" }));
         }
       }

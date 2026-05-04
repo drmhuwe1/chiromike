@@ -3,7 +3,6 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Printer, DollarSign, TrendingUp, Users } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
 
 export default function FinancialReports() {
   const [claims, setClaims] = useState([]);
@@ -11,20 +10,15 @@ export default function FinancialReports() {
   const [loading, setLoading] = useState(true);
   const [reportType, setReportType] = useState("summary");
   const [dateRange, setDateRange] = useState({ from: "", to: "" });
-  const [selectedPatient, setSelectedPatient] = useState("");
-  const [patients, setPatients] = useState([]);
-  const { toast } = useToast();
 
   useEffect(() => {
     const init = async () => {
-      const [claimsData, paymentsData, patientsData] = await Promise.all([
+      const [claimsData, paymentsData] = await Promise.all([
         base44.entities.Claim.list("-updated_date", 500),
         base44.entities.Payment.list("-payment_date", 500),
-        base44.entities.Patient.list("-updated_date", 200),
       ]);
       setClaims(claimsData);
       setPayments(paymentsData);
-      setPatients(patientsData);
       setLoading(false);
     };
     init();

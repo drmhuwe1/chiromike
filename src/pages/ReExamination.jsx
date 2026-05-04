@@ -18,7 +18,6 @@ export default function ReExaminationPage() {
   const [search, setSearch] = useState("");
   const [showSearch, setShowSearch] = useState(true);
   const [selectedPatient, setSelectedPatient] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [polishTarget, setPolishTarget] = useState(null);
   const navigate = useNavigate();
@@ -49,7 +48,6 @@ export default function ReExaminationPage() {
         const match = patientData.find(p => p.id === presetId);
         if (match) selectPatient(match);
       }
-      setLoading(false);
     });
   }, []);
 
@@ -72,13 +70,6 @@ export default function ReExaminationPage() {
       obj[keys[keys.length - 1]] = value;
       return { ...prev };
     });
-  };
-
-  const addOrthoTest = () => {
-    setExam(prev => ({
-      ...prev,
-      orthopedic_tests: [...(prev.orthopedic_tests || []), { test_name: "", result: "", notes: "" }]
-    }));
   };
 
   const updateOrthoTest = (idx, field, value) => {
@@ -106,7 +97,7 @@ export default function ReExaminationPage() {
         vital_signs: exam.vital_signs || {},
       });
       setTreatmentPlans(res.data.plans || []);
-    } catch (e) {
+    } catch {
       toast({ title: "Failed to generate treatment plans", variant: "destructive" });
     }
     setGeneratingPlans(false);
@@ -431,7 +422,7 @@ export default function ReExaminationPage() {
                     try {
                       const res = await base44.integrations.Core.UploadFile({ file });
                       urls.push(res.file_url);
-                    } catch (err) {
+                    } catch {
                       toast({ title: "Upload failed", variant: "destructive" });
                     }
                   }

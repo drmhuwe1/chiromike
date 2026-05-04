@@ -61,9 +61,16 @@ export const AuthProvider = ({ children }) => {
         setIsLoadingPublicSettings(false);
       } catch (appError) {
         console.error('App state check failed:', appError);
-        
-        if (appError.status === 403 && appError.data?.extra_data?.reason) {
-          const reason = appError.data.extra_data.reason;
+
+        const status = appError?.status ?? appError?.response?.status;
+        const data = appError?.data ?? appError?.response?.data;
+        const errMessage =
+          appError?.message ||
+          data?.message ||
+          'Failed to load app';
+
+        if (status === 403 && data?.extra_data?.reason) {
+          const reason = data.extra_data.reason;
           if (reason === 'auth_required') {
             setAuthError({
               type: 'auth_required',
@@ -77,13 +84,13 @@ export const AuthProvider = ({ children }) => {
           } else {
             setAuthError({
               type: reason,
-              message: appError.message
+              message: errMessage
             });
           }
         } else {
           setAuthError({
             type: 'unknown',
-            message: appError.message || 'Failed to load app'
+            message: errMessage
           });
         }
         setIsLoadingPublicSettings(false);

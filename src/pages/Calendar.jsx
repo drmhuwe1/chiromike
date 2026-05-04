@@ -24,7 +24,6 @@ export default function Calendar() {
   });
   const [patients, setPatients] = useState([]);
   const [patientSearch, setPatientSearch] = useState("");
-  const [selectedAppt, setSelectedAppt] = useState(null);
   const [selectedDayView, setSelectedDayView] = useState(null);
   const { toast } = useToast();
 
@@ -153,7 +152,7 @@ export default function Calendar() {
         100
       );
       setAppointments(appts);
-    } catch (error) {
+    } catch {
       toast({ title: "Failed to delete appointment", variant: "destructive" });
     }
   };
@@ -176,7 +175,7 @@ export default function Calendar() {
   const daysInMonth = (date) => new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
   const firstDayOfMonth = (date) => new Date(date.getFullYear(), date.getMonth(), 1).getDay();
   const days = Array.from({ length: daysInMonth(currentDate) }, (_, i) => i + 1);
-  const blanks = Array.from({ length: firstDayOfMonth(currentDate) }, (_, i) => null);
+  const blanks = Array.from({ length: firstDayOfMonth(currentDate) }, () => null);
 
   const formatTime = (dateStr) => {
     if (!dateStr || !dateStr.includes("T")) return null;

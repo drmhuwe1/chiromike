@@ -56,7 +56,7 @@ export default function QuickTemplates() {
   };
 
   const handleDuplicate = async (tmpl) => {
-    const { id, created_date, updated_date, created_by, ...rest } = tmpl;
+    const { id: _id, created_date: _createdDate, updated_date: _updatedDate, created_by: _createdBy, ...rest } = tmpl;
     rest.title = rest.title + " (Copy)";
     await base44.entities.QuickTemplate.create(rest);
     load();

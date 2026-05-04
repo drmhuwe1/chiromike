@@ -24,7 +24,7 @@ const QUICK_ITEMS = [
   { label: "Laser Lipo Package (10 visits)", amount: 500, packageType: "Laser Lipo Package" },
 ];
 
-export default function PaymentModal({ claim, patient, onClose, onSuccess }) {
+export default function PaymentModal({ claim, patient, onClose, onSuccess: _onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [dosDate, setDosDate] = useState(claim?.date_of_service || "");
   const [errorMsg, setErrorMsg] = useState("");

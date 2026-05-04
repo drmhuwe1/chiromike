@@ -72,7 +72,7 @@ export default function FaxCompilerModal({ patient, onClose }) {
           if (first) autoSelect[first.id] = true;
         });
         setSelected(autoSelect);
-      } catch (err) {
+      } catch {
         toast({ title: 'Failed to load documents', variant: 'destructive' });
       }
       setLoading(false);

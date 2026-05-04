@@ -7,7 +7,6 @@ import { useToast } from "@/components/ui/use-toast";
 export default function LegalCaseSummaryModal({ patient, claims, onClose }) {
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [printing, setPrinting] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -30,7 +29,7 @@ export default function LegalCaseSummaryModal({ patient, claims, onClose }) {
         current_status: patient.pain_frequency || "Ongoing",
       });
       setReport(res.data);
-    } catch (e) {
+    } catch {
       toast({ title: "Failed to generate report", variant: "destructive" });
       setLoading(false);
     }
@@ -38,10 +37,8 @@ export default function LegalCaseSummaryModal({ patient, claims, onClose }) {
   };
 
   const handlePrint = () => {
-    setPrinting(true);
     setTimeout(() => {
       window.print();
-      setPrinting(false);
     }, 300);
   };
 

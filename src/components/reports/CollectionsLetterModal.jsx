@@ -1,12 +1,7 @@
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { X, Printer } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
 
 export default function CollectionsLetterModal({ patient, claims, payments, onClose }) {
-  const [printing, setPrinting] = useState(false);
-  const { toast } = useToast();
-
   if (!patient) return null;
 
   // Calculate balance
@@ -18,10 +13,8 @@ export default function CollectionsLetterModal({ patient, claims, payments, onCl
   const visitDates = claims.map(c => c.date_of_service).sort().reverse();
 
   const handlePrint = () => {
-    setPrinting(true);
     setTimeout(() => {
       window.print();
-      setPrinting(false);
     }, 300);
   };
 

@@ -104,7 +104,7 @@ export default function PatientStatementPrint({ patient, office, claims, payment
               </tr>
             </thead>
             <tbody>
-              {claims.map((claim, idx) => (
+              {claims.map((claim, _idx) => (
                 <tr key={claim.id} style={{ borderBottom: "1px solid #ddd" }}>
                   <td style={{ padding: "6px", fontFamily: "monospace" }}>{claim.date_of_service}</td>
                   <td style={{ padding: "6px", fontSize: "10px" }}>

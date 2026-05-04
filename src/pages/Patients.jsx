@@ -67,13 +67,6 @@ export default function Patients() {
     loadPatients();
   };
 
-  const handleDuplicate = async (patient) => {
-    const { id, created_date, updated_date, created_by, ...rest } = patient;
-    rest.first_name = rest.first_name + " (Copy)";
-    await base44.entities.Patient.create(rest);
-    loadPatients();
-  };
-
   return (
     <div>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">

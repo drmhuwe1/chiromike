@@ -79,7 +79,7 @@ export default function NotePolishModal({ rawNotes, onClose, onPolished }) {
                 rows={8}
                 placeholder="Paste your raw dictation or notes here..."
                 defaultValue={rawNotes}
-                onChange={e => {
+                onChange={_e => {
                   // Update parent if needed
                 }}
               />

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { X, Zap } from "lucide-react";
 
-export default function QuickPanel({ onApply, onClose, payerType }) {
+export default function QuickPanel({ onApply, onClose, payerType: _payerType }) {
   const [templates, setTemplates] = useState([]);
   const [loading, setLoading] = useState(true);
 

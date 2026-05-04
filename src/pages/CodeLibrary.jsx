@@ -97,7 +97,7 @@ export default function CodeLibrary() {
       setP("description", result?.description || "");
       if (result?.modifier) setP("default_modifier", result.modifier);
       toast({ title: "Description and modifier found" });
-    } catch (e) {
+    } catch {
       toast({ title: "Lookup failed", variant: "destructive" });
     }
     setLookingUp(false);
@@ -115,7 +115,7 @@ export default function CodeLibrary() {
       });
       setD("description", result || "");
       toast({ title: "Description found" });
-    } catch (e) {
+    } catch {
       toast({ title: "Lookup failed", variant: "destructive" });
     }
     setLookingUp(false);
@@ -141,7 +141,7 @@ export default function CodeLibrary() {
       setP("code", result?.code?.trim() || "");
       if (result?.modifier) setP("default_modifier", result.modifier);
       toast({ title: "Code and modifier found" });
-    } catch (e) {
+    } catch {
       toast({ title: "Lookup failed", variant: "destructive" });
     }
     setLookingUp(false);
@@ -159,7 +159,7 @@ export default function CodeLibrary() {
       });
       setD("code", result?.trim() || "");
       toast({ title: "Code found" });
-    } catch (e) {
+    } catch {
       toast({ title: "Lookup failed", variant: "destructive" });
     }
     setLookingUp(false);
