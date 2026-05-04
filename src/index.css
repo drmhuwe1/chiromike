@@ -1,4 +1,11 @@
-/* Inter font is loaded via preload in index.html for performance */
+/* Inter font — font-display:swap prevents FOIT (Flash of Invisible Text) */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hiJ-Ek-_EeA.woff2') format('woff2');
+}
 
 @tailwind base;
 @tailwind components;

@@ -24,14 +24,14 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 flex flex-col">
       <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md focus:text-sm">Skip to main content</a>
-      <header className="w-full py-4 px-6 border-b border-border bg-card/50">
+      <div role="banner" className="w-full py-4 px-6 border-b border-border bg-card/50">
         <nav aria-label="Site navigation" className="max-w-4xl mx-auto flex flex-wrap gap-x-6 gap-y-2 text-sm font-medium justify-end">
           <a href="/about" className="text-muted-foreground hover:text-primary transition-colors">About</a>
           <a href="/privacy" className="text-muted-foreground hover:text-primary transition-colors">Privacy</a>
           <a href="/terms" className="text-muted-foreground hover:text-primary transition-colors">Terms</a>
           <a href="/contact" className="text-muted-foreground hover:text-primary transition-colors">Contact</a>
         </nav>
-      </header>
+      </div>
       <main id="main-content" className="flex-1 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="bg-card border border-border rounded-2xl shadow-xl p-8 space-y-6">
@@ -99,10 +99,15 @@ export default function LoginPage() {
         </p>
       </div>
       </main>
-      <footer className="py-4 px-6 border-t border-border bg-card/50 text-xs text-muted-foreground text-center">
-        © {new Date().getFullYear()} Huwe Chiropractic — ChiroMike &nbsp;·&nbsp;
-        <a href="/privacy" className="hover:underline">Privacy</a> &nbsp;·&nbsp;
-        <a href="/terms" className="hover:underline">Terms</a>
+      <footer role="contentinfo" className="py-4 px-6 border-t border-border bg-card/50 text-xs text-muted-foreground text-center space-y-1">
+        <nav aria-label="Footer links" className="flex flex-wrap justify-center gap-x-4 gap-y-1">
+          <a href="/about" className="hover:underline hover:text-foreground">About</a>
+          <a href="/contact" className="hover:underline hover:text-foreground">Contact</a>
+          <a href="/privacy" className="hover:underline hover:text-foreground">Privacy Policy</a>
+          <a href="/terms" className="hover:underline hover:text-foreground">Terms of Service</a>
+          <a href="/baa" className="hover:underline hover:text-foreground">BAA</a>
+        </nav>
+        <p>© {new Date().getFullYear()} Huwe Chiropractic — ChiroMike</p>
       </footer>
     </div>
   );

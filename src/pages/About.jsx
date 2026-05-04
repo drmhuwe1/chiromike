@@ -5,7 +5,7 @@ export default function About() {
   return (
     <div className="min-h-screen bg-background">
       <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md focus:text-sm">Skip to main content</a>
-      <header className="w-full border-b border-border bg-card">
+      <div role="banner" className="w-full border-b border-border bg-card">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link to="/" className="text-lg font-bold text-primary">ChiroMike</Link>
           <nav aria-label="Primary navigation" className="flex flex-wrap gap-x-6 gap-y-2 text-sm font-medium">
@@ -15,7 +15,7 @@ export default function About() {
             <Link to="/terms" className="text-muted-foreground hover:text-primary transition-colors">Terms</Link>
           </nav>
         </div>
-      </header>
+      </div>
 
       <main id="main-content" className="max-w-4xl mx-auto px-6 py-12 space-y-10">
         <section>
