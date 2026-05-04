@@ -4,18 +4,20 @@ import { ArrowLeft, FileText } from "lucide-react";
 export default function BAA() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <header className="w-full min-h-[64px] border-b border-border bg-card flex items-center">
-        <div className="max-w-4xl mx-auto px-6 py-4">
-          <Link to="/" className="text-lg font-bold text-primary">ChiroMike</Link>
-        </div>
-      </header>
-      <nav aria-label="Primary navigation" className="w-full bg-card border-b border-border/50 px-6 py-2">
-        <div className="max-w-4xl mx-auto flex flex-wrap gap-x-6 gap-y-1 text-sm font-medium">
-          <Link to="/about" className="text-foreground/70 hover:text-primary transition-colors">About</Link>
-          <Link to="/privacy" className="text-foreground/70 hover:text-primary transition-colors">Privacy</Link>
-          <Link to="/terms" className="text-foreground/70 hover:text-primary transition-colors">Terms</Link>
-        </div>
-      </nav>
+      <div role="banner" className="w-full bg-card border-b border-border shadow-sm">
+        <header className="w-full min-h-[64px] flex items-center border-b border-border/60">
+          <div className="max-w-4xl mx-auto px-6 py-4 w-full">
+            <Link to="/" className="text-lg font-bold text-primary">ChiroMike</Link>
+          </div>
+        </header>
+        <nav aria-label="Primary navigation" className="w-full px-6 py-2">
+          <div className="max-w-4xl mx-auto flex flex-wrap gap-x-6 gap-y-1 text-sm font-medium">
+            <Link to="/about" className="text-foreground/70 hover:text-primary transition-colors">About</Link>
+            <Link to="/privacy" className="text-foreground/70 hover:text-primary transition-colors">Privacy</Link>
+            <Link to="/terms" className="text-foreground/70 hover:text-primary transition-colors">Terms</Link>
+          </div>
+        </nav>
+      </div>
       <main id="main-content" className="flex-1 py-10 px-4">
       <div className="max-w-3xl mx-auto">
         <div className="mb-6 flex items-center gap-3">

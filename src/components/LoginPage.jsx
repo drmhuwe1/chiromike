@@ -24,19 +24,21 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 flex flex-col">
       <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md focus:text-sm">Skip to main content</a>
-      <header className="w-full min-h-[64px] py-3 px-6 bg-card/50 border-b border-border flex items-center">
-        <div className="max-w-4xl mx-auto">
-          <a href="/" className="text-base font-bold text-foreground hover:text-primary transition-colors">ChiroMike</a>
-        </div>
-      </header>
-      <nav aria-label="Site navigation" className="w-full px-6 py-2 bg-card/30 border-b border-border/50">
-        <div className="max-w-4xl mx-auto flex flex-wrap gap-x-6 gap-y-1 text-sm font-medium">
-          <a href="/about" className="text-foreground/70 hover:text-primary transition-colors">About</a>
-          <a href="/privacy" className="text-foreground/70 hover:text-primary transition-colors">Privacy</a>
-          <a href="/terms" className="text-foreground/70 hover:text-primary transition-colors">Terms</a>
-          <a href="/contact" className="text-foreground/70 hover:text-primary transition-colors">Contact</a>
-        </div>
-      </nav>
+      <div role="banner" className="w-full bg-card/50 border-b border-border shadow-sm">
+        <header className="w-full min-h-[64px] flex items-center border-b border-border/60 px-6">
+          <div className="max-w-4xl mx-auto w-full">
+            <a href="/" className="text-base font-bold text-foreground hover:text-primary transition-colors">ChiroMike</a>
+          </div>
+        </header>
+        <nav aria-label="Site navigation" className="w-full px-6 py-2">
+          <div className="max-w-4xl mx-auto flex flex-wrap gap-x-6 gap-y-1 text-sm font-medium">
+            <a href="/about" className="text-foreground/70 hover:text-primary transition-colors">About</a>
+            <a href="/privacy" className="text-foreground/70 hover:text-primary transition-colors">Privacy</a>
+            <a href="/terms" className="text-foreground/70 hover:text-primary transition-colors">Terms</a>
+            <a href="/contact" className="text-foreground/70 hover:text-primary transition-colors">Contact</a>
+          </div>
+        </nav>
+      </div>
       <main id="main-content" className="flex-1 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="bg-card border border-border rounded-2xl shadow-xl p-8 space-y-6">
