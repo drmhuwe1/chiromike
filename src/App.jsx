@@ -2,6 +2,7 @@ import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
 import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
+import { Suspense, lazy } from 'react';
 import { Button } from '@/components/ui/button';
 import { isPublicPath } from '@/lib/publicRoutes';
 import PageNotFound from './lib/PageNotFound';
@@ -9,40 +10,44 @@ import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import LoginPage from '@/components/LoginPage';
 import Layout from './components/Layout';
+import CookieConsent from './components/CookieConsent';
+import PWAInstallBadge from './components/PWAInstallBadge';
+
+// Critical path — loaded eagerly (small, always needed on first render)
 import Dashboard from './pages/Dashboard';
 import Patients from './pages/Patients';
-import Calendar from './pages/Calendar';
-import ClaimBuilder from './pages/ClaimBuilder';
-import SavedClaims from './pages/SavedClaims';
-import ProcedureLibrary from './pages/ProcedureLibrary';
-import DiagnosisFavorites from './pages/DiagnosisFavorites';
-import QuickTemplates from './pages/QuickTemplates';
-import Reports from './pages/Reports';
-import OfficeSettings from './pages/OfficeSettings';
-import PrintClaim from './pages/PrintClaim';
-import PrintReceipt from './pages/PrintReceipt';
-import CodeLibrary from './pages/CodeLibrary';
-import PatientIntake from './pages/PatientIntake';
-import IntakeKiosk from './pages/IntakeKiosk';
-import PatientAccount from './pages/PatientAccount';
-import PaymentSuccess from './pages/PaymentSuccess';
-import PaymentCancelled from './pages/PaymentCancelled';
-import BillingDashboard from './pages/BillingDashboard';
-import HelpGuide from './pages/HelpGuide';
-import Compliance from './pages/Compliance';
-import SoapNotes from './pages/SoapNotes';
-import NewPatientExam from './pages/NewPatientExam';
-import ReExamination from './pages/ReExamination';
-import FinancialReports from './pages/FinancialReports';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
 import BAA from './pages/BAA';
 import SLA from './pages/SLA';
 import About from './pages/About';
 import Contact from './pages/Contact';
-import AdminStability from './pages/AdminStability';
-import CookieConsent from './components/CookieConsent';
-import PWAInstallBadge from './components/PWAInstallBadge';
+import PatientIntake from './pages/PatientIntake';
+import IntakeKiosk from './pages/IntakeKiosk';
+import PaymentSuccess from './pages/PaymentSuccess';
+import PaymentCancelled from './pages/PaymentCancelled';
+
+// Heavy pages — code-split via React.lazy (jspdf, recharts, framer-motion heavy use)
+const Calendar = lazy(() => import('./pages/Calendar'));
+const ClaimBuilder = lazy(() => import('./pages/ClaimBuilder'));
+const SavedClaims = lazy(() => import('./pages/SavedClaims'));
+const ProcedureLibrary = lazy(() => import('./pages/ProcedureLibrary'));
+const DiagnosisFavorites = lazy(() => import('./pages/DiagnosisFavorites'));
+const QuickTemplates = lazy(() => import('./pages/QuickTemplates'));
+const Reports = lazy(() => import('./pages/Reports'));
+const OfficeSettings = lazy(() => import('./pages/OfficeSettings'));
+const PrintClaim = lazy(() => import('./pages/PrintClaim'));
+const PrintReceipt = lazy(() => import('./pages/PrintReceipt'));
+const CodeLibrary = lazy(() => import('./pages/CodeLibrary'));
+const PatientAccount = lazy(() => import('./pages/PatientAccount'));
+const BillingDashboard = lazy(() => import('./pages/BillingDashboard'));
+const HelpGuide = lazy(() => import('./pages/HelpGuide'));
+const Compliance = lazy(() => import('./pages/Compliance'));
+const SoapNotes = lazy(() => import('./pages/SoapNotes'));
+const NewPatientExam = lazy(() => import('./pages/NewPatientExam'));
+const ReExamination = lazy(() => import('./pages/ReExamination'));
+const FinancialReports = lazy(() => import('./pages/FinancialReports'));
+const AdminStability = lazy(() => import('./pages/AdminStability'));
 
 const AuthenticatedApp = () => {
   const location = useLocation();
@@ -100,6 +105,7 @@ const AuthenticatedApp = () => {
 
   // Render the main app
   return (
+    <Suspense fallback={<div className="fixed inset-0 flex items-center justify-center"><div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin" /></div>}>
     <Routes>
       {/* Public routes - no layout */}
       <Route path="/privacy" element={<Privacy />} />
@@ -140,6 +146,7 @@ const AuthenticatedApp = () => {
         <Route path="*" element={<PageNotFound />} />
       </Route>
     </Routes>
+    </Suspense>
   );
 };
 

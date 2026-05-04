@@ -4,7 +4,7 @@ import { ArrowLeft, FileText } from "lucide-react";
 export default function BAA() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <header className="w-full border-b border-border bg-card">
+      <header className="w-full min-h-[64px] border-b border-border bg-card flex items-center">
         <div className="max-w-4xl mx-auto px-6 py-4">
           <Link to="/" className="text-lg font-bold text-primary">ChiroMike</Link>
         </div>

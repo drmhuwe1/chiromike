@@ -24,7 +24,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 flex flex-col">
       <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md focus:text-sm">Skip to main content</a>
-      <header className="w-full py-3 px-6 bg-card/50 border-b border-border">
+      <header className="w-full min-h-[64px] py-3 px-6 bg-card/50 border-b border-border flex items-center">
         <div className="max-w-4xl mx-auto">
           <a href="/" className="text-base font-bold text-foreground hover:text-primary transition-colors">ChiroMike</a>
         </div>

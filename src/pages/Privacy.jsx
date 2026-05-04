@@ -4,7 +4,7 @@ export default function Privacy() {
   return (
     <div className="min-h-screen bg-background">
       <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md focus:text-sm">Skip to main content</a>
-      <header className="w-full border-b border-border bg-card">
+      <header className="w-full min-h-[64px] border-b border-border bg-card flex items-center">
         <div className="max-w-4xl mx-auto px-6 py-4">
           <Link to="/" className="text-lg font-bold text-primary">ChiroMike</Link>
         </div>

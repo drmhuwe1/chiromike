@@ -102,7 +102,7 @@ export default function Layout() {
       {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top bar */}
-        <header className="h-14 border-b border-border bg-card flex items-center px-4 lg:px-6 shrink-0">
+        <header className="h-16 min-h-[64px] border-b border-border bg-card flex items-center px-4 lg:px-6 shrink-0">
           <button 
             className="lg:hidden mr-3 p-1.5 rounded-md hover:bg-muted"
             onClick={() => setMobileOpen(true)}
