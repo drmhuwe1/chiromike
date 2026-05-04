@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { DollarSign, AlertTriangle, Clock, RefreshCw, TrendingUp, ShieldCheck } from "lucide-react";
+import { DollarSign, Clock, RefreshCw, TrendingUp, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import ARAgingTable from "../components/billing/ARAgingTable";

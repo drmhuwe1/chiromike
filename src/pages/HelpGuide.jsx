@@ -2,7 +2,7 @@ import { useState } from "react";
 import { 
   Users, FileText, BookOpen, Library, Zap, BarChart3, Settings, 
   ClipboardList, Wallet, Mail, Printer, ChevronDown, ChevronRight,
-  CheckCircle, AlertCircle, Lightbulb, HelpCircle, Stethoscope, Zap as ZapIcon, CreditCard
+  CheckCircle, AlertCircle, Lightbulb, HelpCircle, Stethoscope, CreditCard
 } from "lucide-react";
 
 const sections = [

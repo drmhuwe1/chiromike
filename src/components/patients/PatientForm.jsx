@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Plus, Trash2, X, Search, FileText, Stethoscope, RefreshCw, Wallet } from "lucide-react";
+import { Plus, Trash2, X, FileText, Stethoscope, RefreshCw, Wallet } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

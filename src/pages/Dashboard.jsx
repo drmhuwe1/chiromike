@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { 
-  FileText, Car, DollarSign, Users, BookOpen, 
+  FileText, Users, BookOpen, 
   Settings, BarChart3, Zap, Calendar, Wallet
 } from "lucide-react";
 

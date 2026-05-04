@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
-import { Search, Plus, Save, ChevronDown, ChevronUp, Mic, Upload } from "lucide-react";
+import { Search, Save, ChevronDown, ChevronUp } from "lucide-react";
 import { logAudit } from "../utils/auditLog";
 import NotePolishModal from "../components/claim/NotePolishModal";
 import VoiceDictation from "../components/VoiceDictation";

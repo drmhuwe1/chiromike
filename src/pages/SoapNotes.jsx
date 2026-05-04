@@ -3,7 +3,6 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Search, Printer, FileText, ChevronDown, ChevronUp, Send, Plus, X, Trash2 } from "lucide-react";
 import FaxModal from "../components/claim/FaxModal";
 import SoapFieldEditModal from "../components/soap/SoapFieldEditModal";

@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Edit2, Trash2, Star, X, Save, ChevronDown, ChevronUp, Briefcase } from "lucide-react";
+import { Plus, Edit2, Trash2, Star, Save, ChevronDown, ChevronUp, Briefcase } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
 const emptyCase = {

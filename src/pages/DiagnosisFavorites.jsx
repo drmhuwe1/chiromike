@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Search, Star, Edit2, X, Save, Trash2 } from "lucide-react";
+import { Plus, Search, Edit2, X, Save, Trash2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
 export default function DiagnosisFavorites() {

@@ -1,8 +1,6 @@
 import { useState } from "react";
-import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { X, Download, Printer } from "lucide-react";
+import { X, Printer } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
 export default function CollectionsLetterModal({ patient, claims, payments, onClose }) {
