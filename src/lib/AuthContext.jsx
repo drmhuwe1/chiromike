@@ -3,6 +3,7 @@ import { base44 } from '@/api/base44Client';
 import { appParams } from '@/lib/app-params';
 import { createAxiosClient } from '@base44/sdk/dist/utils/axios-client';
 import { isEmailWhitelisted } from '@/lib/emailWhitelist';
+import { isPublicPath, skipsAuthBootstrap } from '@/lib/publicRoutes';
 
 const AuthContext = createContext();
 
@@ -19,8 +20,8 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const checkAppState = async () => {
-    // If on public intake route, skip auth checks
-    if (window.location.pathname === '/intake') {
+    // Intake and payment return URLs: skip public-settings / me bootstrap
+    if (skipsAuthBootstrap(window.location.pathname)) {
       setIsLoadingPublicSettings(false);
       setIsLoadingAuth(false);
       setIsAuthenticated(false);
@@ -50,6 +51,12 @@ export const AuthProvider = ({ children }) => {
         } else {
           setIsLoadingAuth(false);
           setIsAuthenticated(false);
+          if (!isPublicPath(window.location.pathname)) {
+            setAuthError({
+              type: 'auth_required',
+              message: 'Authentication required',
+            });
+          }
         }
         setIsLoadingPublicSettings(false);
       } catch (appError) {
@@ -120,14 +127,17 @@ export const AuthProvider = ({ children }) => {
       console.error('User auth check failed:', error);
       setIsLoadingAuth(false);
       setIsAuthenticated(false);
-      
-      // If user auth fails, it might be an expired token
-      if (error.status === 401 || error.status === 403) {
-        setAuthError({
-          type: 'auth_required',
-          message: 'Authentication required'
-        });
-      }
+
+      const status = error?.status ?? error?.response?.status;
+      const message =
+        status === 401 || status === 403
+          ? 'Authentication required'
+          : 'We could not verify your session. Please sign in again.';
+
+      setAuthError({
+        type: 'auth_required',
+        message,
+      });
     }
   };
 

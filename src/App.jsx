@@ -1,7 +1,9 @@
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { isPublicPath } from '@/lib/publicRoutes';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
@@ -43,12 +45,10 @@ import CookieConsent from './components/CookieConsent';
 import PWAInstallBadge from './components/PWAInstallBadge';
 
 const AuthenticatedApp = () => {
-  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
+  const location = useLocation();
+  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin, isAuthenticated } = useAuth();
 
-  // Allow intake and payment routes to render without auth checks
-  const isPublicRoute = window.location.pathname.startsWith('/intake') || 
-                        window.location.pathname === '/payment-success' || 
-                        window.location.pathname === '/payment-cancelled';
+  const isPublicRoute = isPublicPath(location.pathname);
 
   // Show loading spinner while checking app public settings or auth (skip for public routes)
   if (!isPublicRoute && (isLoadingPublicSettings || isLoadingAuth)) {
@@ -74,9 +74,28 @@ const AuthenticatedApp = () => {
         </div>
       );
     } else if (authError.type === 'auth_required') {
-      // Show login page for auth required
       return <LoginPage />;
     }
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="w-full max-w-md bg-card border border-border rounded-2xl shadow-xl p-8 text-center space-y-4">
+          <h1 className="text-2xl font-bold">Unable to load app</h1>
+          <p className="text-muted-foreground">{authError.message}</p>
+          <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
+            <Button type="button" variant="outline" onClick={() => window.location.reload()}>
+              Retry
+            </Button>
+            <Button type="button" onClick={() => navigateToLogin()}>
+              Sign in
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isPublicRoute && !isAuthenticated) {
+    return <LoginPage />;
   }
 
   // Render the main app
@@ -109,7 +128,6 @@ const AuthenticatedApp = () => {
         <Route path="/print-claim" element={<PrintClaim />} />
         <Route path="/print-receipt" element={<PrintReceipt />} />
         <Route path="/code-library" element={<CodeLibrary />} />
-        <Route path="/intake" element={<PatientIntake />} />
         <Route path="/patient-account" element={<PatientAccount />} />
         <Route path="/billing" element={<BillingDashboard />} />
         <Route path="/guide" element={<HelpGuide />} />
