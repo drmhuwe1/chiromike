@@ -4,6 +4,7 @@ import { ArrowLeft, Zap } from "lucide-react";
 export default function SLA() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md focus:text-sm">Skip to main content</a>
       <div role="banner" className="w-full bg-card border-b border-border shadow-sm">
         <header className="w-full min-h-[64px] flex items-center border-b border-border/60">
           <div className="max-w-4xl mx-auto px-6 py-4 w-full">
@@ -18,7 +19,7 @@ export default function SLA() {
           </div>
         </nav>
       </div>
-      <div className="flex-1 py-10 px-4">
+      <main id="main-content" className="flex-1 py-10 px-4">
       <div className="max-w-3xl mx-auto">
         <div className="mb-6">
           <Link to="/" className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1">
@@ -192,7 +193,13 @@ export default function SLA() {
           </div>
         </div>
       </div>
-      </div>
+      </main>
+      <footer className="border-t border-border bg-card py-4 px-6 text-xs text-muted-foreground text-center">
+        © {new Date().getFullYear()} Huwe Chiropractic — ChiroMike &nbsp;·&nbsp;
+        <Link to="/privacy" className="hover:underline">Privacy</Link> &nbsp;·&nbsp;
+        <Link to="/terms" className="hover:underline">Terms</Link> &nbsp;·&nbsp;
+        <Link to="/about" className="hover:underline">About</Link>
+      </footer>
     </div>
   );
 }
