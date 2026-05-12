@@ -24,7 +24,7 @@ export default function Contact() {
       <main id="main-content" className="max-w-2xl mx-auto px-6 py-12 space-y-8">
         <section>
           <h1 className="text-3xl font-bold tracking-tight mb-2">Contact Us</h1>
-          <p className="text-muted-foreground">Reach out to Huwe Chiropractic for appointments or support.</p>
+          <p className="text-muted-foreground">Reach out to Howe Chiropractic for appointments or support.</p>
         </section>
 
         <section className="bg-card border border-border rounded-xl p-6 space-y-5">
@@ -34,7 +34,7 @@ export default function Contact() {
             </div>
             <div>
               <h2 className="font-semibold text-sm mb-0.5">Practice Address</h2>
-              <p className="text-sm text-muted-foreground">Huwe Chiropractic<br />Contact the office for current address</p>
+              <p className="text-sm text-muted-foreground">Howe Chiropractic<br />Contact the office for current address</p>
             </div>
           </div>
 
@@ -71,7 +71,7 @@ export default function Contact() {
       </main>
 
       <footer className="border-t border-border bg-card mt-12 py-4 px-6 text-xs text-muted-foreground text-center">
-        © {new Date().getFullYear()} Huwe Chiropractic — ChiroMike &nbsp;·&nbsp;
+        © {new Date().getFullYear()} Howe Chiropractic — ChiroMike &nbsp;·&nbsp;
         <Link to="/privacy" className="hover:underline">Privacy</Link> &nbsp;·&nbsp;
         <Link to="/terms" className="hover:underline">Terms</Link> &nbsp;·&nbsp;
         <Link to="/about" className="hover:underline">About</Link>

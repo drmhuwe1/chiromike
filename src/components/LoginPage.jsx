@@ -87,11 +87,11 @@ export default function LoginPage() {
 
           {/* Footer Info */}
           <div className="text-center space-y-2 pt-4 border-t border-border">
-            <p className="text-xs text-foreground/70">
-              Sign in with your authorized account
+            <p className="text-xs text-foreground/80">
+             Sign in with your authorized account
             </p>
-            <p className="text-xs text-foreground/70">
-              For access, contact your administrator
+            <p className="text-xs text-foreground/80">
+             For access, contact your administrator
             </p>
             <nav aria-label="Legal links" className="flex flex-wrap justify-center gap-x-3 gap-y-1 text-xs">
               <a href="/about" className="text-primary hover:underline">About</a>
@@ -103,7 +103,7 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <p className="mt-6 text-center text-xs text-foreground/60">
+        <p className="mt-6 text-center text-xs text-foreground/70">
           Secure access for authorized practitioners
         </p>
       </div>
@@ -117,7 +117,7 @@ export default function LoginPage() {
           <a href="/baa" className="hover:underline hover:text-foreground">BAA</a>
           <a href="/sla" className="hover:underline hover:text-foreground">SLA</a>
         </nav>
-        <p>© {new Date().getFullYear()} Huwe Chiropractic — ChiroMike</p>
+        <p>© {new Date().getFullYear()} Howe Chiropractic — ChiroMike</p>
       </footer>
     </div>
   );

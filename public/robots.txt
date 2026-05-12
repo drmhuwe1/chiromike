@@ -1,5 +1,9 @@
 User-agent: *
 Allow: /
 Disallow: /admin/
+Disallow: /payment-*
 
 Sitemap: https://chiromike.org/sitemap.xml
+
+# Respect crawl delay for health
+Crawl-delay: 1

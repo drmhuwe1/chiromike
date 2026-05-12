@@ -23,7 +23,7 @@ export default function Terms() {
       <div>
         <Link to="/" className="text-sm text-primary hover:underline">← Back</Link>
         <h1 className="text-2xl font-bold mt-3">Terms of Service</h1>
-        <p className="text-sm text-muted-foreground mt-1">Last updated: April 15, 2026</p>
+        <p className="text-sm text-muted-foreground mt-1">Last updated: May 12, 2026</p>
       </div>
 
       <section className="space-y-2">

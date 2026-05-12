@@ -26,7 +26,7 @@ export default function About() {
           <h1 className="text-3xl font-bold tracking-tight mb-3">About ChiroMike</h1>
           <p className="text-muted-foreground text-lg leading-relaxed">
             ChiroMike is the all-in-one chiropractic practice management system built exclusively for
-            Huwe Chiropractic. It streamlines claim entry, billing, patient records, and scheduling
+            Howe Chiropractic. It streamlines claim entry, billing, patient records, and scheduling
             into a single, fast, HIPAA-compliant platform.
           </p>
         </section>
@@ -66,7 +66,7 @@ export default function About() {
       </main>
 
       <footer className="border-t border-border bg-card mt-12 py-4 px-6 text-xs text-muted-foreground text-center">
-        © {new Date().getFullYear()} Huwe Chiropractic — ChiroMike &nbsp;·&nbsp;
+        © {new Date().getFullYear()} Howe Chiropractic — ChiroMike &nbsp;·&nbsp;
         <Link to="/privacy" className="hover:underline">Privacy</Link> &nbsp;·&nbsp;
         <Link to="/terms" className="hover:underline">Terms</Link> &nbsp;·&nbsp;
         <Link to="/contact" className="hover:underline">Contact</Link>
