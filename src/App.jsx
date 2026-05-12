@@ -28,26 +28,27 @@ import PaymentSuccess from './pages/PaymentSuccess';
 import PaymentCancelled from './pages/PaymentCancelled';
 
 // Heavy pages — code-split via React.lazy (jspdf, recharts, framer-motion heavy use)
-const Calendar = lazy(() => import('./pages/Calendar'));
-const ClaimBuilder = lazy(() => import('./pages/ClaimBuilder'));
-const SavedClaims = lazy(() => import('./pages/SavedClaims'));
-const ProcedureLibrary = lazy(() => import('./pages/ProcedureLibrary'));
-const DiagnosisFavorites = lazy(() => import('./pages/DiagnosisFavorites'));
-const QuickTemplates = lazy(() => import('./pages/QuickTemplates'));
-const Reports = lazy(() => import('./pages/Reports'));
-const OfficeSettings = lazy(() => import('./pages/OfficeSettings'));
-const PrintClaim = lazy(() => import('./pages/PrintClaim'));
-const PrintReceipt = lazy(() => import('./pages/PrintReceipt'));
-const CodeLibrary = lazy(() => import('./pages/CodeLibrary'));
-const PatientAccount = lazy(() => import('./pages/PatientAccount'));
-const BillingDashboard = lazy(() => import('./pages/BillingDashboard'));
-const HelpGuide = lazy(() => import('./pages/HelpGuide'));
-const Compliance = lazy(() => import('./pages/Compliance'));
-const SoapNotes = lazy(() => import('./pages/SoapNotes'));
-const NewPatientExam = lazy(() => import('./pages/NewPatientExam'));
-const ReExamination = lazy(() => import('./pages/ReExamination'));
-const FinancialReports = lazy(() => import('./pages/FinancialReports'));
-const AdminStability = lazy(() => import('./pages/AdminStability'));
+// With webpack magic comments for chunk naming and optimization
+const Calendar = lazy(() => import(/* webpackChunkName: "calendar" */ './pages/Calendar'));
+const ClaimBuilder = lazy(() => import(/* webpackChunkName: "claim" */ './pages/ClaimBuilder'));
+const SavedClaims = lazy(() => import(/* webpackChunkName: "claims" */ './pages/SavedClaims'));
+const ProcedureLibrary = lazy(() => import(/* webpackChunkName: "codes" */ './pages/ProcedureLibrary'));
+const DiagnosisFavorites = lazy(() => import(/* webpackChunkName: "codes" */ './pages/DiagnosisFavorites'));
+const QuickTemplates = lazy(() => import(/* webpackChunkName: "templates" */ './pages/QuickTemplates'));
+const Reports = lazy(() => import(/* webpackChunkName: "reports" */ './pages/Reports'));
+const OfficeSettings = lazy(() => import(/* webpackChunkName: "admin" */ './pages/OfficeSettings'));
+const PrintClaim = lazy(() => import(/* webpackChunkName: "print" */ './pages/PrintClaim'));
+const PrintReceipt = lazy(() => import(/* webpackChunkName: "print" */ './pages/PrintReceipt'));
+const CodeLibrary = lazy(() => import(/* webpackChunkName: "codes" */ './pages/CodeLibrary'));
+const PatientAccount = lazy(() => import(/* webpackChunkName: "patient" */ './pages/PatientAccount'));
+const BillingDashboard = lazy(() => import(/* webpackChunkName: "billing" */ './pages/BillingDashboard'));
+const HelpGuide = lazy(() => import(/* webpackChunkName: "help" */ './pages/HelpGuide'));
+const Compliance = lazy(() => import(/* webpackChunkName: "legal" */ './pages/Compliance'));
+const SoapNotes = lazy(() => import(/* webpackChunkName: "clinical" */ './pages/SoapNotes'));
+const NewPatientExam = lazy(() => import(/* webpackChunkName: "clinical" */ './pages/NewPatientExam'));
+const ReExamination = lazy(() => import(/* webpackChunkName: "clinical" */ './pages/ReExamination'));
+const FinancialReports = lazy(() => import(/* webpackChunkName: "reports" */ './pages/FinancialReports'));
+const AdminStability = lazy(() => import(/* webpackChunkName: "admin" */ './pages/AdminStability'));
 
 const AuthenticatedApp = () => {
   const location = useLocation();
@@ -58,8 +59,8 @@ const AuthenticatedApp = () => {
   // Show loading spinner while checking app public settings or auth (skip for public routes)
   if (!isPublicRoute && (isLoadingPublicSettings || isLoadingAuth)) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div>
+      <div className="fixed inset-0 flex items-center justify-center bg-background">
+        <div className="w-8 h-8 border-4 border-border border-t-primary rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -105,7 +106,7 @@ const AuthenticatedApp = () => {
 
   // Render the main app
   return (
-    <Suspense fallback={<div className="fixed inset-0 flex items-center justify-center"><div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin" /></div>}>
+    <Suspense fallback={<div className="fixed inset-0 flex items-center justify-center bg-background"><div className="w-8 h-8 border-4 border-border border-t-primary rounded-full animate-spin" /></div>}>
     <Routes>
       {/* Public routes - no layout */}
       <Route path="/privacy" element={<Privacy />} />

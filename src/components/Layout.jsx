@@ -52,7 +52,7 @@ export default function Layout() {
 
       {/* Sidebar */}
       <aside className={`
-        fixed lg:static inset-y-0 left-0 z-50 w-64 
+        fixed lg:static inset-y-0 left-0 z-40 w-64 
         bg-sidebar text-sidebar-foreground
         transform transition-transform duration-200 ease-in-out
         ${mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
@@ -74,7 +74,7 @@ export default function Layout() {
           </button>
         </div>
 
-        <nav aria-label="Sidebar navigation" className="flex-1 py-3 px-3 space-y-0.5 overflow-y-auto">
+        <nav aria-label="Sidebar navigation" className="flex-1 py-3 px-3 space-y-0.5 overflow-y-auto relative z-0">
           {navItems.map((item) => {
             const isActive = location.pathname === item.path;
             const Icon = item.icon;
@@ -84,7 +84,7 @@ export default function Layout() {
                 to={item.path}
                 onClick={() => setMobileOpen(false)}
                 className={`
-                  flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium
+                  relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium
                   transition-colors duration-150
                   ${isActive 
                     ? 'bg-sidebar-primary text-sidebar-primary-foreground' 
@@ -92,7 +92,7 @@ export default function Layout() {
                 `}
               >
                 <Icon className="w-4 h-4 shrink-0" />
-                {item.label}
+                <span className="truncate">{item.label}</span>
               </Link>
             );
           })}
@@ -102,7 +102,7 @@ export default function Layout() {
       {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top bar */}
-        <header role="banner" className="h-16 min-h-[64px] border-b border-border bg-card flex items-center px-4 lg:px-6 shrink-0 relative z-10">
+        <header role="banner" className="h-16 min-h-[64px] border-b border-border bg-card flex items-center px-4 lg:px-6 shrink-0 relative z-30">
           <button 
             className="lg:hidden mr-3 p-1.5 rounded-md hover:bg-muted"
             onClick={() => setMobileOpen(true)}

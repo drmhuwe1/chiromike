@@ -15,6 +15,10 @@
     <meta name="referrer" content="no-referrer" />
     <link rel="canonical" href="https://chiromike.org" />
     <link rel="apple-touch-icon" href="/favicon.ico" />
+    <!-- Disable Datadog SDK to prevent browser storage warnings -->
+    <script>
+      window.DD_RUM = { init: () => {}, startSessionReplayRecording: () => {} };
+    </script>
     <!-- Inter font is self-hosted via @font-face in index.css — no external font request needed -->
     <!-- JSON-LD Structured Data -->
     <script type="application/ld+json">
