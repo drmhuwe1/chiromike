@@ -40,5 +40,10 @@ export default defineConfig({
     headers: {
       'Cache-Control': 'public, max-age=3600',
     },
+    middlewareMode: false,
+    // Ensure sw.js is served with correct headers during dev
+    setupMiddlewares: (middlewares, { middlewareMode }) => {
+      return middlewares;
+    },
   },
 })
