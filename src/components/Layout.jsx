@@ -62,7 +62,7 @@ export default function Layout() {
           <h1 className="text-xl font-bold text-sidebar-primary-foreground tracking-tight">
             ChiroMike
           </h1>
-            <p className="text-xs text-sidebar-foreground/60 mt-0.5">Howe Chiropractic</p>
+            <p className="text-xs text-sidebar-foreground/60 mt-0.5">Huwe Chiropractic</p>
         </div>
         <div className="px-5 py-3 border-b border-sidebar-border">
           <button

@@ -34,7 +34,7 @@ export default function BAA() {
               </div>
             </div>
             <h1 className="text-2xl font-bold">Business Associate Agreement</h1>
-            <p className="text-muted-foreground text-xs">ChiroMike — Howe Chiropractic Practice Management System</p>
+            <p className="text-muted-foreground text-xs">ChiroMike — Huwe Chiropractic Practice Management System</p>
             <p className="text-muted-foreground text-xs">Effective Date: April 17, 2026 · Version 1.0</p>
           </div>
 
@@ -142,7 +142,7 @@ export default function BAA() {
               </div>
               <div>
                 <p className="font-semibold text-foreground">Covered Entity</p>
-                <p>Howe Chiropractic / ChiroMike User</p>
+                <p>Huwe Chiropractic / ChiroMike User</p>
               </div>
             </div>
           </div>
@@ -154,7 +154,7 @@ export default function BAA() {
       </div>
       </main>
       <footer className="border-t border-border bg-card py-4 px-6 text-xs text-muted-foreground text-center">
-        © {new Date().getFullYear()} Howe Chiropractic — ChiroMike &nbsp;·&nbsp;
+        © {new Date().getFullYear()} Huwe Chiropractic — ChiroMike &nbsp;·&nbsp;
         <Link to="/privacy" className="hover:underline">Privacy</Link> &nbsp;·&nbsp;
         <Link to="/terms" className="hover:underline">Terms</Link>
       </footer>

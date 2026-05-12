@@ -117,7 +117,7 @@ export default function LoginPage() {
           <a href="/baa" className="hover:underline hover:text-foreground">BAA</a>
           <a href="/sla" className="hover:underline hover:text-foreground">SLA</a>
         </nav>
-        <p>© {new Date().getFullYear()} Howe Chiropractic — ChiroMike</p>
+        <p>© {new Date().getFullYear()} Huwe Chiropractic — ChiroMike</p>
       </footer>
     </div>
   );
