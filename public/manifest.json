@@ -1,10 +1,10 @@
 {
   "name": "ChiroMike",
   "short_name": "ChiroMike",
-  "description": "Chiropractic practice management for Huwe Chiropractic",
+  "description": "Chiropractic practice management system for Huwe Chiropractic",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f8fafc",
+  "background_color": "#ffffff",
   "theme_color": "#2563eb",
   "icons": [
     {
@@ -12,5 +12,6 @@
       "sizes": "any",
       "type": "image/x-icon"
     }
-  ]
+  ],
+  "categories": ["productivity", "healthcare"]
 }
