@@ -10,6 +10,10 @@ ReactDOM.createRoot(document.getElementById('root')).render(
 // Register service worker for offline capability
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(() => {});
+    navigator.serviceWorker.register('/sw.js').then((reg) => {
+      console.log('[ServiceWorker] Registered successfully:', reg.scope);
+    }).catch((err) => {
+      console.warn('[ServiceWorker] Registration failed:', err.message);
+    });
   });
 }
