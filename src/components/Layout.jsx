@@ -52,17 +52,17 @@ export default function Layout() {
 
       {/* Sidebar */}
       <aside className={`
-        fixed lg:static inset-y-0 left-0 z-40 w-64 
-        bg-sidebar text-sidebar-foreground
-        transform transition-transform duration-200 ease-in-out
-        ${mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-        flex flex-col
+       fixed lg:static inset-y-0 left-0 z-40 w-64 min-h-screen
+       bg-sidebar text-sidebar-foreground
+       transform transition-transform duration-200 ease-in-out
+       ${mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+       flex flex-col
       `}>
         <div className="p-5 border-b border-sidebar-border">
           <h1 className="text-xl font-bold text-sidebar-primary-foreground tracking-tight">
             ChiroMike
           </h1>
-            <p className="text-xs text-sidebar-foreground/60 mt-0.5">Huwe Chiropractic</p>
+            <p className="text-xs text-sidebar-foreground/60 mt-0.5">Howe Chiropractic</p>
         </div>
         <div className="px-5 py-3 border-b border-sidebar-border">
           <button
@@ -100,9 +100,9 @@ export default function Layout() {
       </aside>
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Top bar */}
-        <header role="banner" className="h-16 min-h-[64px] border-b border-border bg-card flex items-center px-4 lg:px-6 shrink-0 relative z-30">
+       <div className="flex-1 flex flex-col overflow-hidden min-h-screen">
+         {/* Top bar */}
+         <header role="banner" className="h-16 min-h-[64px] border-b border-border bg-card flex items-center px-4 lg:px-6 shrink-0 z-30">
           <button 
             className="lg:hidden mr-3 p-1.5 rounded-md hover:bg-muted"
             onClick={() => setMobileOpen(true)}
