@@ -30,13 +30,13 @@ export default function LoginPage() {
             <a href="/" className="text-base font-bold text-foreground hover:text-primary transition-colors">ChiroMike</a>
           </div>
         </header>
-        <nav aria-label="Site navigation" className="w-full px-6 py-2">
-          <div className="max-w-4xl mx-auto flex flex-wrap gap-x-6 gap-y-1 text-sm font-medium">
-            <a href="/about" className="text-foreground/70 hover:text-primary transition-colors">About</a>
-            <a href="/privacy" className="text-foreground/70 hover:text-primary transition-colors">Privacy</a>
-            <a href="/terms" className="text-foreground/70 hover:text-primary transition-colors">Terms</a>
-            <a href="/contact" className="text-foreground/70 hover:text-primary transition-colors">Contact</a>
-          </div>
+        <nav aria-label="Site navigation" className="w-full px-6 py-2 overflow-x-auto">
+         <div className="max-w-4xl mx-auto flex gap-x-4 sm:gap-x-6 gap-y-1 text-sm font-medium whitespace-nowrap sm:whitespace-normal">
+           <a href="/about" className="inline-block py-1 px-0.5 text-foreground/70 hover:text-primary transition-colors">About</a>
+           <a href="/privacy" className="inline-block py-1 px-0.5 text-foreground/70 hover:text-primary transition-colors">Privacy</a>
+           <a href="/terms" className="inline-block py-1 px-0.5 text-foreground/70 hover:text-primary transition-colors">Terms</a>
+           <a href="/contact" className="inline-block py-1 px-0.5 text-foreground/70 hover:text-primary transition-colors">Contact</a>
+         </div>
         </nav>
       </div>
       <main id="main-content" className="flex-1 flex items-center justify-center p-4">
@@ -110,12 +110,12 @@ export default function LoginPage() {
       </main>
       <footer role="contentinfo" className="py-4 px-6 border-t border-border bg-card/50 text-xs text-foreground/60 text-center space-y-1">
         <nav aria-label="Footer navigation" className="flex flex-wrap justify-center gap-x-4 gap-y-1">
-          <a href="/about" className="hover:underline hover:text-foreground">About</a>
-          <a href="/contact" className="hover:underline hover:text-foreground">Contact</a>
-          <a href="/privacy" className="hover:underline hover:text-foreground">Privacy Policy</a>
-          <a href="/terms" className="hover:underline hover:text-foreground">Terms of Service</a>
-          <a href="/baa" className="hover:underline hover:text-foreground">BAA</a>
-          <a href="/sla" className="hover:underline hover:text-foreground">SLA</a>
+          <a href="/about" className="inline-block py-1 px-0.5 hover:underline hover:text-foreground">About</a>
+          <a href="/contact" className="inline-block py-1 px-0.5 hover:underline hover:text-foreground">Contact</a>
+          <a href="/privacy" className="inline-block py-1 px-0.5 hover:underline hover:text-foreground">Privacy Policy</a>
+          <a href="/terms" className="inline-block py-1 px-0.5 hover:underline hover:text-foreground">Terms of Service</a>
+          <a href="/baa" className="inline-block py-1 px-0.5 hover:underline hover:text-foreground">BAA</a>
+          <a href="/sla" className="inline-block py-1 px-0.5 hover:underline hover:text-foreground">SLA</a>
         </nav>
         <p>© {new Date().getFullYear()} Huwe Chiropractic — ChiroMike</p>
       </footer>

@@ -11,12 +11,12 @@ export default function Contact() {
             <Link to="/" className="text-lg font-bold text-primary">ChiroMike</Link>
           </div>
         </header>
-        <nav aria-label="Primary navigation" className="w-full px-6 py-2">
-          <div className="max-w-4xl mx-auto flex flex-wrap gap-x-6 gap-y-1 text-sm font-medium">
-            <Link to="/about" className="text-foreground/70 hover:text-primary transition-colors">About</Link>
-            <Link to="/contact" className="text-foreground hover:text-primary transition-colors">Contact</Link>
-            <Link to="/privacy" className="text-foreground/70 hover:text-primary transition-colors">Privacy</Link>
-            <Link to="/terms" className="text-foreground/70 hover:text-primary transition-colors">Terms</Link>
+        <nav aria-label="Primary navigation" className="w-full px-6 py-2 overflow-x-auto">
+          <div className="max-w-4xl mx-auto flex gap-x-4 sm:gap-x-6 gap-y-1 text-sm font-medium whitespace-nowrap sm:whitespace-normal">
+            <Link to="/about" className="inline-block py-1 px-0.5 text-foreground/70 hover:text-primary transition-colors">About</Link>
+            <Link to="/contact" className="inline-block py-1 px-0.5 text-foreground hover:text-primary transition-colors">Contact</Link>
+            <Link to="/privacy" className="inline-block py-1 px-0.5 text-foreground/70 hover:text-primary transition-colors">Privacy</Link>
+            <Link to="/terms" className="inline-block py-1 px-0.5 text-foreground/70 hover:text-primary transition-colors">Terms</Link>
           </div>
         </nav>
       </div>
