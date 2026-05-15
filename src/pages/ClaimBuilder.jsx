@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { Save, Printer, Copy, CalendarDays, Search, User, Plus, Trash2, Star, Zap, Mail, Sparkles, ChevronDown, CreditCard, RefreshCw } from "lucide-react";
+import { logAudit } from "../utils/auditLog";
 import PayerAlertBanner from "../components/claim/PayerAlertBanner";
 import SoapNoteModal from "../components/claim/SoapNoteModal";
 import VoiceDictation from "../components/VoiceDictation";
@@ -91,6 +92,7 @@ export default function ClaimBuilder() {
       setTemplates(tmpl);
       setFavCodes(codes);
       setFavDx(dx);
+      logAudit("Viewed claim builder", "Claim");
 
       if (settings[0]) {
         window.claimBuilderSettings = settings[0];
@@ -316,6 +318,7 @@ export default function ClaimBuilder() {
     setLoading(false);
     setSavedClaim(saved);
     localStorage.removeItem('claimDraft');
+    logAudit("Created claim", "Claim", saved.id, claim.patient_name);
     toast({ title: "Claim saved! You can now email, print, collect payment, or generate a SOAP note below." });
   };
 
