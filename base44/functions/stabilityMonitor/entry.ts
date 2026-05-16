@@ -121,11 +121,11 @@ Deno.serve(async (req) => {
       } else {
         const lastDate = new Date(recentClaims[0].created_date);
         const daysSince = Math.floor((Date.now() - lastDate.getTime()) / 86400000);
-        const status = daysSince <= 7 ? "pass" : daysSince <= 30 ? "warn" : "fail";
+        const status = daysSince <= 30 ? "pass" : daysSince <= 60 ? "warn" : "fail";
         checks.push({
           id: "U8", name: "Data Freshness", severity: "low", status,
           result: `Most recent Claim created ${daysSince} day(s) ago (${lastDate.toLocaleDateString()}).`,
-          fix: daysSince > 30 ? "App appears dormant — verify the practice is still actively using ChiroMike." : undefined
+          fix: daysSince > 60 ? "App appears dormant — verify the practice is still actively using ChiroMike." : undefined
         });
       }
     } catch (e) {
