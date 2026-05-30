@@ -1,15 +1,12 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
-const stripe = await import('npm:stripe@17.0.0').then(m => new m.default(Deno.env.get('STRIPE_SECRET_KEY')));
-
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-
-    if (!user) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    // This endpoint is intentionally unauthenticated — it is called from the
+    // Stripe payment-success redirect page where the patient may not be logged in.
+    // Security is enforced by verifying the Stripe session_id directly with Stripe.
+    const stripe = new (await import('npm:stripe@17.0.0')).default(Deno.env.get('STRIPE_SECRET_KEY'));
 
     const { session_id, claim_id, patient_id, date_of_service } = await req.json();
 
