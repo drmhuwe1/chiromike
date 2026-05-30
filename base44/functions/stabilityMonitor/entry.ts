@@ -1,9 +1,9 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 import Stripe from 'npm:stripe@14.21.0';
 
-const APP_NAME = "ChiroMike";
-const REPORT_EMAIL = "drmhuwe@gmail.com";
-const APP_URL = "https://chiromike.org";
+const APP_NAME = Deno.env.get("APP_DISPLAY_NAME") || "ChiroMike";
+const REPORT_EMAIL = Deno.env.get("REPORT_EMAIL");
+const APP_URL = Deno.env.get("APP_URL") || "https://chiromike.org";
 
 Deno.serve(async (req) => {
   try {
@@ -340,7 +340,7 @@ After making all fixes:
   </p>
 </div>`;
 
-    try {
+    if (REPORT_EMAIL) try {
       await base44.asServiceRole.integrations.Core.SendEmail({
         to: REPORT_EMAIL,
         subject,

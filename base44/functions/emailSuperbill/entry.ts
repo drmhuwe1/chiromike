@@ -1,8 +1,8 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
 function buildRawEmail({ to, subject, htmlBody }) {
-  const from = 'Huwe Chiropractic <drmhuwe@huwechiropractic.com>';
-  const replyTo = 'drahuwe@gmail.com, drmhuwe@gmail.com';
+  const from = Deno.env.get('SUPERBILL_FROM_EMAIL') || 'Huwe Chiropractic <drmhuwe@huwechiropractic.com>';
+  const replyTo = Deno.env.get('SUPERBILL_REPLY_TO') || 'drahuwe@gmail.com';
   const boundary = 'boundary_' + Math.random().toString(36).slice(2);
   const mime = [
     `From: ${from}`,
