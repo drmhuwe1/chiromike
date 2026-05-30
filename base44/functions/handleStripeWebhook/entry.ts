@@ -1,7 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
-const stripe = await import('npm:stripe@17.0.0').then(m => new m.default(Deno.env.get('STRIPE_SECRET_KEY')));
-
 const PLAN_NAME_MAP = {
   'price_1M45fDGRpSbA8EZgv2smNpb2': 'Maintenance Plan',
   'price_1M45fDGRpSbA8EZgJGuW8mb1': 'Wellness Plan',
@@ -15,6 +13,9 @@ Deno.serve(async (req) => {
 
   try {
     const base44 = createClientFromRequest(req);
+    // Stripe webhook — intentionally unauthenticated. Security is enforced by
+    // verifying the stripe-signature header against STRIPE_WEBHOOK_SECRET.
+    const stripe = new (await import('npm:stripe@17.0.0')).default(Deno.env.get('STRIPE_SECRET_KEY'));
     const signature = req.headers.get('stripe-signature');
     const body = await req.text();
     const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET');
