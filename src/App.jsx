@@ -45,7 +45,7 @@ const BillingDashboard = lazy(() => import(/* webpackChunkName: "billing" */ './
 const HelpGuide = lazy(() => import(/* webpackChunkName: "help" */ './pages/HelpGuide'));
 const Compliance = lazy(() => import(/* webpackChunkName: "legal" */ './pages/Compliance'));
 const SoapNotes = lazy(() => import(/* webpackChunkName: "clinical" */ './pages/SoapNotes'));
-const ClinicalExamination = lazy(() => import(/* webpackChunkName: "clinical" */ './pages/ClinicalExamination'));
+const NewPatientExam = lazy(() => import(/* webpackChunkName: "clinical" */ './pages/NewPatientExam'));
 const ReExamination = lazy(() => import(/* webpackChunkName: "clinical" */ './pages/ReExamination'));
 const FinancialReports = lazy(() => import(/* webpackChunkName: "reports" */ './pages/FinancialReports'));
 const AdminStability = lazy(() => import(/* webpackChunkName: "admin" */ './pages/AdminStability'));
@@ -140,7 +140,7 @@ const AuthenticatedApp = () => {
         <Route path="/guide" element={<HelpGuide />} />
         <Route path="/compliance" element={<Compliance />} />
         <Route path="/soap-notes" element={<SoapNotes />} />
-        <Route path="/clinical-examination" element={<ClinicalExamination />} />
+        <Route path="/new-patient-exam" element={<NewPatientExam />} />
         <Route path="/re-examination" element={<ReExamination />} />
         <Route path="/financial-reports" element={<FinancialReports />} />
         <Route path="/admin/stability" element={<AdminStability />} />

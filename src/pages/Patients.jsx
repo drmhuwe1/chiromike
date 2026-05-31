@@ -200,7 +200,7 @@ export default function Patients() {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => navigate(`/clinical-examination?patient=${p.id}`)}
+                            onClick={() => navigate(`/new-patient-exam?patient=${p.id}`)}
                             className="gap-1.5 text-purple-700 border-purple-300 hover:bg-purple-50"
                           >
                             <Stethoscope className="w-4 h-4" /> New Patient Exam

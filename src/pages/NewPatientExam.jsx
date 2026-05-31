@@ -14,7 +14,7 @@ import OrthoTestsSection from "../components/exam/OrthoTestsSection";
 import NeurologicalSection from "../components/exam/NeurologicalSection";
 import PainAssessmentSection from "../components/exam/PainAssessmentSection";
 
-export default function ClinicalExamination() {
+export default function NewPatientExam() {
   const [patients, setPatients] = useState([]);
   const [search, setSearch] = useState("");
   const [showSearch, setShowSearch] = useState(true);
@@ -207,73 +207,37 @@ export default function ClinicalExamination() {
           </div>
 
           {/* Vital Signs */}
-          <Section
-            title="Vital Signs"
-            expanded={expandSections.vitals}
-            onToggle={() => toggleSection("vitals")}
-          >
+          <Section title="Vital Signs" expanded={expandSections.vitals} onToggle={() => toggleSection("vitals")}>
             <div className="grid grid-cols-3 gap-2">
               <div>
                 <Label className="text-xs">Height</Label>
-                <Input
-                  placeholder="Height (e.g. 5'10)"
-                  className="mt-1 h-8 text-sm"
-                  value={exam.vital_signs?.height || ""}
-                  onChange={e => set("vital_signs.height", e.target.value)}
-                />
+                <Input placeholder="Height (e.g. 5'10)" className="mt-1 h-8 text-sm" value={exam.vital_signs?.height || ""} onChange={e => set("vital_signs.height", e.target.value)} />
               </div>
               <div>
                 <Label className="text-xs">Weight (lbs)</Label>
-                <Input
-                  type="number"
-                  className="mt-1 h-8 text-sm"
-                  value={exam.vital_signs?.weight || ""}
-                  onChange={e => set("vital_signs.weight", parseFloat(e.target.value) || "")}
-                />
+                <Input type="number" className="mt-1 h-8 text-sm" value={exam.vital_signs?.weight || ""} onChange={e => set("vital_signs.weight", parseFloat(e.target.value) || "")} />
               </div>
               <div>
                 <Label className="text-xs">BMI</Label>
-                <Input
-                  type="number"
-                  step="0.1"
-                  className="mt-1 h-8 text-sm"
-                  value={exam.vital_signs?.bmi || ""}
-                  onChange={e => set("vital_signs.bmi", parseFloat(e.target.value) || "")}
-                />
+                <Input type="number" step="0.1" className="mt-1 h-8 text-sm" value={exam.vital_signs?.bmi || ""} onChange={e => set("vital_signs.bmi", parseFloat(e.target.value) || "")} />
               </div>
               <div>
                 <Label className="text-xs">BP</Label>
-                <Input
-                  placeholder="e.g. 120/80"
-                  className="mt-1 h-8 text-sm"
-                  value={exam.vital_signs?.bp || ""}
-                  onChange={e => set("vital_signs.bp", e.target.value)}
-                />
+                <Input placeholder="e.g. 120/80" className="mt-1 h-8 text-sm" value={exam.vital_signs?.bp || ""} onChange={e => set("vital_signs.bp", e.target.value)} />
               </div>
               <div>
                 <Label className="text-xs">HR (bpm)</Label>
-                <Input
-                  type="number"
-                  className="mt-1 h-8 text-sm"
-                  value={exam.vital_signs?.hr || ""}
-                  onChange={e => set("vital_signs.hr", parseInt(e.target.value) || "")}
-                />
+                <Input type="number" className="mt-1 h-8 text-sm" value={exam.vital_signs?.hr || ""} onChange={e => set("vital_signs.hr", parseInt(e.target.value) || "")} />
               </div>
               <div>
                 <Label className="text-xs">Temp (°F)</Label>
-                <Input
-                  type="number"
-                  step="0.1"
-                  className="mt-1 h-8 text-sm"
-                  value={exam.vital_signs?.temp || ""}
-                  onChange={e => set("vital_signs.temp", parseFloat(e.target.value) || "")}
-                />
+                <Input type="number" step="0.1" className="mt-1 h-8 text-sm" value={exam.vital_signs?.temp || ""} onChange={e => set("vital_signs.temp", parseFloat(e.target.value) || "")} />
               </div>
             </div>
           </Section>
 
           {/* Posture & Gait */}
-          <Section title="Posture & Gait" expanded={expandSections.posture} onToggle={() => toggleSection("posture")}>
+          <Section title="Posture &amp; Gait" expanded={expandSections.posture} onToggle={() => toggleSection("posture")}>
             <div className="flex flex-wrap gap-1.5 mb-2">
               <button onClick={() => set("posture_gait", "Normal posture, smooth gait bilaterally")} className="px-2 py-1 text-xs bg-green-100 text-green-700 border border-green-300 rounded hover:bg-green-200">Normal</button>
               <button onClick={() => set("posture_gait", "Forward head posture noted, antalgic gait")} className="px-2 py-1 text-xs bg-blue-100 text-blue-700 border border-blue-300 rounded hover:bg-blue-200">Forward Head</button>
@@ -325,11 +289,7 @@ export default function ClinicalExamination() {
           </Section>
 
           {/* Orthopedic Tests */}
-          <Section
-            title={`Orthopedic Tests (${exam.orthopedic_tests?.length || 0})`}
-            expanded={expandSections.ortho}
-            onToggle={() => toggleSection("ortho")}
-          >
+          <Section title={`Orthopedic Tests (${exam.orthopedic_tests?.length || 0})`} expanded={expandSections.ortho} onToggle={() => toggleSection("ortho")}>
             <OrthoTestsSection
               tests={exam.orthopedic_tests || []}
               onAdd={(name) => setExam(prev => ({ ...prev, orthopedic_tests: [...(prev.orthopedic_tests || []), { test_name: name, result: "", notes: "" }] }))}
@@ -339,22 +299,13 @@ export default function ClinicalExamination() {
           </Section>
 
           {/* Neurological Findings */}
-          <Section
-            title="Neurological Exam"
-            expanded={expandSections.neuro}
-            onToggle={() => toggleSection("neuro")}
-          >
+          <Section title="Neurological Exam" expanded={expandSections.neuro} onToggle={() => toggleSection("neuro")}>
             <NeurologicalSection findings={exam.neurological_findings} onSet={set} />
           </Section>
 
           {/* Palpation Findings */}
-          <Section
-            title="Palpation & Muscle Testing"
-            expanded={expandSections.palp}
-            onToggle={() => toggleSection("palp")}
-          >
+          <Section title="Palpation &amp; Muscle Testing" expanded={expandSections.palp} onToggle={() => toggleSection("palp")}>
             <div className="space-y-4">
-              {/* Cervical */}
               <div>
                 <p className="text-xs text-muted-foreground mb-2">Cervical Palpation:</p>
                 <div className="flex flex-wrap gap-1.5 mb-2">
@@ -366,8 +317,6 @@ export default function ClinicalExamination() {
                 </div>
                 <Textarea className="h-12 text-xs" value={exam.palpation_findings?.cervical_palpation || ""} onChange={e => set("palpation_findings.cervical_palpation", e.target.value)} />
               </div>
-
-              {/* Thoracic */}
               <div>
                 <p className="text-xs text-muted-foreground mb-2">Thoracic Palpation:</p>
                 <div className="flex flex-wrap gap-1.5 mb-2">
@@ -378,8 +327,6 @@ export default function ClinicalExamination() {
                 </div>
                 <Textarea className="h-12 text-xs" value={exam.palpation_findings?.thoracic_palpation || ""} onChange={e => set("palpation_findings.thoracic_palpation", e.target.value)} />
               </div>
-
-              {/* Lumbar */}
               <div>
                 <p className="text-xs text-muted-foreground mb-2">Lumbar Palpation:</p>
                 <div className="flex flex-wrap gap-1.5 mb-2">
@@ -391,8 +338,6 @@ export default function ClinicalExamination() {
                 </div>
                 <Textarea className="h-12 text-xs" value={exam.palpation_findings?.lumbar_palpation || ""} onChange={e => set("palpation_findings.lumbar_palpation", e.target.value)} />
               </div>
-
-              {/* Sacroiliac */}
               <div>
                 <p className="text-xs text-muted-foreground mb-2">Sacroiliac:</p>
                 <div className="flex flex-wrap gap-1.5 mb-2">
@@ -455,7 +400,7 @@ export default function ClinicalExamination() {
             <Textarea rows={3} className="text-sm" placeholder="Clinical impression and diagnoses..." value={exam.clinical_impression} onChange={e => set("clinical_impression", e.target.value)} />
           </Section>
 
-          <Section title="Treatment Plan & Prognosis" expanded={expandSections.plan} onToggle={() => toggleSection("plan")}>
+          <Section title="Treatment Plan &amp; Prognosis" expanded={expandSections.plan} onToggle={() => toggleSection("plan")}>
             <div className="flex gap-2 mb-2">
               <Button size="sm" variant="outline" onClick={() => setPolishTarget({ field: "treatment_plan", value: exam.treatment_plan })}>✨ Polish with AI</Button>
               <Button size="sm" variant="outline" onClick={generateTreatmentPlans} disabled={generatingPlans}>

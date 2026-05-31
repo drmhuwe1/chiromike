@@ -13,7 +13,7 @@ const navItems = [
   { path: "/calendar", label: "Calendar", icon: Calendar },
   { path: "/patient-account", label: "Patient Account", icon: Users },
   { path: "/claim-builder", label: "New Claim", icon: FileText },
-  { path: "/clinical-examination", label: "Clinical Examination", icon: Stethoscope },
+  { path: "/new-patient-exam", label: "New Patient Exam", icon: Stethoscope },
   { path: "/re-examination", label: "Re-Examination", icon: Stethoscope },
   { path: "/saved-claims", label: "Saved Claims", icon: BookOpen },
   { path: "/code-library", label: "Code Library", icon: Library },
