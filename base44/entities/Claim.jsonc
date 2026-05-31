@@ -167,6 +167,11 @@
     "template_used": {
       "type": "string",
       "title": "Template Used"
+    },
+    "description": {
+      "type": "string",
+      "title": "Description",
+      "maxLength": 1000
     }
   },
   "required": [

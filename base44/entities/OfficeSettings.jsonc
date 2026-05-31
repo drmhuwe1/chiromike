@@ -89,6 +89,11 @@
     "logo_url": {
       "type": "string",
       "title": "Practice Logo URL"
+    },
+    "description": {
+      "type": "string",
+      "title": "Description",
+      "maxLength": 1000
     }
   },
   "required": [
