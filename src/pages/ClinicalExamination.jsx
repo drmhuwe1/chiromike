@@ -14,7 +14,7 @@ import OrthoTestsSection from "../components/exam/OrthoTestsSection";
 import NeurologicalSection from "../components/exam/NeurologicalSection";
 import PainAssessmentSection from "../components/exam/PainAssessmentSection";
 
-export default function NewPatientExamPage() {
+export default function ClinicalExamination() {
   const [patients, setPatients] = useState([]);
   const [search, setSearch] = useState("");
   const [showSearch, setShowSearch] = useState(true);

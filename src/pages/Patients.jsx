@@ -145,7 +145,7 @@ export default function Patients() {
                         <Button
                           variant="ghost" size="sm"
                           onClick={() => setFaxTarget(p)}
-                          title="Compile & Fax Patient File"
+                          title="Compile &amp; Fax Patient File"
                           className="text-blue-600 hover:text-blue-700"
                         >
                           <Send className="w-4 h-4" />
@@ -167,7 +167,7 @@ export default function Patients() {
                         <Button
                           variant="ghost" size="sm"
                           onClick={() => navigate(`/patient-account?patient=${p.id}`)}
-                          title="Account & Payments"
+                          title="Account &amp; Payments"
                           className="text-green-600 hover:text-green-700"
                         >
                           <CreditCard className="w-4 h-4" />
@@ -200,7 +200,7 @@ export default function Patients() {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => navigate(`/new-patient-exam?patient=${p.id}`)}
+                            onClick={() => navigate(`/clinical-examination?patient=${p.id}`)}
                             className="gap-1.5 text-purple-700 border-purple-300 hover:bg-purple-50"
                           >
                             <Stethoscope className="w-4 h-4" /> New Patient Exam
@@ -219,7 +219,7 @@ export default function Patients() {
                             onClick={() => navigate(`/patient-account?patient=${p.id}`)}
                             className="gap-1.5 text-green-700 border-green-300 hover:bg-green-50"
                           >
-                            <Wallet className="w-4 h-4" /> Account & Payments
+                            <Wallet className="w-4 h-4" /> Account &amp; Payments
                           </Button>
                         </div>
                       </td>
