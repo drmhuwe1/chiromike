@@ -1,0 +1,124 @@
+{
+  "name": "ClaimSubmission",
+  "type": "object",
+  "properties": {
+    "claim_id": {
+      "type": "string",
+      "title": "Claim ID"
+    },
+    "patient_id": {
+      "type": "string",
+      "title": "Patient ID"
+    },
+    "patient_name": {
+      "type": "string",
+      "title": "Patient Name"
+    },
+    "date_of_service": {
+      "type": "string",
+      "title": "Date of Service"
+    },
+    "insurance_company": {
+      "type": "string",
+      "title": "Insurance / Payer"
+    },
+    "total_charge": {
+      "type": "number",
+      "title": "Total Charge"
+    },
+    "method": {
+      "type": "string",
+      "title": "Submission Method",
+      "enum": [
+        "Print",
+        "Fax",
+        "EDI",
+        "Email",
+        "Portal",
+        "Mail"
+      ]
+    },
+    "submitted_at": {
+      "type": "string",
+      "title": "Submitted At"
+    },
+    "submitted_by": {
+      "type": "string",
+      "title": "Submitted By"
+    },
+    "submission_notes": {
+      "type": "string",
+      "title": "Notes"
+    },
+    "status": {
+      "type": "string",
+      "title": "Status",
+      "enum": [
+        "Submitted",
+        "Pending Response",
+        "Paid",
+        "Denied",
+        "Resubmitted"
+      ],
+      "default": "Submitted"
+    },
+    "resubmission_of": {
+      "type": "string",
+      "title": "Resubmission of Submission ID"
+    }
+  },
+  "required": [
+    "claim_id",
+    "method"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Printer, Trash2, Mail, FileCode, ChevronDown, ChevronUp, X } from "lucide-react";
+import { Search, Printer, Trash2, Mail, FileCode, ChevronDown, ChevronUp, X, History } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { logAudit } from "../utils/auditLog";
 
@@ -19,6 +19,7 @@ const statusColors = {
 
 export default function SavedClaims() {
   const [claims, setClaims] = useState([]);
+  const [submissionCounts, setSubmissionCounts] = useState({});
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("All");
@@ -31,8 +32,15 @@ export default function SavedClaims() {
 
   const load = async () => {
     setLoading(true);
-    const data = await base44.entities.Claim.list("-created_date", 500);
+    const [data, subs] = await Promise.all([
+      base44.entities.Claim.list("-created_date", 500),
+      base44.entities.ClaimSubmission.list("-submitted_at", 1000)
+    ]);
     setClaims(data);
+    // Build a count map: claim_id -> number of submissions
+    const counts = {};
+    subs.forEach(s => { counts[s.claim_id] = (counts[s.claim_id] || 0) + 1; });
+    setSubmissionCounts(counts);
     setLoading(false);
     logAudit("Viewed saved claims", "Claim");
   };
@@ -143,9 +151,16 @@ export default function SavedClaims() {
                     <td className="py-3 px-4 hidden md:table-cell text-muted-foreground">{c.payer_type}</td>
                     <td className="py-3 px-4 text-right hidden md:table-cell font-semibold">${(c.total_charge || 0).toFixed(2)}</td>
                     <td className="py-3 px-4 hidden lg:table-cell">
-                      <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${statusColors[c.status] || ""}`}>
-                        {c.status}
-                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${statusColors[c.status] || ""}`}>
+                          {c.status}
+                        </span>
+                        {submissionCounts[c.id] > 0 && (
+                          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-xs bg-blue-100 text-blue-700 font-medium" title="Times submitted">
+                            <History className="w-3 h-3" />{submissionCounts[c.id]}
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="py-3 px-4">
                       <div className="flex items-center justify-end gap-1" onClick={e => e.stopPropagation()}>
@@ -254,12 +269,15 @@ export default function SavedClaims() {
                           )}
 
                           {/* Actions */}
-                          <div className="col-span-1 md:col-span-2 flex gap-2 pt-2 border-t border-border">
+                          <div className="col-span-1 md:col-span-2 flex flex-wrap gap-2 pt-2 border-t border-border">
                             <Button size="sm" onClick={() => handlePrint(c)} className="gap-1.5">
-                              <Printer className="w-3.5 h-3.5" /> Print / View PDF
+                              <Printer className="w-3.5 h-3.5" /> Print / View Form
                             </Button>
                             <Button size="sm" variant="outline" onClick={() => navigate(`/claim-builder?duplicate=${c.id}`)} className="gap-1.5">
                               Edit / Duplicate
+                            </Button>
+                            <Button size="sm" variant="outline" onClick={() => navigate(`/print-claim?id=${c.id}`)} className="gap-1.5 text-blue-700 border-blue-300 hover:bg-blue-50">
+                              <History className="w-3.5 h-3.5" /> Submission History ({submissionCounts[c.id] || 0})
                             </Button>
                             <Button size="sm" variant="outline" onClick={() => setExpandedClaim(null)} className="ml-auto gap-1.5">
                               <X className="w-3.5 h-3.5" /> Close

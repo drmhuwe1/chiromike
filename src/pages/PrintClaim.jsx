@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { Printer, ArrowLeft, Send, CheckCircle } from "lucide-react";
+import { Printer, ArrowLeft, Send, CheckCircle, History, RefreshCw } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -11,31 +11,64 @@ export default function PrintClaim() {
   const [claim, setClaim] = useState(null);
   const [office, setOffice] = useState(null);
   const [patient, setPatient] = useState(null);
+  const [submissions, setSubmissions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  const [resubmitNotes, setResubmitNotes] = useState("");
+  const [resubmitMethod, setResubmitMethod] = useState("Print");
   const { toast } = useToast();
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
     const load = async () => {
-      const claims = await base44.entities.Claim.filter({ id: claimId });
+      const [me, claims, settings] = await Promise.all([
+        base44.auth.me(),
+        base44.entities.Claim.filter({ id: claimId }),
+        base44.entities.OfficeSettings.list("-updated_date", 1)
+      ]);
+      setUser(me);
       const c = claims[0];
       setClaim(c);
       if (c) {
-        const patients = await base44.entities.Patient.filter({ id: c.patient_id });
+        const [patients, subs] = await Promise.all([
+          base44.entities.Patient.filter({ id: c.patient_id }),
+          base44.entities.ClaimSubmission.filter({ claim_id: claimId }, "-submitted_at", 50)
+        ]);
         setPatient(patients[0] || null);
+        setSubmissions(subs);
       }
-      const settings = await base44.entities.OfficeSettings.list("-updated_date", 1);
       setOffice(settings[0] || null);
       setLoading(false);
     };
     if (claimId) load();
   }, [claimId]);
 
+  const logSubmission = async (method, notes, resubOf) => {
+    const sub = await base44.entities.ClaimSubmission.create({
+      claim_id: claim.id,
+      patient_id: claim.patient_id,
+      patient_name: claim.patient_name,
+      date_of_service: claim.date_of_service,
+      insurance_company: claim.insurance_company,
+      total_charge: claim.total_charge,
+      method,
+      submitted_at: new Date().toISOString(),
+      submitted_by: user?.full_name || user?.email || "Staff",
+      submission_notes: notes || "",
+      status: "Submitted",
+      resubmission_of: resubOf || ""
+    });
+    setSubmissions(prev => [sub, ...prev]);
+    return sub;
+  };
+
   const handlePrint = async () => {
     if (claim?.status === "Draft" || claim?.status === "Saved") {
       await base44.entities.Claim.update(claim.id, { status: "Printed" });
       setClaim(prev => ({ ...prev, status: "Printed" }));
     }
+    await logSubmission("Print", "", "");
     window.print();
   };
 
@@ -43,7 +76,9 @@ export default function PrintClaim() {
     setSubmitting(true);
     await base44.entities.Claim.update(claim.id, { status: "Submitted" });
     setClaim(prev => ({ ...prev, status: "Submitted" }));
-    toast({ title: "Claim marked as Submitted" });
+    await logSubmission(resubmitMethod, resubmitNotes, submissions[0]?.id || "");
+    setResubmitNotes("");
+    toast({ title: "Claim marked as Submitted — submission logged" });
     setSubmitting(false);
   };
 
@@ -74,25 +109,100 @@ export default function PrintClaim() {
   return (
     <div>
       {/* Toolbar - hidden on print */}
-      <div className="flex flex-wrap items-center gap-2 mb-4 no-print">
-        <Link to="/saved-claims">
-          <Button variant="outline" size="sm"><ArrowLeft className="w-4 h-4 mr-1" /> Back</Button>
-        </Link>
-        <div className="ml-auto flex gap-2">
-          {claim.status !== "Submitted" && claim.status !== "Paid" && (
-            <Button variant="outline" onClick={handleMarkSubmitted} disabled={submitting} className="gap-1.5 text-green-700 border-green-400 hover:bg-green-50">
-              <Send className="w-4 h-4" /> Mark as Submitted
+      <div className="no-print mb-4 space-y-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <Link to="/saved-claims">
+            <Button variant="outline" size="sm"><ArrowLeft className="w-4 h-4 mr-1" /> Back</Button>
+          </Link>
+          <Button variant="outline" size="sm" onClick={() => setShowHistory(!showHistory)} className="gap-1.5">
+            <History className="w-4 h-4" /> Submission History ({submissions.length})
+          </Button>
+          <div className="ml-auto flex gap-2 flex-wrap">
+            {(claim.status === "Submitted" || claim.status === "Paid") && (
+              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 border border-green-300 rounded-lg text-green-700 text-sm font-medium">
+                <CheckCircle className="w-4 h-4" /> {claim.status}
+              </div>
+            )}
+            <Button onClick={handlePrint} className="gap-1.5">
+              <Printer className="w-4 h-4" /> Print / Save PDF
             </Button>
-          )}
-          {(claim.status === "Submitted" || claim.status === "Paid") && (
-            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 border border-green-300 rounded-lg text-green-700 text-sm font-medium">
-              <CheckCircle className="w-4 h-4" /> {claim.status}
-            </div>
-          )}
-          <Button onClick={handlePrint} className="gap-1.5">
-            <Printer className="w-4 h-4" /> Print / Save PDF
+          </div>
+        </div>
+
+        {/* Submit / Resubmit controls */}
+        <div className="flex flex-wrap items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-xl">
+          <select
+            value={resubmitMethod}
+            onChange={e => setResubmitMethod(e.target.value)}
+            className="border border-blue-300 rounded px-2 py-1.5 text-sm bg-white"
+          >
+            {["Print", "Fax", "EDI", "Email", "Portal", "Mail"].map(m => (
+              <option key={m} value={m}>{m}</option>
+            ))}
+          </select>
+          <input
+            type="text"
+            placeholder="Optional notes (auth #, rep name, confirmation #...)"
+            value={resubmitNotes}
+            onChange={e => setResubmitNotes(e.target.value)}
+            className="flex-1 min-w-[200px] border border-blue-300 rounded px-3 py-1.5 text-sm bg-white"
+          />
+          <Button onClick={handleMarkSubmitted} disabled={submitting} className="gap-1.5 bg-green-600 hover:bg-green-700 text-white">
+            {submissions.length > 0
+              ? <><RefreshCw className="w-4 h-4" /> Log Resubmission</>
+              : <><Send className="w-4 h-4" /> Mark as Submitted</>}
           </Button>
         </div>
+
+        {/* Submission history panel */}
+        {showHistory && (
+          <div className="border border-border rounded-xl overflow-hidden bg-card">
+            <div className="px-4 py-2 bg-muted/50 border-b text-sm font-semibold">Submission History</div>
+            {submissions.length === 0 ? (
+              <p className="px-4 py-3 text-sm text-muted-foreground">No submissions logged yet.</p>
+            ) : (
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="border-b bg-muted/30">
+                    <th className="text-left py-2 px-4 font-medium">#</th>
+                    <th className="text-left py-2 px-4 font-medium">Date/Time</th>
+                    <th className="text-left py-2 px-4 font-medium">Method</th>
+                    <th className="text-left py-2 px-4 font-medium">By</th>
+                    <th className="text-left py-2 px-4 font-medium">Status</th>
+                    <th className="text-left py-2 px-4 font-medium">Notes</th>
+                    <th className="text-right py-2 px-4 font-medium">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {submissions.map((s, i) => (
+                    <tr key={s.id} className="border-b last:border-0 hover:bg-muted/20">
+                      <td className="py-2 px-4 text-muted-foreground">{submissions.length - i}</td>
+                      <td className="py-2 px-4 font-mono">{s.submitted_at ? new Date(s.submitted_at).toLocaleString() : "—"}</td>
+                      <td className="py-2 px-4">
+                        <span className="px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-medium">{s.method}</span>
+                      </td>
+                      <td className="py-2 px-4 text-muted-foreground">{s.submitted_by}</td>
+                      <td className="py-2 px-4">
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                          s.status === "Paid" ? "bg-emerald-100 text-emerald-700" :
+                          s.status === "Denied" ? "bg-red-100 text-red-700" :
+                          "bg-purple-100 text-purple-700"
+                        }`}>{s.status}</span>
+                      </td>
+                      <td className="py-2 px-4 text-muted-foreground max-w-[200px] truncate">{s.submission_notes || "—"}</td>
+                      <td className="py-2 px-4 text-right">
+                        <button
+                          onClick={() => window.print()}
+                          className="text-primary hover:underline text-xs"
+                        >Reprint</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        )}
       </div>
 
       {/* CMS-1500 Form */}
