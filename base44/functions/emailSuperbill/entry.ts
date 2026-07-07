@@ -68,17 +68,20 @@ Deno.serve(async (req) => {
       }
     }
 
-    const practiceName = office.practice_name || 'Chiropractic Office';
-    const dos = claim.date_of_service || '';
+    // HTML-escape all user/clinic-supplied strings before interpolating into email body
+    const esc = (s) => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+
+    const practiceName = esc(office.practice_name || 'Chiropractic Office');
+    const dos = esc(claim.date_of_service || '');
     const total = (claim.total_charge || 0).toFixed(2);
-    const patientName = claim.patient_name || `${patient.first_name} ${patient.last_name}`;
+    const patientName = esc(claim.patient_name || `${patient.first_name} ${patient.last_name}`);
 
     // Build service lines HTML
     const serviceLines = (claim.service_lines || []).map(line => `
       <tr style="border-bottom:1px solid #e5e7eb;">
-        <td style="padding:8px 6px;font-family:monospace;font-size:13px;">${line.code || ''}</td>
-        <td style="padding:8px 6px;font-size:13px;">${line.description || ''}</td>
-        <td style="padding:8px 6px;font-size:13px;text-align:center;">${line.modifier || ''}</td>
+        <td style="padding:8px 6px;font-family:monospace;font-size:13px;">${esc(line.code)}</td>
+        <td style="padding:8px 6px;font-size:13px;">${esc(line.description)}</td>
+        <td style="padding:8px 6px;font-size:13px;text-align:center;">${esc(line.modifier)}</td>
         <td style="padding:8px 6px;font-size:13px;text-align:center;">${line.units || 1}</td>
         <td style="padding:8px 6px;font-size:13px;text-align:right;">$${((line.charge || 0) * (line.units || 1)).toFixed(2)}</td>
       </tr>
@@ -88,8 +91,8 @@ Deno.serve(async (req) => {
     const diagnoses = (claim.diagnoses || []).map((dx, i) => `
       <tr>
         <td style="padding:4px 6px;font-size:13px;">${i + 1}.</td>
-        <td style="padding:4px 6px;font-family:monospace;font-size:13px;">${dx.code || ''}</td>
-        <td style="padding:4px 6px;font-size:13px;">${dx.description || ''}</td>
+        <td style="padding:4px 6px;font-family:monospace;font-size:13px;">${esc(dx.code)}</td>
+        <td style="padding:4px 6px;font-size:13px;">${esc(dx.description)}</td>
       </tr>
     `).join('');
 
@@ -101,10 +104,10 @@ Deno.serve(async (req) => {
 
   <div style="text-align:center;border-bottom:2px solid #1e40af;padding-bottom:16px;margin-bottom:20px;">
     <h1 style="margin:0;font-size:22px;color:#1e40af;">${practiceName}</h1>
-    ${office.billing_address_line1 ? `<p style="margin:4px 0;font-size:13px;color:#64748b;">${office.billing_address_line1}${office.billing_city ? `, ${office.billing_city}` : ''}${office.billing_state ? `, ${office.billing_state}` : ''} ${office.billing_zip || ''}</p>` : ''}
-    ${office.phone ? `<p style="margin:4px 0;font-size:13px;color:#64748b;">Phone: ${office.phone}</p>` : ''}
-    ${office.rendering_npi ? `<p style="margin:4px 0;font-size:13px;color:#64748b;">NPI: ${office.rendering_npi}</p>` : ''}
-    ${office.ein_tax_id ? `<p style="margin:4px 0;font-size:13px;color:#64748b;">Tax ID: ${office.ein_tax_id}</p>` : ''}
+    ${office.billing_address_line1 ? `<p style="margin:4px 0;font-size:13px;color:#64748b;">${esc(office.billing_address_line1)}${office.billing_city ? `, ${esc(office.billing_city)}` : ''}${office.billing_state ? `, ${esc(office.billing_state)}` : ''} ${esc(office.billing_zip)}</p>` : ''}
+    ${office.phone ? `<p style="margin:4px 0;font-size:13px;color:#64748b;">Phone: ${esc(office.phone)}</p>` : ''}
+    ${office.rendering_npi ? `<p style="margin:4px 0;font-size:13px;color:#64748b;">NPI: ${esc(office.rendering_npi)}</p>` : ''}
+    ${office.ein_tax_id ? `<p style="margin:4px 0;font-size:13px;color:#64748b;">Tax ID: ${esc(office.ein_tax_id)}</p>` : ''}
   </div>
 
   <h2 style="text-align:center;font-size:18px;font-weight:bold;letter-spacing:1px;margin-bottom:20px;">SUPERBILL / RECEIPT</h2>
@@ -115,11 +118,11 @@ Deno.serve(async (req) => {
       <td style="padding:4px 0;text-align:right;"><strong>Date of Service:</strong> ${dos}</td>
     </tr>
     <tr>
-      <td style="padding:4px 0;"><strong>DOB:</strong> ${patient.dob || '—'}</td>
-      <td style="padding:4px 0;text-align:right;"><strong>Visit Type:</strong> ${claim.visit_type || '—'}</td>
+      <td style="padding:4px 0;"><strong>DOB:</strong> ${esc(patient.dob) || '—'}</td>
+      <td style="padding:4px 0;text-align:right;"><strong>Visit Type:</strong> ${esc(claim.visit_type) || '—'}</td>
     </tr>
-    ${claim.insurance_company ? `<tr><td style="padding:4px 0;"><strong>Insurance:</strong> ${claim.insurance_company}</td><td style="padding:4px 0;text-align:right;"><strong>Member ID:</strong> ${claim.insurance_id || '—'}</td></tr>` : ''}
-    ${claim.insurance_group ? `<tr><td colspan="2" style="padding:4px 0;"><strong>Group #:</strong> ${claim.insurance_group}</td></tr>` : ''}
+    ${claim.insurance_company ? `<tr><td style="padding:4px 0;"><strong>Insurance:</strong> ${esc(claim.insurance_company)}</td><td style="padding:4px 0;text-align:right;"><strong>Member ID:</strong> ${esc(claim.insurance_id) || '—'}</td></tr>` : ''}
+    ${claim.insurance_group ? `<tr><td colspan="2" style="padding:4px 0;"><strong>Group #:</strong> ${esc(claim.insurance_group)}</td></tr>` : ''}
   </table>
 
   ${diagnoses ? `

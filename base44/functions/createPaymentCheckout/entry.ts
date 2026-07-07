@@ -55,8 +55,8 @@ Deno.serve(async (req) => {
           quantity: 1,
         },
       ],
-      success_url: `${getOrigin(req)}/payment-success?session_id={CHECKOUT_SESSION_ID}&claim_id=${claim_id}&patient_id=${patient_id}&dos=${date_of_service}`,
-      cancel_url: `${getOrigin(req)}/payment-cancelled`,
+      success_url: `${getOrigin()}/payment-success?session_id={CHECKOUT_SESSION_ID}&claim_id=${claim_id}&patient_id=${patient_id}&dos=${date_of_service}`,
+      cancel_url: `${getOrigin()}/payment-cancelled`,
       metadata: {
         base44_app_id: Deno.env.get('BASE44_APP_ID'),
         claim_id,
@@ -75,8 +75,7 @@ Deno.serve(async (req) => {
   }
 });
 
-function getOrigin(req) {
-  const host = req.headers.get('host') || 'localhost:5173';
-  const proto = req.headers.get('x-forwarded-proto') || 'http';
-  return `${proto}://${host}`;
+function getOrigin() {
+  // Use server-side env var — never trust client-supplied Host/X-Forwarded-Proto headers for redirects
+  return Deno.env.get('APP_URL') || 'https://app.base44.com';
 }
