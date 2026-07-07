@@ -21,6 +21,17 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Payment not completed' }, { status: 400 });
     }
 
+    // Verify the session metadata matches the supplied claim/patient IDs
+    // to prevent session ID reuse across different claims (payment bypass)
+    if (session.metadata?.claim_id && session.metadata.claim_id !== claim_id) {
+      console.error(`Metadata mismatch: session claim_id=${session.metadata.claim_id} vs request claim_id=${claim_id}`);
+      return Response.json({ error: 'Session does not match the supplied claim' }, { status: 403 });
+    }
+    if (session.metadata?.patient_id && session.metadata.patient_id !== patient_id) {
+      console.error(`Metadata mismatch: session patient_id=${session.metadata.patient_id} vs request patient_id=${patient_id}`);
+      return Response.json({ error: 'Session does not match the supplied patient' }, { status: 403 });
+    }
+
     // Get patient and claim details
     const claims = await base44.asServiceRole.entities.Claim.filter({ id: claim_id });
     const patients = await base44.asServiceRole.entities.Patient.filter({ id: patient_id });

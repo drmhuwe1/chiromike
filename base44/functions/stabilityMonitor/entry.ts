@@ -9,19 +9,15 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
-    // Allow scheduled/manual invocations (no user auth required for scheduled)
-    let triggeredBy = "scheduled";
-    try {
-      const body = await req.json().catch(() => ({}));
-      triggeredBy = body.triggered_by || "scheduled";
-      // If manual, require admin
-      if (triggeredBy === "manual") {
-        const user = await base44.auth.me();
-        if (!user || user.role !== "admin") {
-          return Response.json({ error: "Admin access required" }, { status: 403 });
-        }
-      }
-    } catch (_) { /* scheduled call, no body */ }
+    // Always require admin auth — prevents unauthenticated callers from
+    // triggering heavy queries or reading diagnostic data by omitting triggered_by.
+    const user = await base44.auth.me();
+    if (!user || user.role !== "admin") {
+      return Response.json({ error: "Admin access required" }, { status: 403 });
+    }
+
+    const body = await req.json().catch(() => ({}));
+    const triggeredBy = body.triggered_by || "scheduled";
 
     const checks = [];
     const runDate = new Date().toISOString();
