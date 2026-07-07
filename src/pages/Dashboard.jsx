@@ -1,7 +1,9 @@
 import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { base44 } from "@/api/base44Client";
 import { 
   FileText, Users, BookOpen, 
-  Settings, BarChart3, Zap, Calendar, Wallet
+  Settings, BarChart3, Zap, Calendar, Wallet, Bell, X, ChevronRight
 } from "lucide-react";
 
 const quickActions = [
@@ -18,6 +20,68 @@ const quickActions = [
   { label: "Office Settings", icon: Settings, path: "/settings", color: "bg-gray-700" },
 ];
 
+// Track which intake patient IDs have been dismissed this session
+const DISMISSED_KEY = "chiromike_dismissed_intakes";
+
+function IntakeBanner() {
+  const [newPatients, setNewPatients] = useState([]);
+  const [dismissed, setDismissed] = useState(() => {
+    try { return JSON.parse(sessionStorage.getItem(DISMISSED_KEY) || "[]"); } catch { return []; }
+  });
+
+  useEffect(() => {
+    // Check for intake_form patients created in the last 7 days
+    const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    base44.entities.Patient.list("-created_date", 50).then(patients => {
+      const recent = patients.filter(p =>
+        p.intake_source === "intake_form" &&
+        p.created_date > since &&
+        !dismissed.includes(p.id)
+      );
+      setNewPatients(recent);
+    }).catch(() => {});
+  }, []);
+
+  const dismiss = (id) => {
+    const next = [...dismissed, id];
+    setDismissed(next);
+    sessionStorage.setItem(DISMISSED_KEY, JSON.stringify(next));
+    setNewPatients(prev => prev.filter(p => p.id !== id));
+  };
+
+  if (newPatients.length === 0) return null;
+
+  return (
+    <div className="space-y-2 mb-6">
+      {newPatients.map(patient => (
+        <div key={patient.id} className="flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-xl px-4 py-3">
+          <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+            <Bell className="w-4 h-4 text-white" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-blue-900">
+              New intake: {patient.first_name} {patient.last_name}
+            </p>
+            <p className="text-xs text-blue-700">
+              Submitted {new Date(patient.created_date).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+              {patient.chief_complaint ? ` · ${patient.chief_complaint.slice(0, 60)}${patient.chief_complaint.length > 60 ? "…" : ""}` : ""}
+            </p>
+          </div>
+          <Link
+            to="/patients"
+            className="flex items-center gap-1 text-xs font-semibold text-blue-700 hover:text-blue-900 whitespace-nowrap"
+          >
+            View <ChevronRight className="w-3.5 h-3.5" />
+          </Link>
+          <button onClick={() => dismiss(patient.id)} className="text-blue-400 hover:text-blue-700 ml-1" title="Dismiss">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function Dashboard() {
   return (
     <div>
@@ -28,6 +92,8 @@ export default function Dashboard() {
           <p className="text-muted-foreground mt-1">Fast chiropractic claim entry for Huwe Chiropractic</p>
         </div>
       </div>
+
+      <IntakeBanner />
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
         {quickActions.map((action) => {
