@@ -336,6 +336,7 @@ export default function ClaimBuilder() {
     if (!claim.patient_id) { toast({ title: 'Select a patient', variant: 'destructive' }); return; }
     setEmailing(true);
     const saved = await base44.entities.Claim.create({ ...claim, total_charge: totalCharge, status: 'Saved' });
+    logAudit("Created claim (email superbill)", "Claim", saved.id, claim.patient_name);
     try {
       const res = await base44.functions.invoke('emailSuperbill', { claim_id: saved.id, include_hcfa: includeHcfa });
       toast({ title: `Superbill emailed to ${res.data.sent_to}` });
@@ -350,6 +351,7 @@ export default function ClaimBuilder() {
     if (!claim.patient_id) { toast({ title: "Select a patient", variant: "destructive" }); return; }
     setLoading(true);
     const saved = await base44.entities.Claim.create({ ...claim, total_charge: totalCharge, status: "Saved" });
+    logAudit("Created claim (save and print)", "Claim", saved.id, claim.patient_name);
     setLoading(false);
     navigate(isCash ? `/print-receipt?id=${saved.id}` : `/print-claim?id=${saved.id}`);
   };

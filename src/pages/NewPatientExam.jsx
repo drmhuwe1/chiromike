@@ -49,7 +49,7 @@ export default function NewPatientExam() {
         const match = patientData.find(p => p.id === presetId);
         if (match) selectPatient(match);
       }
-      logAudit("Viewed New Patient Exam page", "NewPatientExam");
+      logAudit("Viewed New Patient Exam", "NewPatientExam");
     });
   }, []);
 
