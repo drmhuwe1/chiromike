@@ -24,7 +24,10 @@ Deno.serve(async (req) => {
       return Response.json({ skipped: true, reason: 'No report email configured' });
     }
 
-    const patientName = `${patient.first_name || ''} ${patient.last_name || ''}`.trim() || 'Unknown Patient';
+    // HTML-escape user-supplied strings before interpolating into email body
+    const esc = (str) => String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+
+    const patientName = esc(`${patient.first_name || ''} ${patient.last_name || ''}`.trim() || 'Unknown Patient');
     const submittedAt = new Date().toLocaleString('en-US', { timeZone: 'America/New_York' });
 
     const emailBody = `
@@ -37,11 +40,11 @@ Deno.serve(async (req) => {
     
     <table style="width:100%;border-collapse:collapse;font-size:14px">
       <tr><td style="padding:6px 0;color:#6b7280;width:140px">Patient Name</td><td style="padding:6px 0;font-weight:600">${patientName}</td></tr>
-      <tr><td style="padding:6px 0;color:#6b7280">Date of Birth</td><td style="padding:6px 0">${patient.dob || '—'}</td></tr>
-      <tr><td style="padding:6px 0;color:#6b7280">Phone</td><td style="padding:6px 0">${patient.phone || '—'}</td></tr>
-      <tr><td style="padding:6px 0;color:#6b7280">Email</td><td style="padding:6px 0">${patient.email || '—'}</td></tr>
-      <tr><td style="padding:6px 0;color:#6b7280">Chief Complaint</td><td style="padding:6px 0">${patient.chief_complaint || '—'}</td></tr>
-      <tr><td style="padding:6px 0;color:#6b7280">Insurance</td><td style="padding:6px 0">${patient.insurance_company || 'Not provided'}</td></tr>
+      <tr><td style="padding:6px 0;color:#6b7280">Date of Birth</td><td style="padding:6px 0">${esc(patient.dob) || '—'}</td></tr>
+      <tr><td style="padding:6px 0;color:#6b7280">Phone</td><td style="padding:6px 0">${esc(patient.phone) || '—'}</td></tr>
+      <tr><td style="padding:6px 0;color:#6b7280">Email</td><td style="padding:6px 0">${esc(patient.email) || '—'}</td></tr>
+      <tr><td style="padding:6px 0;color:#6b7280">Chief Complaint</td><td style="padding:6px 0">${esc(patient.chief_complaint) || '—'}</td></tr>
+      <tr><td style="padding:6px 0;color:#6b7280">Insurance</td><td style="padding:6px 0">${esc(patient.insurance_company) || 'Not provided'}</td></tr>
       <tr><td style="padding:6px 0;color:#6b7280">Submitted At</td><td style="padding:6px 0">${submittedAt} ET</td></tr>
     </table>
 
