@@ -177,8 +177,7 @@ export default function AutomatedCrawl({ baseline, onSaveBaseline, onCrawlComple
                 <th className="text-center py-2 px-3 font-medium">Status</th>
                 <th className="text-center py-2 px-3 font-medium">Errors</th>
                 <th className="text-center py-2 px-3 font-medium">Failed Calls</th>
-                <th className="text-center py-2 px-3 font-medium">Links</th>
-                <th className="text-center py-2 px-3 font-medium">Buttons</th>
+                <th className="text-center py-2 px-3 font-medium">HTTP</th>
                 <th className="text-right py-2 px-4 font-medium">Fix</th>
               </tr>
             </thead>
@@ -238,8 +237,9 @@ function RouteRow({ r, st, hasIssues, routeFixPrompt }) {
         <td className={`py-2 px-3 text-center font-semibold ${r.failedNetworkCalls.length > 0 ? "text-amber-600" : "text-muted-foreground"}`}>
           {r.failedNetworkCalls.length || "—"}
         </td>
-        <td className="py-2 px-3 text-center text-muted-foreground">{r.linkCount || "—"}</td>
-        <td className="py-2 px-3 text-center text-muted-foreground">{r.buttonCount || "—"}</td>
+        <td className={`py-2 px-3 text-center font-mono text-xs ${r.status >= 500 ? "text-red-600 font-semibold" : r.status === 404 ? "text-red-500" : "text-muted-foreground"}`}>
+          {r.timedOut ? "—" : (r.status || "—")}
+        </td>
         <td className="py-2 px-4 text-right">
           {routeFixPrompt && (
             <button
@@ -253,7 +253,7 @@ function RouteRow({ r, st, hasIssues, routeFixPrompt }) {
       </tr>
       {expanded && hasIssues && (
         <tr className="border-b bg-amber-50/40">
-          <td colSpan={7} className="px-6 py-3 space-y-2">
+          <td colSpan={6} className="px-6 py-3 space-y-2">
             {r.broken && <p className="text-xs text-red-700 font-semibold">⛔ Broken route — not-found content detected (HTTP {r.status || "?"})</p>}
             {r.timedOut && <p className="text-xs text-amber-700 font-semibold">⏱ Timed out — route did not respond within 6 seconds. May indicate a loading error or network issue.</p>}
             {r.errors.map((e, i) => (
