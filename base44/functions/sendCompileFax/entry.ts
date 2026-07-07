@@ -6,6 +6,8 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
+    if (user.role !== 'admin') return Response.json({ error: 'Forbidden' }, { status: 403 });
+
     const { fax_number, patient_name, documents, cover_note } = await req.json();
 
     if (!fax_number || !documents || documents.length === 0) {

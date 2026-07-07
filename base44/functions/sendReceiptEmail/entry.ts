@@ -9,10 +9,12 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { claim_id, patient_email } = await req.json();
+    if (user.role !== 'admin') return Response.json({ error: 'Forbidden' }, { status: 403 });
 
-    if (!claim_id || !patient_email) {
-      return Response.json({ error: 'Missing claim_id or patient_email' }, { status: 400 });
+    const { claim_id } = await req.json();
+
+    if (!claim_id) {
+      return Response.json({ error: 'Missing claim_id' }, { status: 400 });
     }
 
     // Fetch claim and patient data
@@ -25,6 +27,12 @@ Deno.serve(async (req) => {
 
     const patients = await base44.asServiceRole.entities.Patient.filter({ id: claim.patient_id });
     const patient = patients[0];
+
+    // Always use the email on record — never trust the caller-supplied address
+    const patient_email = patient?.email;
+    if (!patient_email) {
+      return Response.json({ error: 'No email address on file for this patient' }, { status: 400 });
+    }
 
     const settings = await base44.asServiceRole.entities.OfficeSettings.list('-updated_date', 1);
     const office = settings[0];
