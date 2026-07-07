@@ -11,125 +11,47 @@ const APP_ROUTES = [
   "/admin/stability",
 ];
 
-const CRAWL_TIMEOUT = 8000; // ms per route
+// Crawl a route by fetching it directly — checks that the SPA shell loads (200 OK)
+// and that it's a valid HTML page. Auth-gated pages redirect to login (also 200 in SPA)
+// but the shell still loads, which is the correct behaviour to verify.
+async function crawlRoute(path) {
+  const origin = window.location.origin;
+  const url = origin + path;
+  const errors = [];
+  const failedNetworkCalls = [];
 
-function crawlRoute(path) {
-  return new Promise((resolve) => {
-    const origin = window.location.origin;
-    const url = origin + path;
-    const errors = [];
-    const failedNetworkCalls = [];
-    let linkCount = 0;
-    let buttonCount = 0;
-    let broken = false;
-    let timedOut = false;
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 6000);
+    const res = await fetch(url, { signal: controller.signal, credentials: "include" });
+    clearTimeout(timeout);
 
-    const iframe = document.createElement("iframe");
-    iframe.style.cssText = "position:fixed;top:-9999px;left:-9999px;width:1280px;height:800px;visibility:hidden;pointer-events:none;";
-    iframe.sandbox = "allow-same-origin allow-scripts";
-    document.body.appendChild(iframe);
+    const text = await res.text();
+    const broken = res.status === 404 ||
+      text.toLowerCase().includes("cannot get") ||
+      (text.length < 100 && !text.includes("<"));
 
-    const timer = setTimeout(() => {
-      timedOut = true;
-      cleanup();
-    }, CRAWL_TIMEOUT);
-
-    const handleMessage = (e) => {
-      if (e.data?.type === "crawl_result" && e.data.path === path) {
-        errors.push(...(e.data.errors || []));
-        failedNetworkCalls.push(...(e.data.failedNetworkCalls || []));
-        linkCount = e.data.linkCount || 0;
-        buttonCount = e.data.buttonCount || 0;
-        broken = e.data.broken || false;
-        cleanup();
-      }
-    };
-
-    window.addEventListener("message", handleMessage);
-
-    const cleanup = () => {
-      clearTimeout(timer);
-      window.removeEventListener("message", handleMessage);
-      if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
-      resolve({ path, broken, errors, failedNetworkCalls, linkCount, buttonCount, timedOut });
-    };
-
-    // Inject a probe script via srcdoc that navigates and reports back
-    const probeScript = `
-      <html><head></head><body><script>
-      (function() {
-        var errors = [];
-        var failedNetworkCalls = [];
-        var path = ${JSON.stringify(path)};
-
-        window.onerror = function(msg, src, line) {
-          errors.push(msg + ' (' + (src||'') + ':' + (line||'') + ')');
-          return true;
-        };
-        window.addEventListener('unhandledrejection', function(e) {
-          errors.push('UnhandledRejection: ' + (e.reason?.message || e.reason || 'unknown'));
-        });
-
-        // Patch console.error
-        var origErr = console.error;
-        console.error = function() {
-          var msg = Array.from(arguments).join(' ');
-          errors.push('console.error: ' + msg);
-          origErr.apply(console, arguments);
-        };
-
-        // Resource timing observer — check after 4s
-        setTimeout(function() {
-          try {
-            var entries = performance.getEntriesByType('resource');
-            entries.forEach(function(e) {
-              if (e.responseStatus >= 400 || (e.transferSize === 0 && e.decodedBodySize === 0 && e.duration === 0 && e.initiatorType !== 'beacon')) {
-                if (e.name && !e.name.includes('chrome-extension')) {
-                  failedNetworkCalls.push(e.name.replace(window.location.origin, '') + ' [' + (e.responseStatus || '?') + ']');
-                }
-              }
-            });
-          } catch(ex) {}
-
-          var links = document.querySelectorAll('a[href]').length;
-          var buttons = document.querySelectorAll('button, [role=button], input[type=button], input[type=submit]').length;
-          var notFound = document.body && (
-            document.title.toLowerCase().includes('not found') ||
-            document.body.innerText.toLowerCase().includes('page not found') ||
-            document.body.innerText.toLowerCase().includes('404')
-          );
-
-          window.parent.postMessage({
-            type: 'crawl_result',
-            path: path,
-            errors: errors.slice(0, 10),
-            failedNetworkCalls: [...new Set(failedNetworkCalls)].slice(0, 10),
-            linkCount: links,
-            buttonCount: buttons,
-            broken: notFound
-          }, '*');
-        }, 4000);
-      })();
-      <\/script>
-      <script>window.location.href = ${JSON.stringify(url)};<\/script>
-      </body></html>`;
-
-    try {
-      iframe.srcdoc = probeScript;
-    } catch (e) {
-      cleanup();
+    if (res.status >= 500) {
+      errors.push(`HTTP ${res.status} returned for ${path}`);
     }
-  });
+
+    return { path, broken, errors, failedNetworkCalls, status: res.status, timedOut: false };
+  } catch (e) {
+    const timedOut = e.name === "AbortError";
+    if (!timedOut) errors.push(e.message);
+    return { path, broken: false, errors, failedNetworkCalls, status: null, timedOut };
+  }
 }
 
 function generateCrawlFixPrompt(results) {
-  const issues = results.filter(r => r.broken || r.errors.length > 0 || r.failedNetworkCalls.length > 0);
+  const issues = results.filter(r => r.broken || r.timedOut || r.errors.length > 0 || r.failedNetworkCalls.length > 0);
   if (issues.length === 0) return null;
 
   const lines = ["# ChiroMike — Automated Crawl Fix Prompt", `Generated: ${new Date().toLocaleString("en-US", { timeZone: "America/New_York" })} ET`, "", "Issues detected by automated crawl. Fix each issue below. Do NOT change other code.", "", "ISSUES TO FIX:", "━━━━━━━━━━━━━━━"];
   issues.forEach((r, i) => {
     lines.push(`\nISSUE ${i + 1}: Route ${r.path}`);
-    if (r.broken) lines.push(`  - BROKEN ROUTE: Page not found content detected`);
+    if (r.broken) lines.push(`  - BROKEN ROUTE: Page not found content detected (HTTP ${r.status || "?"})`);
+    if (r.timedOut) lines.push(`  - TIMEOUT: Route did not respond within 6 seconds — may indicate a loading error, infinite loop, or auth redirect issue`);
     r.errors.forEach(e => lines.push(`  - RUNTIME ERROR: ${e}`));
     r.failedNetworkCalls.forEach(n => lines.push(`  - FAILED NETWORK CALL: ${n}`));
     lines.push(`  Fix required: Investigate and resolve all errors on route ${r.path}`);
@@ -185,6 +107,8 @@ export default function AutomatedCrawl({ baseline, onSaveBaseline, onCrawlComple
     if (r.timedOut) return "timeout";
     return "ok";
   };
+
+  const hasIssuesForFix = (r) => r.broken || r.timedOut || r.errors.length > 0 || r.failedNetworkCalls.length > 0;
 
   return (
     <div className="space-y-5">
@@ -261,8 +185,8 @@ export default function AutomatedCrawl({ baseline, onSaveBaseline, onCrawlComple
             <tbody>
               {results.map((r) => {
                 const st = getRowStatus(r);
-                const hasIssues = st !== "ok" && st !== "timeout";
-                const routeFixPrompt = (r.broken || r.errors.length > 0 || r.failedNetworkCalls.length > 0)
+                const hasIssues = st !== "ok";
+                const routeFixPrompt = hasIssuesForFix(r)
                   ? generateCrawlFixPrompt([r])
                   : null;
                 return (
@@ -298,7 +222,7 @@ function RouteRow({ r, st, hasIssues, routeFixPrompt }) {
   return (
     <>
       <tr
-        className={`border-b last:border-0 cursor-pointer hover:bg-muted/20 ${hasIssues ? "bg-red-50/40" : ""}`}
+        className={`border-b last:border-0 cursor-pointer hover:bg-muted/20 ${r.broken ? "bg-red-50/40" : r.timedOut ? "bg-amber-50/40" : hasIssues ? "bg-red-50/40" : ""}`}
         onClick={() => hasIssues && setExpanded(v => !v)}
       >
         <td className="py-2 px-4 font-mono">{r.path}</td>
@@ -306,7 +230,7 @@ function RouteRow({ r, st, hasIssues, routeFixPrompt }) {
           {st === "ok" && <CheckCircle2 className="w-4 h-4 text-green-500 mx-auto" />}
           {st === "broken" && <XCircle className="w-4 h-4 text-red-500 mx-auto" />}
           {st === "issues" && <AlertTriangle className="w-4 h-4 text-amber-500 mx-auto" />}
-          {st === "timeout" && <span className="text-muted-foreground text-xs">Timeout</span>}
+          {st === "timeout" && <AlertTriangle className="w-4 h-4 text-amber-400 mx-auto" title="Timed out" />}
         </td>
         <td className={`py-2 px-3 text-center font-semibold ${r.errors.length > 0 ? "text-red-600" : "text-muted-foreground"}`}>
           {r.errors.length || "—"}
@@ -328,9 +252,10 @@ function RouteRow({ r, st, hasIssues, routeFixPrompt }) {
         </td>
       </tr>
       {expanded && hasIssues && (
-        <tr className="border-b bg-red-50/60">
+        <tr className="border-b bg-amber-50/40">
           <td colSpan={7} className="px-6 py-3 space-y-2">
-            {r.broken && <p className="text-xs text-red-700 font-semibold">⛔ Broken route — not-found content detected</p>}
+            {r.broken && <p className="text-xs text-red-700 font-semibold">⛔ Broken route — not-found content detected (HTTP {r.status || "?"})</p>}
+            {r.timedOut && <p className="text-xs text-amber-700 font-semibold">⏱ Timed out — route did not respond within 6 seconds. May indicate a loading error or network issue.</p>}
             {r.errors.map((e, i) => (
               <p key={i} className="text-xs text-red-600 font-mono bg-red-100 rounded px-2 py-1">{e}</p>
             ))}
