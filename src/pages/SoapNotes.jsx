@@ -45,6 +45,7 @@ export default function SoapNotes() {
       return;
     }
     await base44.entities.SoapNote.delete(note.id);
+    logAudit("Deleted SOAP note", "SoapNote", note.id, note.patient_name);
     await refreshNotes();
     setExpanded(null);
     toast({ title: "SOAP note deleted" });
@@ -216,6 +217,7 @@ export default function SoapNotes() {
           field={editingField}
           onSave={async (field, value) => {
             await base44.entities.SoapNote.update(editingNote.id, { [field]: value });
+            logAudit("Updated SOAP note field", "SoapNote", editingNote.id, editingNote.patient_name);
             await refreshNotes();
             toast({ title: "Field updated" });
           }}
