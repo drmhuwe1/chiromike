@@ -24,6 +24,60 @@ const ALL_VALID_ROUTES = new Set([
   "/intake", "/intake-kiosk", "/payment-success", "/payment-cancelled",
 ]);
 
+// Static button audit — key action buttons and their target routes/functions
+function auditStaticButtons() {
+  const buttons = [
+    // Navigation buttons that go to routes
+    { label: "New Claim (→ /claim-builder)", target: "/claim-builder", type: "route" },
+    { label: "Print Claim (→ /print-claim)", target: "/print-claim", type: "route" },
+    { label: "Print Receipt (→ /print-receipt)", target: "/print-receipt", type: "route" },
+    { label: "Patient Account (→ /patient-account)", target: "/patient-account", type: "route" },
+    { label: "New Patient Exam (→ /new-patient-exam)", target: "/new-patient-exam", type: "route" },
+    { label: "Re-Examination (→ /re-examination)", target: "/re-examination", type: "route" },
+    { label: "Office Ally (→ /office-ally)", target: "/office-ally", type: "route" },
+    { label: "Office Ally Settings (→ /office-ally-settings)", target: "/office-ally-settings", type: "route" },
+    { label: "Billing Dashboard (→ /billing)", target: "/billing", type: "route" },
+    { label: "Financial Reports (→ /financial-reports)", target: "/financial-reports", type: "route" },
+    // Backend function buttons
+    { label: "Generate SOAP Note (generateSoapNote)", target: "generateSoapNote", type: "function" },
+    { label: "Generate EDI 837 (generateEDI837)", target: "generateEDI837", type: "function" },
+    { label: "Email Superbill (emailSuperbill)", target: "emailSuperbill", type: "function" },
+    { label: "Send Receipt Email (sendReceiptEmail)", target: "sendReceiptEmail", type: "function" },
+    { label: "Send Fax (sendFax)", target: "sendFax", type: "function" },
+    { label: "Compile Fax (sendCompileFax)", target: "sendCompileFax", type: "function" },
+    { label: "Sync to Calendar (syncAppointmentToCalendar)", target: "syncAppointmentToCalendar", type: "function" },
+    { label: "Polish Notes (polishDictatedNotes)", target: "polishDictatedNotes", type: "function" },
+    { label: "Generate Treatment Plan (generateTreatmentPlans)", target: "generateTreatmentPlans", type: "function" },
+    { label: "Create Payment Checkout (createPaymentCheckout)", target: "createPaymentCheckout", type: "function" },
+    { label: "Create Subscription Checkout (createSubscriptionCheckout)", target: "createSubscriptionCheckout", type: "function" },
+    { label: "Import Patients (importPatients)", target: "importPatients", type: "function" },
+    { label: "Office Ally Export (officeAllyExport)", target: "officeAllyExport", type: "function" },
+    { label: "Office Ally SFTP (officeAllySftp)", target: "officeAllySftp", type: "function" },
+    { label: "Reconcile AR (reconcileAR)", target: "reconcileAR", type: "function" },
+    { label: "Legal Case Summary (generateLegalCaseSummary)", target: "generateLegalCaseSummary", type: "function" },
+    { label: "Notify New Intake (notifyNewIntake)", target: "notifyNewIntake", type: "function" },
+    { label: "Stability Monitor (stabilityMonitor)", target: "stabilityMonitor", type: "function" },
+    { label: "Verify Stripe Payment (verifyStripePayment)", target: "verifyStripePayment", type: "function" },
+  ];
+
+  const KNOWN_FUNCTIONS = new Set([
+    "generateSoapNote","generateEDI837","emailSuperbill","sendReceiptEmail",
+    "sendFax","sendCompileFax","syncAppointmentToCalendar","polishDictatedNotes",
+    "generateTreatmentPlans","createPaymentCheckout","createSubscriptionCheckout",
+    "importPatients","officeAllyExport","officeAllySftp","reconcileAR",
+    "generateLegalCaseSummary","notifyNewIntake","stabilityMonitor","verifyStripePayment",
+    "fetchGoogleCalendarEvents","officeAllySettings","handleStripeWebhook",
+  ]);
+
+  const broken = buttons.filter(b => {
+    if (b.type === "route") return !ALL_VALID_ROUTES.has(b.target);
+    if (b.type === "function") return !KNOWN_FUNCTIONS.has(b.target);
+    return false;
+  });
+
+  return { checked: buttons.length, broken };
+}
+
 // Fetch check — confirms the SPA shell returns 200 and isn't a hard 404/500
 async function crawlRoute(path) {
   const url = window.location.origin + path;
@@ -96,10 +150,11 @@ function auditStaticLinks() {
   return { checked: allLinks.length, broken };
 }
 
-function generateCrawlFixPrompt(results, linkAudit) {
+function generateCrawlFixPrompt(results, linkAudit, btnAudit) {
   const routeIssues = results.filter(r => r.broken || r.timedOut || r.errors.length > 0);
   const hasLinkIssues = linkAudit && linkAudit.broken.length > 0;
-  if (routeIssues.length === 0 && !hasLinkIssues) return null;
+  const hasBtnIssues = btnAudit && btnAudit.broken.length > 0;
+  if (routeIssues.length === 0 && !hasLinkIssues && !hasBtnIssues) return null;
 
   const lines = [
     "# ChiroMike — Automated Crawl Fix Prompt",
@@ -123,6 +178,10 @@ function generateCrawlFixPrompt(results, linkAudit) {
     lines.push(`\nLINK AUDIT ISSUES:`);
     linkAudit.broken.forEach(l => lines.push(`  - Link "${l.label}" points to unregistered route: ${l.href} — add to App.jsx`));
   }
+  if (hasBtnIssues) {
+    lines.push(`\nBUTTON AUDIT ISSUES:`);
+    btnAudit.broken.forEach(b => lines.push(`  - Button "${b.label}" references missing ${b.type === "route" ? "route" : "backend function"}: ${b.target}`));
+  }
 
   lines.push("\nAfter fixes:\n1. Save changes\n2. Re-run crawl from /admin/stability\n3. Verify all routes show green");
   return lines.join("\n");
@@ -132,6 +191,7 @@ export default function AutomatedCrawl({ baseline, onSaveBaseline, onCrawlComple
   const [crawling, setCrawling] = useState(false);
   const [results, setResults] = useState(null);
   const [linkAudit, setLinkAudit] = useState(null);
+  const [btnAudit, setBtnAudit] = useState(null);
   const [progress, setProgress] = useState({ current: 0, total: APP_ROUTES.length, route: "" });
   const [copied, setCopied] = useState(false);
 
@@ -140,8 +200,9 @@ export default function AutomatedCrawl({ baseline, onSaveBaseline, onCrawlComple
     setResults(null);
     setLinkAudit(null);
 
-    // Run static link audit immediately (no async needed)
+    // Run static audits immediately (no async needed)
     const audit = auditStaticLinks();
+    const btnAudit = auditStaticButtons();
 
     const allResults = [];
     for (let i = 0; i < APP_ROUTES.length; i++) {
@@ -153,6 +214,7 @@ export default function AutomatedCrawl({ baseline, onSaveBaseline, onCrawlComple
 
     setResults(allResults);
     setLinkAudit(audit);
+    setBtnAudit(btnAudit);
     setCrawling(false);
     if (onCrawlComplete) onCrawlComplete(allResults);
   };
@@ -164,9 +226,11 @@ export default function AutomatedCrawl({ baseline, onSaveBaseline, onCrawlComple
     timedOut: results.filter(r => r.timedOut).length,
     linksChecked: linkAudit?.checked || 0,
     linksBroken: linkAudit?.broken.length || 0,
+    buttonsChecked: btnAudit?.checked || 0,
+    buttonsBroken: btnAudit?.broken.length || 0,
   } : null;
 
-  const fixPrompt = results ? generateCrawlFixPrompt(results, linkAudit) : null;
+  const fixPrompt = results ? generateCrawlFixPrompt(results, linkAudit, btnAudit) : null;
 
   const copyFix = () => {
     if (!fixPrompt) return;
@@ -220,7 +284,7 @@ export default function AutomatedCrawl({ baseline, onSaveBaseline, onCrawlComple
 
       {/* Summary cards */}
       {summary && (
-        <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
           {[
             { label: "Routes Checked", value: summary.routes, color: "text-foreground" },
             { label: "Broken Routes", value: summary.broken, color: summary.broken > 0 ? "text-red-600" : "text-green-600" },
@@ -228,6 +292,8 @@ export default function AutomatedCrawl({ baseline, onSaveBaseline, onCrawlComple
             { label: "Timed Out", value: summary.timedOut, color: summary.timedOut > 0 ? "text-amber-600" : "text-green-600" },
             { label: "Links Audited", value: summary.linksChecked, color: "text-foreground" },
             { label: "Broken Links", value: summary.linksBroken, color: summary.linksBroken > 0 ? "text-red-600" : "text-green-600" },
+            { label: "Buttons Audited", value: summary.buttonsChecked, color: "text-foreground" },
+            { label: "Bad Buttons", value: summary.buttonsBroken, color: summary.buttonsBroken > 0 ? "text-red-600" : "text-green-600" },
           ].map(s => (
             <div key={s.label} className="bg-card border border-border rounded-xl p-3 text-center">
               <div className={`text-2xl font-bold ${s.color}`}>{s.value}</div>
@@ -251,6 +317,27 @@ export default function AutomatedCrawl({ baseline, onSaveBaseline, onCrawlComple
               {linkAudit.broken.map((l, i) => (
                 <div key={i} className="text-xs font-mono bg-red-50 border border-red-200 rounded px-2 py-1 text-red-700">
                   ⛔ "{l.label}" → <code>{l.href}</code> — not registered in App.jsx
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Button audit results */}
+      {btnAudit && (
+        <div className="bg-card border border-border rounded-xl overflow-hidden">
+          <div className="px-4 py-2 bg-muted/50 border-b text-sm font-semibold flex items-center gap-2">
+            🔘 Button Audit — {btnAudit.checked} buttons checked
+            {btnAudit.broken.length === 0
+              ? <span className="ml-auto text-green-600 font-normal text-xs">All buttons valid ✓</span>
+              : <span className="ml-auto text-red-600 font-normal text-xs">{btnAudit.broken.length} broken</span>}
+          </div>
+          {btnAudit.broken.length > 0 && (
+            <div className="p-4 space-y-1.5">
+              {btnAudit.broken.map((b, i) => (
+                <div key={i} className="text-xs font-mono bg-red-50 border border-red-200 rounded px-2 py-1 text-red-700">
+                  ⛔ "{b.label}" — missing {b.type === "route" ? "route" : "backend function"}: <code>{b.target}</code>
                 </div>
               ))}
             </div>
