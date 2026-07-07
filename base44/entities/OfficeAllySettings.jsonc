@@ -1,0 +1,106 @@
+{
+  "name": "OfficeAllySettings",
+  "type": "object",
+  "properties": {
+    "submitter_id": {
+      "type": "string",
+      "title": "Office Ally Submitter ID"
+    },
+    "practice_name": {
+      "type": "string",
+      "title": "Practice Name"
+    },
+    "billing_npi": {
+      "type": "string",
+      "title": "Billing Provider NPI"
+    },
+    "ein_tax_id": {
+      "type": "string",
+      "title": "Billing Provider Tax ID / EIN"
+    },
+    "address_line1": {
+      "type": "string",
+      "title": "Practice Address Line 1"
+    },
+    "address_line2": {
+      "type": "string",
+      "title": "Practice Address Line 2"
+    },
+    "city": {
+      "type": "string",
+      "title": "City"
+    },
+    "state": {
+      "type": "string",
+      "title": "State"
+    },
+    "zip": {
+      "type": "string",
+      "title": "ZIP"
+    },
+    "sftp_host": {
+      "type": "string",
+      "title": "SFTP Host"
+    },
+    "sftp_port": {
+      "type": "string",
+      "title": "SFTP Port",
+      "default": "22"
+    },
+    "sftp_username": {
+      "type": "string",
+      "title": "SFTP Username"
+    },
+    "sftp_password_encrypted": {
+      "type": "string",
+      "title": "SFTP Password (encrypted)"
+    },
+    "sftp_inbound_folder": {
+      "type": "string",
+      "title": "SFTP Inbound Folder"
+    },
+    "sftp_outbound_folder": {
+      "type": "string",
+      "title": "SFTP Outbound Folder"
+    },
+    "submission_mode": {
+      "type": "string",
+      "title": "Submission Mode",
+      "enum": [
+        "Manual Upload",
+        "Direct SFTP"
+      ],
+      "default": "Manual Upload"
+    },
+    "sftp_configured": {
+      "type": "boolean",
+      "title": "SFTP Credentials Saved",
+      "default": false
+    }
+  },
+  "required": [
+    "practice_name"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

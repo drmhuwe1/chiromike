@@ -1,0 +1,77 @@
+{
+  "name": "OfficeAllyReport",
+  "type": "object",
+  "properties": {
+    "filename": {
+      "type": "string",
+      "title": "Report Filename"
+    },
+    "report_type": {
+      "type": "string",
+      "title": "Report Type",
+      "enum": [
+        "999",
+        "277",
+        "835",
+        "Summary",
+        "Other"
+      ]
+    },
+    "retrieved_at": {
+      "type": "string",
+      "title": "Retrieved At"
+    },
+    "content_preview": {
+      "type": "string",
+      "title": "Content Preview"
+    },
+    "matched_claim_ids": {
+      "type": "array",
+      "title": "Matched Claim IDs",
+      "items": {
+        "type": "string"
+      }
+    },
+    "status_updates": {
+      "type": "array",
+      "title": "Status Updates Applied",
+      "items": {
+        "type": "object"
+      }
+    },
+    "posting_confirmed": {
+      "type": "boolean",
+      "title": "835 Posting Confirmed",
+      "default": false
+    },
+    "raw_content": {
+      "type": "string",
+      "title": "Raw File Content"
+    }
+  },
+  "required": [
+    "filename"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

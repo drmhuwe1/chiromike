@@ -1,0 +1,80 @@
+{
+  "name": "OfficeAllyBatch",
+  "type": "object",
+  "properties": {
+    "batch_filename": {
+      "type": "string",
+      "title": "Batch Filename"
+    },
+    "claim_ids": {
+      "type": "array",
+      "title": "Claim IDs Included",
+      "items": {
+        "type": "string"
+      }
+    },
+    "claim_count": {
+      "type": "number",
+      "title": "Number of Claims"
+    },
+    "submission_mode": {
+      "type": "string",
+      "title": "Submission Mode"
+    },
+    "submitted_at": {
+      "type": "string",
+      "title": "Submitted At"
+    },
+    "submitted_by": {
+      "type": "string",
+      "title": "Submitted By"
+    },
+    "status": {
+      "type": "string",
+      "title": "Status",
+      "enum": [
+        "Exported",
+        "Submitted via SFTP",
+        "Failed"
+      ],
+      "default": "Exported"
+    },
+    "sftp_result": {
+      "type": "string",
+      "title": "SFTP Result"
+    },
+    "office_ally_file_id": {
+      "type": "string",
+      "title": "Office Ally File ID Confirmation"
+    },
+    "notes": {
+      "type": "string",
+      "title": "Notes"
+    }
+  },
+  "required": [
+    "batch_filename"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
