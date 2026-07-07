@@ -12,7 +12,13 @@ const APP_ROUTES = [
 ];
 
 // Internal SPA routes (valid hrefs that aren't external)
-const KNOWN_SPA_ROUTES = new Set(APP_ROUTES);
+// Must include ALL routes defined in App.jsx, including public ones not in the crawl list
+const KNOWN_SPA_ROUTES = new Set([
+  ...APP_ROUTES,
+  "/about", "/contact", "/privacy", "/terms", "/baa", "/sla",
+  "/intake", "/intake-kiosk", "/payment-success", "/payment-cancelled",
+  "/office-ally", "/office-ally-settings",
+]);
 const KNOWN_EXTERNAL_PREFIXES = ["http://", "https://", "mailto:", "tel:", "#"];
 
 // Fetch check — confirms the SPA shell returns 200
