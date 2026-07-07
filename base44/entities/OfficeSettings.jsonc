@@ -90,6 +90,35 @@
       "type": "string",
       "title": "Practice Logo URL"
     },
+    "additional_providers": {
+      "type": "array",
+      "title": "Additional Billing Providers",
+      "items": {
+        "type": "object",
+        "properties": {
+          "provider_name": {
+            "type": "string",
+            "title": "Provider Name"
+          },
+          "npi": {
+            "type": "string",
+            "title": "NPI"
+          },
+          "ein_tax_id": {
+            "type": "string",
+            "title": "EIN / Tax ID"
+          },
+          "taxonomy_code": {
+            "type": "string",
+            "title": "Taxonomy Code"
+          },
+          "is_default": {
+            "type": "boolean",
+            "title": "Default Provider"
+          }
+        }
+      }
+    },
     "description": {
       "type": "string",
       "title": "Description",
