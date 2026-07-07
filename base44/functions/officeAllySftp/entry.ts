@@ -2,7 +2,8 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 import SftpClient from 'npm:pure-js-sftp@5.0.0';
 
 function decryptPassword(encrypted) {
-  const key = Deno.env.get('SFTP_ENCRYPTION_KEY') || 'chiromike-default-key-32chars!!';
+  const key = Deno.env.get('OFFICEALLY_ENCRYPTION_KEY') || '';
+  if (!key) throw new Error('OFFICEALLY_ENCRYPTION_KEY is not configured.');
   const decoded = atob(encrypted);
   let result = '';
   for (let i = 0; i < decoded.length; i++) {
