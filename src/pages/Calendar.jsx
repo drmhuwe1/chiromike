@@ -34,25 +34,26 @@ export default function Calendar() {
       try {
         const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
         const lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
-        
-        // Fetch Google Calendar events
-        const calRes = await base44.functions.invoke("fetchGoogleCalendarEvents", {
-          startDate: firstDay.toISOString(),
-          endDate: lastDay.toISOString(),
-        });
-        setGoogleEvents(calRes.data.events || []);
 
-        // Fetch patient appointments
-        const appts = await base44.entities.Appointment.filter(
-          { cancelled: false },
-          "-appointment_date",
-          100
-        );
+        // Fetch patient appointments and patients in parallel (always works)
+        const [appts, pts] = await Promise.all([
+          base44.entities.Appointment.filter({ cancelled: false }, "-appointment_date", 100),
+          base44.entities.Patient.list("-updated_date", 300),
+        ]);
         setAppointments(appts);
-
-        // Load patients for form
-        const pts = await base44.entities.Patient.list("-updated_date", 300);
         setPatients(pts);
+
+        // Fetch Google Calendar events — optional, don't block if it fails
+        try {
+          const calRes = await base44.functions.invoke("fetchGoogleCalendarEvents", {
+            startDate: firstDay.toISOString(),
+            endDate: lastDay.toISOString(),
+          });
+          setGoogleEvents(calRes.data.events || []);
+        } catch {
+          // Google Calendar not connected or token expired — continue without it
+          setGoogleEvents([]);
+        }
       } catch (error) {
         toast({ title: "Failed to load calendar", variant: "destructive" });
         console.error(error);
