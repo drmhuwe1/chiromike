@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Download, ExternalLink, CheckCircle, AlertCircle, Loader2, ClipboardCheck } from "lucide-react";
+import { Download, ExternalLink, CheckCircle, Loader2, ClipboardCheck } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import ClaimReadinessCheck, { validateClaimReadiness } from "@/components/officeally/ClaimReadinessCheck";
 
@@ -25,47 +25,48 @@ export default function OfficeAllyExportModal({ claim, patient, open, onClose, o
 
   const handleDownload = async () => {
     setLoading(true);
-    const res = await base44.functions.invoke('officeAllyExport', { claim_ids: [claim.id], mode: 'single' });
-    if (res.data?.error) {
-      toast({ title: res.data.error, variant: "destructive" });
-      setLoading(false);
-      return;
-    }
-    // The function returns a binary Response — trigger download via fetch
     try {
-      const response = await fetch('/api/functions/officeAllyExport', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${base44.auth.getToken?.() || ''}` },
-        body: JSON.stringify({ claim_ids: [claim.id], mode: 'single' }),
-        credentials: 'include'
+      // Call the export function — it returns the EDI content as text
+      const res = await base44.functions.invoke('officeAllyExport', {
+        claim_ids: [claim.id],
+        mode: 'single'
       });
-      if (!response.ok) {
-        const err = await response.json();
-        // Check for validation errors
-        if (err.validation_errors) {
-          toast({ title: "Validation failed: " + err.validation_errors.join(", "), variant: "destructive" });
-          setLoading(false);
-          return;
+
+      if (res.data?.error) {
+        const errData = res.data;
+        if (errData.validation_errors) {
+          toast({ title: "Validation failed: " + errData.validation_errors.join("; "), variant: "destructive" });
+        } else {
+          toast({ title: errData.error || "Export failed", variant: "destructive" });
         }
-        throw new Error(err.error || 'Export failed');
+        setLoading(false);
+        return;
       }
-      const blob = await response.blob();
-      const dispHeader = response.headers.get('Content-Disposition') || '';
-      const fnMatch = dispHeader.match(/filename="([^"]+)"/);
-      const fname = fnMatch ? fnMatch[1] : `OA_${claim.patient_name}_${claim.date_of_service}.edi`;
-      const bId = response.headers.get('X-Batch-Id');
-      setFilename(fname);
-      setBatchId(bId);
+
+      // The function returns text/plain with Content-Disposition — invoke returns raw text in data
+      // Build a blob and trigger browser download
+      const ediText = typeof res.data === 'string' ? res.data : JSON.stringify(res.data);
+      const fname = `OA_${claim.patient_name?.replace(/\s+/g, '_')}_${claim.date_of_service || 'export'}.edi`;
+
+      const blob = new Blob([ediText], { type: 'text/plain' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = fname;
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
+
+      setFilename(fname);
       onStatusUpdate?.('Exported for Office Ally');
       setStep("confirm");
+
+      // Try to get batch ID from a follow-up list call
+      const batches = await base44.entities.OfficeAllyBatch.list('-created_date', 1);
+      if (batches[0]) setBatchId(batches[0].id);
+
     } catch (err) {
-      // Fallback: use functions.invoke and handle binary
       toast({ title: err.message || "Download failed", variant: "destructive" });
     }
     setLoading(false);
@@ -73,9 +74,14 @@ export default function OfficeAllyExportModal({ claim, patient, open, onClose, o
 
   const handleConfirmFileId = async () => {
     if (!fileId.trim()) { toast({ title: "Please enter the Office Ally File ID", variant: "destructive" }); return; }
-    if (!batchId) { toast({ title: "Batch record not found", variant: "destructive" }); return; }
     setLoading(true);
-    await base44.functions.invoke('officeAllySftp', { action: 'confirm_file_id', batch_id: batchId, office_ally_file_id: fileId.trim() });
+    if (batchId) {
+      await base44.functions.invoke('officeAllySftp', {
+        action: 'confirm_file_id',
+        batch_id: batchId,
+        office_ally_file_id: fileId.trim()
+      });
+    }
     toast({ title: "File ID saved — submission confirmed!" });
     setLoading(false);
     onClose();
@@ -110,13 +116,13 @@ export default function OfficeAllyExportModal({ claim, patient, open, onClose, o
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-2 text-sm text-blue-900">
               <p className="font-semibold">How to submit to Office Ally:</p>
               <ol className="list-decimal list-inside space-y-1 text-xs">
-                <li>Click "Download 837P File" below.</li>
+                <li>Click "Download 837P File" below — a .edi file will save to your computer.</li>
                 <li>Log into <strong>Office Ally Service Center</strong> at officeally.com.</li>
                 <li>Go to <strong>Submit Claims → Upload Claims</strong>.</li>
                 <li>Choose <strong>Professional CMS-1500 / 837P</strong> file type.</li>
                 <li>Select the downloaded .edi file and upload.</li>
                 <li>Copy the <strong>File ID confirmation number</strong> shown by Office Ally.</li>
-                <li>Return here and enter that File ID to complete the record.</li>
+                <li>Return here and enter the File ID to complete the record.</li>
               </ol>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -130,9 +136,7 @@ export default function OfficeAllyExportModal({ claim, patient, open, onClose, o
                 </Button>
               </a>
             </div>
-            <div className="flex justify-start">
-              <Button variant="ghost" size="sm" onClick={() => setStep("check")}>← Back</Button>
-            </div>
+            <Button variant="ghost" size="sm" onClick={() => setStep("check")}>← Back</Button>
           </div>
         )}
 
@@ -146,20 +150,19 @@ export default function OfficeAllyExportModal({ claim, patient, open, onClose, o
               </div>
             </div>
             <div>
-              <Label>Office Ally File ID Confirmation <span className="text-muted-foreground font-normal">(optional but recommended)</span></Label>
+              <Label>Office Ally File ID <span className="text-muted-foreground font-normal text-xs">(optional — enter after uploading)</span></Label>
               <Input
                 className="mt-1"
                 value={fileId}
                 onChange={e => setFileId(e.target.value)}
-                placeholder="Enter the File ID shown by Office Ally after upload"
+                placeholder="e.g. OA-20240707-12345"
               />
-              <p className="text-xs text-muted-foreground mt-1">Enter this after you upload the file to Office Ally to link the confirmation to this claim.</p>
             </div>
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={onClose}>Close Without Saving ID</Button>
+              <Button variant="outline" onClick={onClose}>Close</Button>
               <Button onClick={handleConfirmFileId} disabled={loading || !fileId.trim()}>
                 {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <CheckCircle className="w-4 h-4 mr-2" />}
-                Save File ID & Close
+                Save File ID
               </Button>
             </div>
           </div>
