@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Save, Building, Upload, X } from "lucide-react";
+import { Save, Building, Upload, X, Plus, Trash2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import PayerProfilesTab from "../components/settings/PayerProfilesTab";
 
@@ -118,37 +118,117 @@ export default function OfficeSettings() {
         </TabsContent>
 
         <TabsContent value="billing">
-          <div className="bg-card border border-border rounded-xl p-6 space-y-4">
-            <h2 className="text-lg font-semibold">Billing / Rendering Provider</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label>Rendering Provider Name</Label>
-                <Input value={settings.rendering_provider || ""} onChange={e => set("rendering_provider", e.target.value)} />
+          <div className="space-y-4">
+            {/* Primary Provider */}
+            <div className="bg-card border border-border rounded-xl p-6 space-y-4">
+              <h2 className="text-lg font-semibold">Primary Billing / Rendering Provider</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label>Rendering Provider Name</Label>
+                  <Input value={settings.rendering_provider || ""} onChange={e => set("rendering_provider", e.target.value)} />
+                </div>
+                <div>
+                  <Label>Rendering NPI</Label>
+                  <Input value={settings.rendering_npi || ""} onChange={e => set("rendering_npi", e.target.value)} />
+                </div>
+                <div>
+                  <Label>Billing Provider Name</Label>
+                  <Input value={settings.billing_provider || ""} onChange={e => set("billing_provider", e.target.value)} />
+                </div>
+                <div>
+                  <Label>Billing NPI</Label>
+                  <Input value={settings.billing_npi || ""} onChange={e => set("billing_npi", e.target.value)} />
+                </div>
+                <div>
+                  <Label>EIN / Tax ID</Label>
+                  <Input value={settings.ein_tax_id || ""} onChange={e => set("ein_tax_id", e.target.value)} />
+                </div>
+                <div>
+                  <Label>Taxonomy Code</Label>
+                  <Input value={settings.taxonomy_code || ""} onChange={e => set("taxonomy_code", e.target.value)} />
+                </div>
               </div>
               <div>
-                <Label>Rendering NPI</Label>
-                <Input value={settings.rendering_npi || ""} onChange={e => set("rendering_npi", e.target.value)} />
-              </div>
-              <div>
-                <Label>Billing Provider Name</Label>
-                <Input value={settings.billing_provider || ""} onChange={e => set("billing_provider", e.target.value)} />
-              </div>
-              <div>
-                <Label>Billing NPI</Label>
-                <Input value={settings.billing_npi || ""} onChange={e => set("billing_npi", e.target.value)} />
-              </div>
-              <div>
-                <Label>EIN / Tax ID</Label>
-                <Input value={settings.ein_tax_id || ""} onChange={e => set("ein_tax_id", e.target.value)} />
-              </div>
-              <div>
-                <Label>Taxonomy Code</Label>
-                <Input value={settings.taxonomy_code || ""} onChange={e => set("taxonomy_code", e.target.value)} />
+                <Label>Default Claim Notes</Label>
+                <Textarea value={settings.default_claim_notes || ""} onChange={e => set("default_claim_notes", e.target.value)} rows={3} />
               </div>
             </div>
-            <div>
-              <Label>Default Claim Notes</Label>
-              <Textarea value={settings.default_claim_notes || ""} onChange={e => set("default_claim_notes", e.target.value)} rows={3} />
+
+            {/* Additional Providers */}
+            <div className="bg-card border border-border rounded-xl p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold">Additional Billing Providers</h2>
+                <Button size="sm" variant="outline" onClick={() => {
+                  const providers = [...(settings.additional_providers || []), { provider_name: "", npi: "", ein_tax_id: "", taxonomy_code: "", is_default: false }];
+                  set("additional_providers", providers);
+                }}>
+                  <Plus className="w-4 h-4 mr-1" /> Add Provider
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">These providers will be selectable when printing claims, receipts, and superbills.</p>
+              {(!settings.additional_providers || settings.additional_providers.length === 0) ? (
+                <p className="text-sm text-muted-foreground italic">No additional providers added yet.</p>
+              ) : (
+                <div className="space-y-4">
+                  {(settings.additional_providers || []).map((prov, idx) => (
+                    <div key={idx} className="border border-border rounded-lg p-4 space-y-3 relative">
+                      <button
+                        onClick={() => {
+                          const providers = (settings.additional_providers || []).filter((_, i) => i !== idx);
+                          set("additional_providers", providers);
+                        }}
+                        className="absolute top-3 right-3 text-destructive hover:opacity-70"
+                        title="Remove"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pr-8">
+                        <div>
+                          <Label>Provider Name</Label>
+                          <Input value={prov.provider_name || ""} onChange={e => {
+                            const providers = [...(settings.additional_providers || [])];
+                            providers[idx] = { ...providers[idx], provider_name: e.target.value };
+                            set("additional_providers", providers);
+                          }} />
+                        </div>
+                        <div>
+                          <Label>NPI</Label>
+                          <Input value={prov.npi || ""} onChange={e => {
+                            const providers = [...(settings.additional_providers || [])];
+                            providers[idx] = { ...providers[idx], npi: e.target.value };
+                            set("additional_providers", providers);
+                          }} />
+                        </div>
+                        <div>
+                          <Label>EIN / Tax ID</Label>
+                          <Input value={prov.ein_tax_id || ""} onChange={e => {
+                            const providers = [...(settings.additional_providers || [])];
+                            providers[idx] = { ...providers[idx], ein_tax_id: e.target.value };
+                            set("additional_providers", providers);
+                          }} />
+                        </div>
+                        <div>
+                          <Label>Taxonomy Code</Label>
+                          <Input value={prov.taxonomy_code || ""} onChange={e => {
+                            const providers = [...(settings.additional_providers || [])];
+                            providers[idx] = { ...providers[idx], taxonomy_code: e.target.value };
+                            set("additional_providers", providers);
+                          }} />
+                        </div>
+                      </div>
+                      <label className="flex items-center gap-2 cursor-pointer text-sm">
+                        <input type="checkbox" checked={!!prov.is_default} onChange={e => {
+                          const providers = (settings.additional_providers || []).map((p, i) => ({
+                            ...p, is_default: i === idx ? e.target.checked : false
+                          }));
+                          set("additional_providers", providers);
+                        }} className="accent-primary" />
+                        Set as default for printing
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </TabsContent>

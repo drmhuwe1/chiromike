@@ -19,6 +19,7 @@ export default function PrintClaim() {
   const [resubmitMethod, setResubmitMethod] = useState("Print");
   const { toast } = useToast();
   const [user, setUser] = useState(null);
+  const [selectedProvider, setSelectedProvider] = useState(null); // overrides office defaults
 
   useEffect(() => {
     const load = async () => {
@@ -38,7 +39,11 @@ export default function PrintClaim() {
         setPatient(patients[0] || null);
         setSubmissions(subs);
       }
-      setOffice(settings[0] || null);
+      const officeData = settings[0] || null;
+      setOffice(officeData);
+      // Auto-select default additional provider if set
+      const def = officeData?.additional_providers?.find(p => p.is_default);
+      if (def) setSelectedProvider(def);
       setLoading(false);
     };
     if (claimId) load();
@@ -99,6 +104,21 @@ export default function PrintClaim() {
   const isCash = payerType === "Cash";
   const isOther = !isMedicare && !isBCBS && !isAutoPI && !isCash;
 
+  // Effective provider — selectedProvider overrides office defaults
+  const ep = selectedProvider ? {
+    rendering_provider: selectedProvider.provider_name,
+    rendering_npi: selectedProvider.npi,
+    billing_npi: selectedProvider.npi,
+    ein_tax_id: selectedProvider.ein_tax_id || office?.ein_tax_id,
+    taxonomy_code: selectedProvider.taxonomy_code || office?.taxonomy_code,
+  } : {
+    rendering_provider: office?.rendering_provider,
+    rendering_npi: office?.rendering_npi,
+    billing_npi: office?.billing_npi,
+    ein_tax_id: office?.ein_tax_id,
+    taxonomy_code: office?.taxonomy_code,
+  };
+
   const chk = (val) => val ? "X" : " ";
   const dxLetter = (i) => String.fromCharCode(65 + i);
 
@@ -129,7 +149,24 @@ export default function PrintClaim() {
           </div>
         </div>
 
-        {/* Submit / Resubmit controls */}
+        {/* Provider selector */}
+        {office?.additional_providers?.length > 0 && (
+          <div className="flex items-center gap-2 p-3 bg-muted/40 border border-border rounded-xl">
+            <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">Billing Provider:</span>
+            <select
+              value={selectedProvider ? JSON.stringify(selectedProvider) : ""}
+              onChange={e => setSelectedProvider(e.target.value ? JSON.parse(e.target.value) : null)}
+              className="border border-border rounded px-2 py-1.5 text-sm bg-white flex-1"
+            >
+              <option value="">Primary: {office.rendering_provider || office.billing_provider || "Default"}</option>
+              {office.additional_providers.map((p, i) => (
+                <option key={i} value={JSON.stringify(p)}>{p.provider_name} {p.npi ? `(NPI: ${p.npi})` : ""}</option>
+              ))}
+            </select>
+          </div>
+        )}
+
+      {/* Submit / Resubmit controls */}
         <div className="flex flex-wrap items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-xl">
           <select
             value={resubmitMethod}
@@ -375,7 +412,7 @@ export default function PrintClaim() {
               <div style={{ borderLeft: "1px solid #ccc", paddingLeft: "2px", textAlign: "right" }}>{line ? `$${(line.charge || 0).toFixed(2)}` : ""}</div>
               <div style={{ borderLeft: "1px solid #ccc", paddingLeft: "2px", textAlign: "center" }}>{line?.units || ""}</div>
               <div style={{ borderLeft: "1px solid #ccc", paddingLeft: "2px" }}></div>
-              <div style={{ borderLeft: "1px solid #ccc", paddingLeft: "2px" }}>{line ? (office?.rendering_npi || "") : ""}</div>
+              <div style={{ borderLeft: "1px solid #ccc", paddingLeft: "2px" }}>{line ? (ep.rendering_npi || "") : ""}</div>
             </div>
           ))}
         </div>
@@ -383,7 +420,7 @@ export default function PrintClaim() {
         {/* ── BOTTOM ROW: 25 EIN | 26 Acct | 27 Assign | 28 Total | 29 Paid | 30 Reserved ── */}
         <div style={{ display: "grid", gridTemplateColumns: "2fr 1.5fr 1fr 1.5fr 1.5fr 1.5fr", borderBottom: "1px solid #000" }}>
           <Cell label="25. FEDERAL TAX I.D. NUMBER &nbsp; SSN [  ] EIN [X]" borderRight>
-            <div>{office?.ein_tax_id || ""}</div>
+            <div>{ep.ein_tax_id || ""}</div>
           </Cell>
           <Cell label="26. PATIENT'S ACCOUNT NO." borderRight>
             <div>{claim.patient_id?.slice(-8) || ""}</div>
@@ -405,26 +442,26 @@ export default function PrintClaim() {
         {/* ── BOTTOM ROW: 31 Signature | 32 Facility | 33 Billing ── */}
         <div style={{ display: "grid", gridTemplateColumns: "2fr 3fr 3fr" }}>
           <Cell label="31. SIGNATURE OF PHYSICIAN OR SUPPLIER (MD, DO, OTHER)" borderRight>
-            <div style={{ marginTop: "4px" }}>{office?.rendering_provider || ""}</div>
+            <div style={{ marginTop: "4px" }}>{ep.rendering_provider || ""}</div>
             <div>Date: {claim.date_of_service || ""}</div>
-            <div style={{ fontSize: "7px", marginTop: "2px" }}>NPI: {office?.rendering_npi || ""}</div>
-            <div style={{ fontSize: "7px" }}>Taxonomy: {office?.taxonomy_code || ""}</div>
+            <div style={{ fontSize: "7px", marginTop: "2px" }}>NPI: {ep.rendering_npi || ""}</div>
+            <div style={{ fontSize: "7px" }}>Taxonomy: {ep.taxonomy_code || ""}</div>
           </Cell>
           <Cell label="32. SERVICE FACILITY LOCATION INFORMATION" borderRight>
             <div>{office?.practice_name || ""}</div>
             <div>{office?.billing_address_line1 || ""}</div>
             <div>{office?.billing_city || ""} {office?.billing_state || ""} {office?.billing_zip || ""}</div>
-            <div style={{ fontSize: "7px", marginTop: "2px" }}>NPI: {office?.billing_npi || ""}</div>
+            <div style={{ fontSize: "7px", marginTop: "2px" }}>NPI: {ep.billing_npi || ""}</div>
           </Cell>
           <Cell label="33. BILLING PROVIDER INFO & PH #">
-            <div style={{ fontWeight: "bold" }}>{office?.practice_name || ""}</div>
+            <div style={{ fontWeight: "bold" }}>{selectedProvider ? selectedProvider.provider_name : (office?.practice_name || "")}</div>
             <div>{office?.billing_address_line1 || ""}</div>
             <div>{office?.billing_city || ""} {office?.billing_state || ""} {office?.billing_zip || ""}</div>
             <div>Tel: {office?.phone || ""}</div>
             <div style={{ marginTop: "2px" }}>
-              <span style={{ fontSize: "7px", fontWeight: "bold" }}>33a. NPI: </span>{office?.billing_npi || ""}
+              <span style={{ fontSize: "7px", fontWeight: "bold" }}>33a. NPI: </span>{ep.billing_npi || ""}
               &nbsp;&nbsp;
-              <span style={{ fontSize: "7px", fontWeight: "bold" }}>33b. </span>{office?.taxonomy_code || ""}
+              <span style={{ fontSize: "7px", fontWeight: "bold" }}>33b. </span>{ep.taxonomy_code || ""}
             </div>
           </Cell>
         </div>

@@ -11,6 +11,7 @@ export default function PrintReceipt() {
   const [office, setOffice] = useState(null);
   const [patient, setPatient] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [selectedProvider, setSelectedProvider] = useState(null);
 
   useEffect(() => {
     const load = async () => {
@@ -22,7 +23,10 @@ export default function PrintReceipt() {
         setPatient(patients[0] || null);
       }
       const settings = await base44.entities.OfficeSettings.list("-updated_date", 1);
-      setOffice(settings[0] || null);
+      const officeData = settings[0] || null;
+      setOffice(officeData);
+      const def = officeData?.additional_providers?.find(p => p.is_default);
+      if (def) setSelectedProvider(def);
       setLoading(false);
     };
     if (claimId) load();
@@ -47,9 +51,24 @@ export default function PrintReceipt() {
 
   return (
     <div>
-      <div className="flex items-center gap-3 mb-4 no-print">
+      <div className="flex flex-wrap items-center gap-3 mb-4 no-print">
         <Link to="/saved-claims"><Button variant="outline" size="sm"><ArrowLeft className="w-4 h-4 mr-1" /> Back</Button></Link>
         <Button onClick={handlePrint}><Printer className="w-4 h-4 mr-2" /> Print Receipt</Button>
+        {office?.additional_providers?.length > 0 && (
+          <div className="flex items-center gap-2 ml-2">
+            <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">Provider:</span>
+            <select
+              value={selectedProvider ? JSON.stringify(selectedProvider) : ""}
+              onChange={e => setSelectedProvider(e.target.value ? JSON.parse(e.target.value) : null)}
+              className="border border-border rounded px-2 py-1.5 text-sm bg-white"
+            >
+              <option value="">Primary: {office.rendering_provider || office.billing_provider || "Default"}</option>
+              {office.additional_providers.map((p, i) => (
+                <option key={i} value={JSON.stringify(p)}>{p.provider_name}</option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
 
       <div className="print-area bg-white text-black p-8 max-w-[5in] mx-auto border border-border rounded-xl" style={{ fontFamily: "'Courier New', monospace", fontSize: "12px", pageBreakAfter: "avoid" }}>
@@ -135,9 +154,9 @@ export default function PrintReceipt() {
 
         {/* Provider */}
         <div className="mt-4 pt-3 border-t border-dashed border-black text-center text-[10px]">
-          <p>Provider: {office?.rendering_provider || ""}</p>
-          {office?.rendering_npi && <p>NPI: {office.rendering_npi}</p>}
-          {office?.ein_tax_id && <p>Tax ID: {office.ein_tax_id}</p>}
+          <p>Provider: {selectedProvider ? selectedProvider.provider_name : (office?.rendering_provider || "")}</p>
+          {(selectedProvider?.npi || office?.rendering_npi) && <p>NPI: {selectedProvider?.npi || office.rendering_npi}</p>}
+          {(selectedProvider?.ein_tax_id || office?.ein_tax_id) && <p>Tax ID: {selectedProvider?.ein_tax_id || office.ein_tax_id}</p>}
         </div>
 
         {/* Footer */}
