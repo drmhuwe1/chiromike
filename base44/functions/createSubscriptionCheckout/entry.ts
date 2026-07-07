@@ -17,7 +17,8 @@ Deno.serve(async (req) => {
 
     const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY'));
 
-    const origin = req.headers.get('origin') || 'https://app.base44.com';
+    // Use a server-side fixed origin — never trust client-supplied Origin/Host headers for redirects
+    const origin = Deno.env.get('APP_URL') || 'https://app.base44.com';
 
     const sessionParams = {
       mode: 'subscription',

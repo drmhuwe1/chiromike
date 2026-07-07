@@ -10,6 +10,11 @@ Deno.serve(async (req) => {
 
     if (!patient_id) return Response.json({ error: 'patient_id required' }, { status: 400 });
 
+    // RBAC: only admins may generate SOAP notes for arbitrary patients
+    if (user.role !== 'admin') {
+      return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
+    }
+
     // Fetch patient, claims, and office settings
     const patientData = await base44.asServiceRole.entities.Patient.get(patient_id);
     if (!patientData) return Response.json({ error: 'Patient not found' }, { status: 404 });
