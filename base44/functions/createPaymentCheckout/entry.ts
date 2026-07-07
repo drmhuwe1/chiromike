@@ -11,13 +11,13 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { claim_id, patient_id, patient_email, amount, date_of_service } = await req.json();
+    const { claim_id, patient_id, patient_email, date_of_service } = await req.json();
 
-    if (!claim_id || !patient_id || !patient_email || !amount) {
+    if (!claim_id || !patient_id || !patient_email) {
       return Response.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // Get claim and patient details
+    // Get claim and patient details — amount is always derived server-side from the claim record
     const claims = await base44.asServiceRole.entities.Claim.filter({ id: claim_id });
     const patients = await base44.asServiceRole.entities.Patient.filter({ id: patient_id });
 
@@ -27,6 +27,15 @@ Deno.serve(async (req) => {
 
     const claim = claims[0];
     const patient = patients[0];
+
+    // Derive amount from DB — never trust client-supplied amount
+    const totalCharge = Math.round((claim.total_charge || 0) * 100); // cents
+    const amountPaid = Math.round((claim.amount_paid || 0) * 100);
+    const unitAmount = Math.max(totalCharge - amountPaid, 0);
+
+    if (unitAmount <= 0) {
+      return Response.json({ error: 'No outstanding balance on this claim' }, { status: 400 });
+    }
 
     // Create Stripe checkout session
     const session = await stripe.checkout.sessions.create({
@@ -39,9 +48,9 @@ Deno.serve(async (req) => {
             currency: 'usd',
             product_data: {
               name: `Payment for ${patient.first_name} ${patient.last_name}`,
-              description: `Chiropractic visit - ${date_of_service}`,
+              description: `Chiropractic visit - ${date_of_service || claim.date_of_service}`,
             },
-            unit_amount: amount,
+            unit_amount: unitAmount,
           },
           quantity: 1,
         },

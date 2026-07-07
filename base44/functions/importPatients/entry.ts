@@ -15,6 +15,18 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'file_url is required' }, { status: 400 });
     }
 
+    // SSRF protection: only allow https from trusted Base44 storage hostnames
+    let parsedUrl;
+    try {
+      parsedUrl = new URL(file_url);
+    } catch {
+      return Response.json({ error: 'Invalid file_url' }, { status: 400 });
+    }
+    const ALLOWED_HOSTS = ['storage.googleapis.com', 'files.base44.com', 'cdn.base44.com'];
+    if (parsedUrl.protocol !== 'https:' || !ALLOWED_HOSTS.some(h => parsedUrl.hostname === h || parsedUrl.hostname.endsWith('.' + h))) {
+      return Response.json({ error: 'file_url must be an https URL from a trusted storage host' }, { status: 400 });
+    }
+
     console.log('Fetching file:', file_url);
     const fileResp = await fetch(file_url);
     if (!fileResp.ok) {
