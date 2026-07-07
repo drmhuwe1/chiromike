@@ -1,7 +1,7 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { 
   LayoutDashboard, Users, FileText, Settings, BookOpen, 
-  Library, Zap, BarChart3, Menu, Wallet, HelpCircle, ShieldCheck, ClipboardList, Stethoscope, Calendar, LogOut, Activity
+  Library, Zap, BarChart3, Menu, Wallet, HelpCircle, ShieldCheck, ClipboardList, Stethoscope, Calendar, LogOut, Activity, Send
 } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/lib/AuthContext";
@@ -25,6 +25,8 @@ const navItems = [
   { path: "/guide", label: "Feature Guide", icon: HelpCircle },
   { path: "/compliance", label: "HIPAA Compliance", icon: ShieldCheck },
   { path: "/settings", label: "Office Settings", icon: Settings },
+  { path: "/office-ally", label: "Office Ally", icon: Send },
+  { path: "/office-ally-settings", label: "Office Ally Settings", icon: Settings },
   { path: "/admin/stability", label: "Stability Monitor", icon: Activity },
 ];
 

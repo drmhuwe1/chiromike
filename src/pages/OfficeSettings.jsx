@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Save, Building, Upload, X, Plus, Trash2 } from "lucide-react";
+import { Save, Building, Upload, X, Plus, Trash2, ExternalLink } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import PayerProfilesTab from "../components/settings/PayerProfilesTab";
 
@@ -68,6 +68,7 @@ export default function OfficeSettings() {
           <TabsTrigger value="billing">Billing Provider</TabsTrigger>
           <TabsTrigger value="payers">Payer Profiles</TabsTrigger>
           <TabsTrigger value="receipts">Receipts & Superbills</TabsTrigger>
+          <TabsTrigger value="officeally">Office Ally</TabsTrigger>
         </TabsList>
 
         <TabsContent value="practice">
@@ -275,6 +276,20 @@ export default function OfficeSettings() {
             <div>
               <Label>Superbill Notes</Label>
               <Textarea value={settings.superbill_notes || ""} onChange={e => set("superbill_notes", e.target.value)} rows={3} />
+            </div>
+          </div>
+        </TabsContent>
+        <TabsContent value="officeally">
+          <div className="bg-card border border-border rounded-xl p-6 space-y-4">
+            <h2 className="text-lg font-semibold">Office Ally Integration</h2>
+            <p className="text-sm text-muted-foreground">Configure your Office Ally submitter credentials and SFTP connection for electronic claim submission.</p>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <a href="/office-ally-settings" className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors">
+                <ExternalLink className="w-4 h-4" /> Open Office Ally Settings
+              </a>
+              <a href="/office-ally" className="inline-flex items-center gap-2 px-4 py-2 rounded-md border border-border text-sm font-medium hover:bg-muted transition-colors">
+                View Claim Submissions
+              </a>
             </div>
           </div>
         </TabsContent>

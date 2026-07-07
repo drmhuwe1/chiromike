@@ -49,6 +49,8 @@ const NewPatientExam = lazy(() => import(/* webpackChunkName: "clinical" */ './p
 const ReExamination = lazy(() => import(/* webpackChunkName: "clinical" */ './pages/ReExamination'));
 const FinancialReports = lazy(() => import(/* webpackChunkName: "reports" */ './pages/FinancialReports'));
 const AdminStability = lazy(() => import(/* webpackChunkName: "admin" */ './pages/AdminStability'));
+const OfficeAllySettingsPage = lazy(() => import(/* webpackChunkName: "admin" */ './pages/OfficeAllySettings'));
+const OfficeAllySubmissions = lazy(() => import(/* webpackChunkName: "admin" */ './pages/OfficeAllySubmissions'));
 
 const AuthenticatedApp = () => {
   const location = useLocation();
@@ -143,6 +145,8 @@ const AuthenticatedApp = () => {
         <Route path="/new-patient-exam" element={<NewPatientExam />} />
         <Route path="/re-examination" element={<ReExamination />} />
         <Route path="/financial-reports" element={<FinancialReports />} />
+        <Route path="/office-ally" element={<OfficeAllySubmissions />} />
+        <Route path="/office-ally-settings" element={<OfficeAllySettingsPage />} />
         <Route path="/admin/stability" element={<AdminStability />} />
         <Route path="*" element={<PageNotFound />} />
       </Route>
