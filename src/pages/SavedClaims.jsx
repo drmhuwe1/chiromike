@@ -97,6 +97,7 @@ export default function SavedClaims() {
   const handleDelete = async (id) => {
     if (!confirm("Delete this claim?")) return;
     await base44.entities.Claim.delete(id);
+    logAudit("Deleted claim", "Claim", id);
     load();
   };
 
