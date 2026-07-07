@@ -2,7 +2,7 @@ import { useState } from "react";
 import { 
   Users, FileText, BookOpen, Library, Zap, BarChart3, Settings, 
   ClipboardList, Wallet, Mail, Printer, ChevronDown, ChevronRight,
-  CheckCircle, AlertCircle, Lightbulb, HelpCircle, Stethoscope, CreditCard
+  CheckCircle, AlertCircle, Lightbulb, HelpCircle, Stethoscope, CreditCard, Send
 } from "lucide-react";
 
 const sections = [
@@ -210,6 +210,31 @@ const sections = [
       { type: "step", text: "After a successful payment, the receipt email is sent automatically — patient gets itemized charges and payment confirmation." },
       { type: "tip", text: "Stripe is live mode — all transactions are real. Include app ID in metadata for transaction tracking." },
       { type: "tip", text: "Checkout only works from a published app, not the preview — make sure to publish before collecting real payments." },
+    ],
+  },
+  {
+    id: "office-ally",
+    icon: Send,
+    color: "text-indigo-600",
+    bg: "bg-indigo-50 border-indigo-200",
+    title: "Office Ally — Electronic Claim Submission",
+    subtitle: "Generate 837P files and submit insurance claims electronically",
+    steps: [
+      { type: "step", text: "**What is Office Ally?** Office Ally is a free clearinghouse that sends your electronic claims (837P files) to insurance companies. ChiroMike generates the 837P file — you upload it to Office Ally, and they transmit it to the payer." },
+      { type: "step", text: "**Step 1 — Set up your Office Ally account.** Go to officeally.com and register (it's free for providers). During registration you'll receive a **Submitter ID** — save that number." },
+      { type: "step", text: "**Step 2 — Configure Office Ally Settings.** In the sidebar go to **Office Ally Settings**. Enter your Submitter ID, Practice Name, Billing NPI, and Tax ID. These will appear on every 837P file you generate. Save settings." },
+      { type: "step", text: "**Step 3 — Go to Office Ally Submissions.** Click **Office Ally** in the sidebar. You'll see all your insurance claims listed with their status and a readiness check (green = ready, red = missing info)." },
+      { type: "step", text: "**Step 4 — Fix any readiness issues.** If a claim shows red with issues (missing diagnosis, missing subscriber ID, etc.), open that claim in Claim Builder and fill in the missing fields. The readiness check tells you exactly what's missing in plain English." },
+      { type: "step", text: "**Step 5 — Export the 837P file.** Click **Export** next to a ready claim. A step-by-step dialog will walk you through: review the claim details, then click **Download 837P File**. A file ending in .edi will save to your computer." },
+      { type: "step", text: "**Step 6 — Upload to Office Ally.** Open a new browser tab and go to **officeally.com**. Log in, then go to **Submit Claims → Upload Claims**. Choose **Professional CMS-1500 / 837P** as the file type. Click Browse, select your downloaded .edi file, and click Upload." },
+      { type: "step", text: "**Step 7 — Save the confirmation File ID.** After uploading, Office Ally shows a **File ID** confirmation number (looks like a date and number). Copy it, come back to ChiroMike, paste it in the **Office Ally File ID** box in the dialog, and click **Save File ID**. This links the submission to the claim record." },
+      { type: "step", text: "**Claim statuses explained:** Draft (not sent), Ready to Submit (validated, good to go), Exported for Office Ally (downloaded but not yet uploaded), Submitted to Office Ally (uploaded), Accepted (Office Ally confirmed receipt), Rejected (problem found — fix and resubmit), Paid (payment received), Needs Review (requires attention)." },
+      { type: "step", text: "**Batch export.** To submit multiple claims at once, check the boxes next to each claim you want to include, then click **Batch Download 837P**. All selected claims are packaged into one .edi file — upload that single file to Office Ally the same way." },
+      { type: "step", text: "**Tracking submissions.** Click the **Submission History** tab to see every batch you've exported, when it was submitted, how many claims were included, and the Office Ally File ID confirmation." },
+      { type: "step", text: "**Direct SFTP (advanced).** If Office Ally approves you for SFTP access, enter your SFTP credentials in Office Ally Settings and switch the Submission Mode to **Direct SFTP**. Claims will then be uploaded automatically from ChiroMike without needing to download and re-upload manually." },
+      { type: "tip", text: "Always use **Manual Upload** until you are comfortable with the process. It works immediately, requires no SFTP approval, and gives you full visibility into what's being submitted." },
+      { type: "tip", text: "Office Ally typically processes claims within 24–48 hours. Check your Office Ally account's **Reports** section (or the Check Reports button in ChiroMike if SFTP is configured) to see 999 acknowledgments (accepted/rejected), 277 status updates, and 835 payment remittance files." },
+      { type: "tip", text: "A **999 Accepted** means Office Ally received the file and sent it to the payer. It does not mean the payer approved the claim — that comes later as a 277 or EOB." },
     ],
   },
   {
