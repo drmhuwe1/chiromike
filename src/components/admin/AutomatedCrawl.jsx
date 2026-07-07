@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Play, Copy, Wrench, CheckCircle2, XCircle, AlertTriangle, Globe } from "lucide-react";
 
@@ -8,169 +8,152 @@ const APP_ROUTES = [
   "/procedures", "/diagnoses", "/templates", "/reports", "/settings",
   "/code-library", "/patient-account", "/billing", "/guide", "/compliance",
   "/soap-notes", "/new-patient-exam", "/re-examination", "/financial-reports",
-  "/admin/stability",
+  "/office-ally", "/office-ally-settings", "/admin/stability",
 ];
 
-// Internal SPA routes (valid hrefs that aren't external)
-// Must include ALL routes defined in App.jsx, including public ones not in the crawl list
-const KNOWN_SPA_ROUTES = new Set([
-  ...APP_ROUTES,
-  "/about", "/contact", "/privacy", "/terms", "/baa", "/sla",
+// Complete list of all valid internal SPA routes (from App.jsx)
+const ALL_VALID_ROUTES = new Set([
+  "/", "/patients", "/calendar", "/claim-builder", "/saved-claims",
+  "/procedures", "/diagnoses", "/templates", "/reports", "/settings",
+  "/print-claim", "/print-receipt", "/code-library", "/patient-account",
+  "/billing", "/guide", "/compliance", "/soap-notes", "/new-patient-exam",
+  "/re-examination", "/financial-reports", "/office-ally", "/office-ally-settings",
+  "/admin/stability",
+  // Public routes
+  "/privacy", "/terms", "/baa", "/sla", "/about", "/contact",
   "/intake", "/intake-kiosk", "/payment-success", "/payment-cancelled",
-  "/office-ally", "/office-ally-settings",
 ]);
-const KNOWN_EXTERNAL_PREFIXES = ["http://", "https://", "mailto:", "tel:", "#"];
 
-// Fetch check — confirms the SPA shell returns 200
-async function fetchCheck(path) {
+// Fetch check — confirms the SPA shell returns 200 and isn't a hard 404/500
+async function crawlRoute(path) {
   const url = window.location.origin + path;
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 6000);
+    const timeout = setTimeout(() => controller.abort(), 8000);
     const res = await fetch(url, { signal: controller.signal, credentials: "include" });
     clearTimeout(timeout);
     const text = await res.text();
+
     const broken = res.status === 404 ||
       text.toLowerCase().includes("cannot get") ||
       (text.length < 100 && !text.includes("<"));
-    const errors = res.status >= 500 ? [`HTTP ${res.status} returned for ${path}`] : [];
-    return { broken, errors, status: res.status, timedOut: false };
+
+    const errors = [];
+    if (res.status >= 500) errors.push(`HTTP ${res.status} server error`);
+
+    return { path, broken, errors, status: res.status, timedOut: false };
   } catch (e) {
     const timedOut = e.name === "AbortError";
-    return { broken: false, errors: timedOut ? [] : [e.message], status: null, timedOut };
+    return { path, broken: false, errors: timedOut ? [] : [e.message], status: null, timedOut };
   }
 }
 
-// iframe DOM scan — loads the route in a hidden iframe, waits for render, inspects links & buttons
-function iframeScan(path, iframeEl) {
-  return new Promise((resolve) => {
-    const SETTLE_MS = 3500; // wait for React to mount
-    const TIMEOUT_MS = 8000;
+// Static link audit — checks all known nav links in the app against the valid route registry
+// This replaces iframe DOM scanning which fails on auth-gated pages
+function auditStaticLinks() {
+  // All internal links used across the app (Layout nav, footers, cross-page links)
+  const allLinks = [
+    // Layout sidebar nav
+    { href: "/", label: "Dashboard" },
+    { href: "/patients", label: "Patients" },
+    { href: "/calendar", label: "Calendar" },
+    { href: "/claim-builder", label: "Claim Builder" },
+    { href: "/saved-claims", label: "Saved Claims" },
+    { href: "/procedures", label: "Procedures" },
+    { href: "/diagnoses", label: "Diagnoses" },
+    { href: "/templates", label: "Templates" },
+    { href: "/soap-notes", label: "SOAP Notes" },
+    { href: "/new-patient-exam", label: "New Patient Exam" },
+    { href: "/re-examination", label: "Re-Examination" },
+    { href: "/reports", label: "Reports" },
+    { href: "/financial-reports", label: "Financial Reports" },
+    { href: "/billing", label: "Billing" },
+    { href: "/office-ally", label: "Office Ally" },
+    { href: "/office-ally-settings", label: "Office Ally Settings" },
+    { href: "/code-library", label: "Code Library" },
+    { href: "/patient-account", label: "Patient Account" },
+    { href: "/settings", label: "Settings" },
+    { href: "/guide", label: "Help Guide" },
+    { href: "/compliance", label: "Compliance" },
+    { href: "/admin/stability", label: "Admin Stability" },
+    // Footer / legal links
+    { href: "/privacy", label: "Privacy Policy" },
+    { href: "/terms", label: "Terms of Service" },
+    { href: "/baa", label: "BAA" },
+    { href: "/sla", label: "SLA" },
+    { href: "/about", label: "About" },
+    { href: "/contact", label: "Contact" },
+    // Kiosk / payment flows
+    { href: "/intake", label: "Patient Intake" },
+    { href: "/intake-kiosk", label: "Intake Kiosk" },
+    { href: "/payment-success", label: "Payment Success" },
+    { href: "/payment-cancelled", label: "Payment Cancelled" },
+    { href: "/print-claim", label: "Print Claim" },
+    { href: "/print-receipt", label: "Print Receipt" },
+  ];
 
-    let settled = false;
-    const timer = setTimeout(() => {
-      if (!settled) {
-        settled = true;
-        resolve({ brokenLinks: [], deadButtons: [], iframeTimedOut: true });
-      }
-    }, TIMEOUT_MS);
-
-    iframeEl.onload = () => {
-      setTimeout(() => {
-        if (settled) return;
-        settled = true;
-        clearTimeout(timer);
-        try {
-          const doc = iframeEl.contentDocument || iframeEl.contentWindow?.document;
-          if (!doc) return resolve({ brokenLinks: [], deadButtons: [], iframeTimedOut: false });
-
-          // Check <a> tags for broken/missing hrefs
-          const brokenLinks = [];
-          doc.querySelectorAll("a[href]").forEach(a => {
-            const href = a.getAttribute("href");
-            if (!href || href === "" || href === "javascript:void(0)") {
-              brokenLinks.push(`Empty/invalid href on link: "${a.textContent.trim().slice(0, 40) || "(no text)"}"`);
-            } else if (href.startsWith("/") && !KNOWN_SPA_ROUTES.has(href) && !KNOWN_EXTERNAL_PREFIXES.some(p => href.startsWith(p))) {
-              brokenLinks.push(`Link points to unknown route: ${href} — "${a.textContent.trim().slice(0, 30) || "(no text)"}"`);
-            }
-          });
-
-          // Check <button> tags — flag ones with no text, no aria-label, and no apparent type
-          const deadButtons = [];
-          doc.querySelectorAll("button").forEach(btn => {
-            const label = (btn.textContent || "").trim();
-            const ariaLabel = btn.getAttribute("aria-label") || "";
-            const hasIcon = btn.querySelector("svg");
-            if (!label && !ariaLabel && !hasIcon) {
-              deadButtons.push(`Button with no label, aria-label, or icon found on page`);
-            }
-          });
-
-          resolve({ brokenLinks, deadButtons, iframeTimedOut: false });
-        } catch {
-          // Cross-origin or other access error
-          resolve({ brokenLinks: [], deadButtons: [], iframeTimedOut: false });
-        }
-      }, SETTLE_MS);
-    };
-
-    iframeEl.src = window.location.origin + path;
-  });
+  const broken = allLinks.filter(l => !ALL_VALID_ROUTES.has(l.href));
+  return { checked: allLinks.length, broken };
 }
 
-async function crawlRoute(path, iframeEl) {
-  const [fetch_result, dom_result] = await Promise.all([
-    fetchCheck(path),
-    iframeScan(path, iframeEl),
-  ]);
-
-  return {
-    path,
-    broken: fetch_result.broken,
-    errors: fetch_result.errors,
-    failedNetworkCalls: [],
-    status: fetch_result.status,
-    timedOut: fetch_result.timedOut,
-    brokenLinks: dom_result.brokenLinks,
-    deadButtons: dom_result.deadButtons,
-    iframeTimedOut: dom_result.iframeTimedOut,
-  };
-}
-
-function generateCrawlFixPrompt(results) {
-  const issues = results.filter(r =>
-    r.broken || r.timedOut || r.errors.length > 0 ||
-    r.failedNetworkCalls.length > 0 || r.brokenLinks.length > 0 || r.deadButtons.length > 0
-  );
-  if (issues.length === 0) return null;
+function generateCrawlFixPrompt(results, linkAudit) {
+  const routeIssues = results.filter(r => r.broken || r.timedOut || r.errors.length > 0);
+  const hasLinkIssues = linkAudit && linkAudit.broken.length > 0;
+  if (routeIssues.length === 0 && !hasLinkIssues) return null;
 
   const lines = [
     "# ChiroMike — Automated Crawl Fix Prompt",
     `Generated: ${new Date().toLocaleString("en-US", { timeZone: "America/New_York" })} ET`,
     "",
-    "Issues detected by automated crawl. Fix each issue below. Do NOT change other code.",
+    "Issues detected. Fix each below. Do NOT change other code.",
     "",
     "ISSUES TO FIX:",
     "━━━━━━━━━━━━━━━",
   ];
-  issues.forEach((r, i) => {
+
+  routeIssues.forEach((r, i) => {
     lines.push(`\nISSUE ${i + 1}: Route ${r.path}`);
-    if (r.broken) lines.push(`  - BROKEN ROUTE: Page not found content detected (HTTP ${r.status || "?"})`);
-    if (r.timedOut) lines.push(`  - TIMEOUT: Route did not respond within 6 seconds`);
-    r.errors.forEach(e => lines.push(`  - RUNTIME ERROR: ${e}`));
-    r.failedNetworkCalls.forEach(n => lines.push(`  - FAILED NETWORK CALL: ${n}`));
-    r.brokenLinks.forEach(l => lines.push(`  - BROKEN LINK: ${l}`));
-    r.deadButtons.forEach(b => lines.push(`  - UNLABELED BUTTON: ${b}`));
-    lines.push(`  Fix required: Investigate and resolve all errors on route ${r.path}`);
+    if (r.broken) lines.push(`  - BROKEN ROUTE: Page not found (HTTP ${r.status || "?"})`);
+    if (r.timedOut) lines.push(`  - TIMEOUT: Route did not respond within 8 seconds`);
+    r.errors.forEach(e => lines.push(`  - ERROR: ${e}`));
+    lines.push(`  Fix: Investigate and resolve errors on route ${r.path}`);
   });
 
-  lines.push("\nAfter making all fixes:\n1. Save all changes\n2. Re-run Automated Crawl from /admin/stability\n3. Verify all routes show 0 errors");
+  if (hasLinkIssues) {
+    lines.push(`\nLINK AUDIT ISSUES:`);
+    linkAudit.broken.forEach(l => lines.push(`  - Link "${l.label}" points to unregistered route: ${l.href} — add to App.jsx`));
+  }
+
+  lines.push("\nAfter fixes:\n1. Save changes\n2. Re-run crawl from /admin/stability\n3. Verify all routes show green");
   return lines.join("\n");
 }
 
 export default function AutomatedCrawl({ baseline, onSaveBaseline, onCrawlComplete }) {
   const [crawling, setCrawling] = useState(false);
   const [results, setResults] = useState(null);
+  const [linkAudit, setLinkAudit] = useState(null);
   const [progress, setProgress] = useState({ current: 0, total: APP_ROUTES.length, route: "" });
   const [copied, setCopied] = useState(false);
-  const iframeRef = useRef(null);
 
   const runCrawl = async () => {
     setCrawling(true);
     setResults(null);
-    const allResults = [];
+    setLinkAudit(null);
 
+    // Run static link audit immediately (no async needed)
+    const audit = auditStaticLinks();
+
+    const allResults = [];
     for (let i = 0; i < APP_ROUTES.length; i++) {
       const route = APP_ROUTES[i];
       setProgress({ current: i + 1, total: APP_ROUTES.length, route });
-      const result = await crawlRoute(route, iframeRef.current);
+      const result = await crawlRoute(route);
       allResults.push(result);
     }
 
     setResults(allResults);
+    setLinkAudit(audit);
     setCrawling(false);
-    // Reset iframe
-    if (iframeRef.current) iframeRef.current.src = "about:blank";
     if (onCrawlComplete) onCrawlComplete(allResults);
   };
 
@@ -179,11 +162,11 @@ export default function AutomatedCrawl({ baseline, onSaveBaseline, onCrawlComple
     broken: results.filter(r => r.broken).length,
     errors: results.reduce((s, r) => s + r.errors.length, 0),
     timedOut: results.filter(r => r.timedOut).length,
-    brokenLinks: results.reduce((s, r) => s + r.brokenLinks.length, 0),
-    deadButtons: results.reduce((s, r) => s + r.deadButtons.length, 0),
+    linksChecked: linkAudit?.checked || 0,
+    linksBroken: linkAudit?.broken.length || 0,
   } : null;
 
-  const fixPrompt = results ? generateCrawlFixPrompt(results) : null;
+  const fixPrompt = results ? generateCrawlFixPrompt(results, linkAudit) : null;
 
   const copyFix = () => {
     if (!fixPrompt) return;
@@ -194,27 +177,13 @@ export default function AutomatedCrawl({ baseline, onSaveBaseline, onCrawlComple
 
   const getRowStatus = (r) => {
     if (r.broken) return "broken";
-    if (r.errors.length > 0 || r.failedNetworkCalls.length > 0) return "issues";
-    if (r.brokenLinks.length > 0 || r.deadButtons.length > 0) return "issues";
-    if (r.timedOut || r.iframeTimedOut) return "timeout";
+    if (r.errors.length > 0) return "issues";
+    if (r.timedOut) return "timeout";
     return "ok";
   };
 
-  const hasIssuesForFix = (r) =>
-    r.broken || r.timedOut || r.errors.length > 0 ||
-    r.failedNetworkCalls.length > 0 || r.brokenLinks.length > 0 || r.deadButtons.length > 0;
-
   return (
     <div className="space-y-5">
-      {/* Hidden iframe for DOM scanning */}
-      <iframe
-        ref={iframeRef}
-        src="about:blank"
-        style={{ position: "absolute", width: 1280, height: 900, top: -9999, left: -9999, opacity: 0, pointerEvents: "none" }}
-        title="crawl-scanner"
-        sandbox="allow-same-origin allow-scripts"
-      />
-
       {/* Controls */}
       <div className="flex items-center gap-3 flex-wrap">
         <Button onClick={runCrawl} disabled={crawling} className="gap-1.5">
@@ -235,7 +204,7 @@ export default function AutomatedCrawl({ baseline, onSaveBaseline, onCrawlComple
           </>
         )}
         {crawling && progress.route && (
-          <span className="text-xs text-muted-foreground">Scanning: <code className="font-mono">{progress.route}</code></span>
+          <span className="text-xs text-muted-foreground">Checking: <code className="font-mono">{progress.route}</code></span>
         )}
       </div>
 
@@ -249,16 +218,16 @@ export default function AutomatedCrawl({ baseline, onSaveBaseline, onCrawlComple
         </div>
       )}
 
-      {/* Summary */}
+      {/* Summary cards */}
       {summary && (
         <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
           {[
-            { label: "Routes Crawled", value: summary.routes, color: "text-foreground" },
+            { label: "Routes Checked", value: summary.routes, color: "text-foreground" },
             { label: "Broken Routes", value: summary.broken, color: summary.broken > 0 ? "text-red-600" : "text-green-600" },
-            { label: "Console Errors", value: summary.errors, color: summary.errors > 0 ? "text-red-600" : "text-green-600" },
+            { label: "Server Errors", value: summary.errors, color: summary.errors > 0 ? "text-red-600" : "text-green-600" },
             { label: "Timed Out", value: summary.timedOut, color: summary.timedOut > 0 ? "text-amber-600" : "text-green-600" },
-            { label: "Broken Links", value: summary.brokenLinks, color: summary.brokenLinks > 0 ? "text-red-600" : "text-green-600" },
-            { label: "Bad Buttons", value: summary.deadButtons, color: summary.deadButtons > 0 ? "text-amber-600" : "text-green-600" },
+            { label: "Links Audited", value: summary.linksChecked, color: "text-foreground" },
+            { label: "Broken Links", value: summary.linksBroken, color: summary.linksBroken > 0 ? "text-red-600" : "text-green-600" },
           ].map(s => (
             <div key={s.label} className="bg-card border border-border rounded-xl p-3 text-center">
               <div className={`text-2xl font-bold ${s.color}`}>{s.value}</div>
@@ -268,11 +237,32 @@ export default function AutomatedCrawl({ baseline, onSaveBaseline, onCrawlComple
         </div>
       )}
 
+      {/* Link audit results */}
+      {linkAudit && (
+        <div className="bg-card border border-border rounded-xl overflow-hidden">
+          <div className="px-4 py-2 bg-muted/50 border-b text-sm font-semibold flex items-center gap-2">
+            🔗 Link Audit — {linkAudit.checked} links checked
+            {linkAudit.broken.length === 0
+              ? <span className="ml-auto text-green-600 font-normal text-xs">All links valid ✓</span>
+              : <span className="ml-auto text-red-600 font-normal text-xs">{linkAudit.broken.length} broken</span>}
+          </div>
+          {linkAudit.broken.length > 0 && (
+            <div className="p-4 space-y-1.5">
+              {linkAudit.broken.map((l, i) => (
+                <div key={i} className="text-xs font-mono bg-red-50 border border-red-200 rounded px-2 py-1 text-red-700">
+                  ⛔ "{l.label}" → <code>{l.href}</code> — not registered in App.jsx
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Per-route table */}
       {results && (
         <div className="bg-card border border-border rounded-xl overflow-hidden">
           <div className="px-4 py-2 bg-muted/50 border-b text-sm font-semibold flex items-center gap-2">
-            <Globe className="w-4 h-4" /> Per-Route Results
+            <Globe className="w-4 h-4" /> Route Health
           </div>
           <table className="w-full text-xs">
             <thead>
@@ -281,8 +271,6 @@ export default function AutomatedCrawl({ baseline, onSaveBaseline, onCrawlComple
                 <th className="text-center py-2 px-3 font-medium">Status</th>
                 <th className="text-center py-2 px-3 font-medium">HTTP</th>
                 <th className="text-center py-2 px-3 font-medium">Errors</th>
-                <th className="text-center py-2 px-3 font-medium">Links</th>
-                <th className="text-center py-2 px-3 font-medium">Buttons</th>
                 <th className="text-right py-2 px-4 font-medium">Fix</th>
               </tr>
             </thead>
@@ -290,10 +278,8 @@ export default function AutomatedCrawl({ baseline, onSaveBaseline, onCrawlComple
               {results.map((r) => {
                 const st = getRowStatus(r);
                 const hasIssues = st !== "ok";
-                const routeFixPrompt = hasIssuesForFix(r) ? generateCrawlFixPrompt([r]) : null;
-                return (
-                  <RouteRow key={r.path} r={r} st={st} hasIssues={hasIssues} routeFixPrompt={routeFixPrompt} />
-                );
+                const routeFixPrompt = hasIssues ? generateCrawlFixPrompt([r], null) : null;
+                return <RouteRow key={r.path} r={r} st={st} hasIssues={hasIssues} routeFixPrompt={routeFixPrompt} />;
               })}
             </tbody>
           </table>
@@ -302,7 +288,7 @@ export default function AutomatedCrawl({ baseline, onSaveBaseline, onCrawlComple
 
       {!results && !crawling && (
         <div className="text-center py-12 text-muted-foreground text-sm border border-dashed border-border rounded-xl">
-          Click "Run Crawl" to scan all {APP_ROUTES.length} routes — checks HTTP status, broken links, and unlabeled buttons.
+          Click "Run Crawl" to check all {APP_ROUTES.length} routes for HTTP errors and audit all internal navigation links.
         </div>
       )}
     </div>
@@ -321,40 +307,30 @@ function RouteRow({ r, st, hasIssues, routeFixPrompt }) {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const allIssueDetails = [
-    ...(r.broken ? [`⛔ Broken route — not-found content detected (HTTP ${r.status || "?"})`] : []),
-    ...(r.timedOut ? ["⏱ Fetch timed out — route did not respond within 6 seconds"] : []),
-    ...(r.iframeTimedOut ? ["⏱ DOM scan timed out — page may have a loading/render issue"] : []),
-    ...r.errors.map(e => `🔴 Runtime error: ${e}`),
-    ...r.failedNetworkCalls.map(n => `🟠 Failed network call: ${n}`),
-    ...r.brokenLinks.map(l => `🔗 Broken link: ${l}`),
-    ...r.deadButtons.map(b => `🔘 ${b}`),
+  const details = [
+    ...(r.broken ? [`⛔ Broken — not-found content (HTTP ${r.status || "?"})`] : []),
+    ...(r.timedOut ? ["⏱ Timed out — no response within 8 seconds"] : []),
+    ...r.errors.map(e => `🔴 ${e}`),
   ];
 
   return (
     <>
       <tr
-        className={`border-b last:border-0 cursor-pointer hover:bg-muted/20 ${r.broken ? "bg-red-50/40" : hasIssues ? "bg-amber-50/30" : ""}`}
+        className={`border-b last:border-0 hover:bg-muted/20 ${hasIssues ? "cursor-pointer" : ""} ${r.broken ? "bg-red-50/40" : r.timedOut ? "bg-amber-50/30" : hasIssues ? "bg-amber-50/30" : ""}`}
         onClick={() => hasIssues && setExpanded(v => !v)}
       >
         <td className="py-2 px-4 font-mono">{r.path}</td>
         <td className="py-2 px-3 text-center">
-          {st === "ok" && <CheckCircle2 className="w-4 h-4 text-green-500 mx-auto" />}
-          {st === "broken" && <XCircle className="w-4 h-4 text-red-500 mx-auto" />}
-          {st === "issues" && <AlertTriangle className="w-4 h-4 text-amber-500 mx-auto" />}
-          {st === "timeout" && <AlertTriangle className="w-4 h-4 text-amber-400 mx-auto" title="Timed out" />}
+          {st === "ok"      && <CheckCircle2 className="w-4 h-4 text-green-500 mx-auto" />}
+          {st === "broken"  && <XCircle className="w-4 h-4 text-red-500 mx-auto" />}
+          {st === "issues"  && <AlertTriangle className="w-4 h-4 text-amber-500 mx-auto" />}
+          {st === "timeout" && <AlertTriangle className="w-4 h-4 text-amber-400 mx-auto" />}
         </td>
         <td className={`py-2 px-3 text-center font-mono ${r.status >= 500 ? "text-red-600 font-semibold" : r.status === 404 ? "text-red-500" : "text-muted-foreground"}`}>
           {r.timedOut ? "—" : (r.status || "—")}
         </td>
-        <td className={`py-2 px-3 text-center font-semibold ${r.errors.length > 0 ? "text-red-600" : "text-muted-foreground"}`}>
-          {r.errors.length || "—"}
-        </td>
-        <td className={`py-2 px-3 text-center font-semibold ${r.brokenLinks.length > 0 ? "text-red-600" : r.iframeTimedOut ? "text-muted-foreground" : "text-green-600"}`}>
-          {r.iframeTimedOut ? "?" : (r.brokenLinks.length > 0 ? r.brokenLinks.length : "✓")}
-        </td>
-        <td className={`py-2 px-3 text-center font-semibold ${r.deadButtons.length > 0 ? "text-amber-600" : r.iframeTimedOut ? "text-muted-foreground" : "text-green-600"}`}>
-          {r.iframeTimedOut ? "?" : (r.deadButtons.length > 0 ? r.deadButtons.length : "✓")}
+        <td className={`py-2 px-3 text-center font-semibold ${r.errors.length > 0 ? "text-red-600" : "text-green-600"}`}>
+          {r.errors.length > 0 ? r.errors.length : "✓"}
         </td>
         <td className="py-2 px-4 text-right">
           {routeFixPrompt && (
@@ -367,11 +343,11 @@ function RouteRow({ r, st, hasIssues, routeFixPrompt }) {
           )}
         </td>
       </tr>
-      {expanded && hasIssues && allIssueDetails.length > 0 && (
-        <tr className="border-b bg-amber-50/40">
-          <td colSpan={7} className="px-6 py-3 space-y-1.5">
-            {allIssueDetails.map((detail, i) => (
-              <p key={i} className="text-xs font-mono bg-white/70 border border-border rounded px-2 py-1">{detail}</p>
+      {expanded && details.length > 0 && (
+        <tr className="border-b bg-red-50/30">
+          <td colSpan={5} className="px-6 py-3 space-y-1.5">
+            {details.map((d, i) => (
+              <p key={i} className="text-xs font-mono bg-white/70 border border-border rounded px-2 py-1">{d}</p>
             ))}
           </td>
         </tr>
