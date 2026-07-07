@@ -37,6 +37,9 @@ Deno.serve(async (req) => {
     const settings = await base44.asServiceRole.entities.OfficeSettings.list('-updated_date', 1);
     const office = settings[0];
 
+    // HTML-escape all user/claim-supplied strings before interpolating into email body
+    const esc = (s) => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+
     // Build receipt HTML
     const total = claim.total_charge || 0;
     const amountPaid = claim.amount_paid || 0;
@@ -63,11 +66,11 @@ Deno.serve(async (req) => {
         </head>
         <body>
           <div class="header">
-            <h1>${office?.practice_name || 'Huwe Chiropractic'}</h1>
-            <p>${office?.billing_address_line1 || ''}</p>
-            <p>${office?.billing_city || ''} ${office?.billing_state || ''} ${office?.billing_zip || ''}</p>
-            <p>${office?.phone || ''}</p>
-            ${office?.receipt_header ? `<p style="margin-top: 10px;">${office.receipt_header}</p>` : ''}
+            <h1>${esc(office?.practice_name || 'Huwe Chiropractic')}</h1>
+            <p>${esc(office?.billing_address_line1)}</p>
+            <p>${esc(office?.billing_city)} ${esc(office?.billing_state)} ${esc(office?.billing_zip)}</p>
+            <p>${esc(office?.phone)}</p>
+            ${office?.receipt_header ? `<p style="margin-top: 10px;">${esc(office.receipt_header)}</p>` : ''}
           </div>
 
           <div class="section">
@@ -77,19 +80,19 @@ Deno.serve(async (req) => {
           <div class="section">
             <div class="row">
               <span><strong>Patient:</strong></span>
-              <span>${claim.patient_name}</span>
+              <span>${esc(claim.patient_name)}</span>
             </div>
             <div class="row">
               <span><strong>Date:</strong></span>
-              <span>${claim.date_of_service}</span>
+              <span>${esc(claim.date_of_service)}</span>
             </div>
-            ${patient?.dob ? `<div class="row"><span><strong>DOB:</strong></span><span>${patient.dob}</span></div>` : ''}
+            ${patient?.dob ? `<div class="row"><span><strong>DOB:</strong></span><span>${esc(patient.dob)}</span></div>` : ''}
           </div>
 
           ${claim.diagnoses?.length > 0 ? `
             <div class="section">
               <strong>Diagnoses:</strong>
-              ${claim.diagnoses.map(dx => `<div class="row" style="margin-left: 10px;"><span class="code">${dx.code}</span><span>${dx.description}</span></div>`).join('')}
+              ${claim.diagnoses.map(dx => `<div class="row" style="margin-left: 10px;"><span class="code">${esc(dx.code)}</span><span>${esc(dx.description)}</span></div>`).join('')}
             </div>
           ` : ''}
 
@@ -107,8 +110,8 @@ Deno.serve(async (req) => {
               <tbody>
                 ${(claim.service_lines || []).map(line => `
                   <tr>
-                    <td class="code">${line.code}</td>
-                    <td>${line.description}</td>
+                    <td class="code">${esc(line.code)}</td>
+                    <td>${esc(line.description)}</td>
                     <td style="text-align: right;">${line.units}</td>
                     <td style="text-align: right;">$${((line.charge || 0) * (line.units || 1)).toFixed(2)}</td>
                   </tr>
@@ -133,10 +136,10 @@ Deno.serve(async (req) => {
           </div>
 
           <div class="footer">
-            <p>Provider: ${office?.rendering_provider || ''}</p>
-            ${office?.rendering_npi ? `<p>NPI: ${office.rendering_npi}</p>` : ''}
-            ${office?.ein_tax_id ? `<p>Tax ID: ${office.ein_tax_id}</p>` : ''}
-            ${office?.receipt_footer ? `<p style="margin-top: 10px;">${office.receipt_footer}</p>` : ''}
+            <p>Provider: ${esc(office?.rendering_provider)}</p>
+            ${office?.rendering_npi ? `<p>NPI: ${esc(office.rendering_npi)}</p>` : ''}
+            ${office?.ein_tax_id ? `<p>Tax ID: ${esc(office.ein_tax_id)}</p>` : ''}
+            ${office?.receipt_footer ? `<p style="margin-top: 10px;">${esc(office.receipt_footer)}</p>` : ''}
           </div>
         </body>
       </html>
