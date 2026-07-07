@@ -13,25 +13,43 @@ Deno.serve(async (req) => {
     const { accessToken } = await base44.asServiceRole.connectors.getConnection('googlecalendar');
     const authHeader = { Authorization: `Bearer ${accessToken}` };
 
-    const url = `https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${start}&timeMax=${end}&maxResults=100&singleEvents=true&orderBy=startTime`;
-    const res = await fetch(url, { headers: authHeader });
-
-    if (!res.ok) {
-      console.error('Google Calendar API error:', res.status, await res.text());
-      return Response.json({ error: 'Failed to fetch calendar events' }, { status: res.status });
+    // Fetch all calendars the user has access to (including shared/checked ones)
+    const calListRes = await fetch('https://www.googleapis.com/calendar/v3/users/me/calendarList?maxResults=50', { headers: authHeader });
+    if (!calListRes.ok) {
+      console.error('Failed to fetch calendar list:', calListRes.status, await calListRes.text());
+      return Response.json({ error: 'Failed to fetch calendar list' }, { status: calListRes.status });
     }
+    const calListData = await calListRes.json();
+    const calendars = (calListData.items || []).filter(c => c.selected !== false);
 
-    const data = await res.json();
-    const events = (data.items || []).map(event => ({
-      id: event.id,
-      title: event.summary || 'Untitled',
-      start: event.start?.dateTime || event.start?.date,
-      end: event.end?.dateTime || event.end?.date,
-      description: event.description || '',
-      location: event.location || '',
-      htmlLink: event.htmlLink,
-      source: 'google_calendar'
-    }));
+    // Fetch events from all calendars in parallel
+    const allEventArrays = await Promise.all(
+      calendars.map(async (cal) => {
+        const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(cal.id)}/events?timeMin=${start}&timeMax=${end}&maxResults=100&singleEvents=true&orderBy=startTime`;
+        const res = await fetch(url, { headers: authHeader });
+        if (!res.ok) return [];
+        const data = await res.json();
+        return (data.items || []).map(event => ({
+          id: event.id,
+          title: event.summary || 'Untitled',
+          start: event.start?.dateTime || event.start?.date,
+          end: event.end?.dateTime || event.end?.date,
+          description: event.description || '',
+          location: event.location || '',
+          htmlLink: event.htmlLink,
+          calendarName: cal.summary || cal.id,
+          source: 'google_calendar'
+        }));
+      })
+    );
+
+    // Deduplicate by event id
+    const seen = new Set();
+    const events = allEventArrays.flat().filter(e => {
+      if (seen.has(e.id)) return false;
+      seen.add(e.id);
+      return true;
+    });
 
     return Response.json({ events });
   } catch (error) {
