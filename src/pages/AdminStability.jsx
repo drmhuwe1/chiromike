@@ -1,11 +1,15 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { 
-  CheckCircle2, AlertTriangle, XCircle, RefreshCw, 
+import {
+  CheckCircle2, AlertTriangle, XCircle, RefreshCw,
   Mail, Copy, ChevronDown, ChevronRight, Clock, Activity, Wrench
 } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
+import AutomatedCrawl from "@/components/admin/AutomatedCrawl";
+import RegressionSuite from "@/components/admin/RegressionSuite";
+
+const BASELINE_KEY = "chiromike_crawl_baseline";
 
 const STATUS_CONFIG = {
   clear:   { icon: CheckCircle2, color: "text-green-600",  bg: "bg-green-50  border-green-200",  label: "ALL CLEAR",          badge: "bg-green-100 text-green-800" },
@@ -76,6 +80,7 @@ After fixing, the stability monitor check [${check.id}] should pass.`;
 }
 
 export default function AdminStability() {
+  const [activeTab, setActiveTab] = useState("monitor");
   const [running, setRunning] = useState(false);
   const [currentResult, setCurrentResult] = useState(null);
   const [history, setHistory] = useState([]);
@@ -83,6 +88,10 @@ export default function AdminStability() {
   const [selectedRun, setSelectedRun] = useState(null);
   const [copied, setCopied] = useState(false);
   const [user, setUser] = useState(null);
+  const [crawlResults, setCrawlResults] = useState(null);
+  const [baseline, setBaseline] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(BASELINE_KEY)); } catch { return null; }
+  });
 
   useEffect(() => {
     base44.auth.me().then(setUser).catch(() => {});
@@ -136,6 +145,13 @@ export default function AdminStability() {
     }
   };
 
+  const handleSaveBaseline = (results) => {
+    const payload = { _saved_at: new Date().toISOString(), routes: results };
+    localStorage.setItem(BASELINE_KEY, JSON.stringify(payload));
+    setBaseline(payload);
+    alert(`Baseline saved — ${results.length} routes stored.`);
+  };
+
   const displayResult = selectedRun
     ? {
         overall_status: selectedRun.overall_status,
@@ -177,8 +193,8 @@ export default function AdminStability() {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-xl font-bold">ChiroMike Stability Monitor</h1>
-          {displayResult?.run_date && (
+          <h1 className="text-xl font-bold">ChiroMike Admin Center</h1>
+          {activeTab === "monitor" && displayResult?.run_date && (
             <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
               <Clock className="w-3 h-3" />
               Last run: {new Date(displayResult.run_date).toLocaleString("en-US", { timeZone: "America/New_York" })} ET
@@ -186,141 +202,183 @@ export default function AdminStability() {
             </p>
           )}
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={loadHistory} disabled={loadingHistory}>
-            <RefreshCw className={`w-3.5 h-3.5 mr-1 ${loadingHistory ? "animate-spin" : ""}`} />
-            Refresh
-          </Button>
-          <Button onClick={runNow} disabled={running} size="sm">
-            {running
-              ? <><div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />Running...</>
-              : <><Activity className="w-3.5 h-3.5 mr-1" />Run Now</>
-            }
-          </Button>
-        </div>
+        {activeTab === "monitor" && (
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={loadHistory} disabled={loadingHistory}>
+              <RefreshCw className={`w-3.5 h-3.5 mr-1 ${loadingHistory ? "animate-spin" : ""}`} />
+              Refresh
+            </Button>
+            <Button onClick={runNow} disabled={running} size="sm">
+              {running
+                ? <><div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />Running...</>
+                : <><Activity className="w-3.5 h-3.5 mr-1" />Run Now</>
+              }
+            </Button>
+          </div>
+        )}
       </div>
 
-      {/* Status Card */}
-      <div className={`border-2 rounded-2xl p-6 ${statusCfg.bg}`}>
-        <div className="flex items-center gap-4">
-          <StatusIcon className={`w-12 h-12 ${statusCfg.color} ${displayResult?.overall_status === "failure" ? "animate-pulse" : ""}`} />
-          <div className="flex-1">
-            <h2 className={`text-2xl font-bold ${statusCfg.color}`}>{statusCfg.label}</h2>
-            {displayResult ? (
-              <div className="flex gap-4 mt-1 text-sm">
-                <span className="text-green-700 font-semibold">✅ {displayResult.passed} passed</span>
-                <span className="text-amber-700 font-semibold">⚠️ {displayResult.warned} warned</span>
-                <span className="text-red-700 font-semibold">❌ {displayResult.failed} failed</span>
-                <span className="text-gray-500">/ {displayResult.total_checks} total</span>
+      {/* Tabs */}
+      <div className="flex gap-1 border-b border-border">
+        {[
+          { key: "monitor",    label: "⚙️ Stability Monitor" },
+          { key: "crawl",      label: "🌐 Automated Crawl" },
+          { key: "regression", label: "🔁 Regression Suite" },
+        ].map(tab => (
+          <button
+            key={tab.key}
+            onClick={() => setActiveTab(tab.key)}
+            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors -mb-px ${
+              activeTab === tab.key
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Automated Crawl tab */}
+      {activeTab === "crawl" && (
+        <AutomatedCrawl
+          baseline={baseline?.routes || null}
+          onSaveBaseline={handleSaveBaseline}
+          onCrawlComplete={setCrawlResults}
+        />
+      )}
+
+      {/* Regression Suite tab */}
+      {activeTab === "regression" && (
+        <RegressionSuite
+          baseline={baseline}
+          onSaveBaseline={handleSaveBaseline}
+          lastCrawlResults={crawlResults}
+        />
+      )}
+
+      {/* Stability Monitor tab */}
+      {activeTab === "monitor" && (
+        <div className="space-y-6">
+          {/* Status Card */}
+          <div className={`border-2 rounded-2xl p-6 ${statusCfg.bg}`}>
+            <div className="flex items-center gap-4">
+              <StatusIcon className={`w-12 h-12 ${statusCfg.color} ${displayResult?.overall_status === "failure" ? "animate-pulse" : ""}`} />
+              <div className="flex-1">
+                <h2 className={`text-2xl font-bold ${statusCfg.color}`}>{statusCfg.label}</h2>
+                {displayResult ? (
+                  <div className="flex gap-4 mt-1 text-sm">
+                    <span className="text-green-700 font-semibold">✅ {displayResult.passed} passed</span>
+                    <span className="text-amber-700 font-semibold">⚠️ {displayResult.warned} warned</span>
+                    <span className="text-red-700 font-semibold">❌ {displayResult.failed} failed</span>
+                    <span className="text-gray-500">/ {displayResult.total_checks} total</span>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {running ? "Running checks..." : "Click 'Run Now' to run a manual check."}
+                  </p>
+                )}
               </div>
-            ) : (
-              <p className="text-sm text-muted-foreground mt-1">
-                {running ? "Running checks..." : "Click 'Run Now' to run a manual check."}
-              </p>
+            </div>
+
+            {/* Fix Prompt CTA */}
+            {displayResult?.fix_prompt && (
+              <div className="mt-4 pt-4 border-t border-red-300">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-red-800 font-medium">Auto-fix prompt available — paste into Base44 to repair issues.</p>
+                  <Button size="sm" onClick={copyFixPrompt} className="bg-red-600 hover:bg-red-700 text-white">
+                    <Copy className="w-3.5 h-3.5 mr-1" />
+                    {copied ? "Copied!" : "Copy Fix Prompt"}
+                  </Button>
+                </div>
+              </div>
             )}
           </div>
-        </div>
 
-        {/* Fix Prompt CTA */}
-        {displayResult?.fix_prompt && (
-          <div className="mt-4 pt-4 border-t border-red-300">
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-red-800 font-medium">Auto-fix prompt available — paste into Base44 to repair issues.</p>
-              <Button
-                size="sm"
-                onClick={copyFixPrompt}
-                className="bg-red-600 hover:bg-red-700 text-white"
-              >
-                <Copy className="w-3.5 h-3.5 mr-1" />
-                {copied ? "Copied!" : "Copy Fix Prompt"}
-              </Button>
+          {/* Check Results */}
+          {displayResult?.checks?.length > 0 && (
+            <div className="bg-card border border-border rounded-2xl p-5">
+              <h3 className="font-semibold mb-3">Check Results</h3>
+              {displayResult.checks.map(c => <CheckRow key={c.id} check={c} />)}
             </div>
-          </div>
-        )}
-      </div>
+          )}
 
-      {/* Check Results */}
-      {displayResult?.checks?.length > 0 && (
-        <div className="bg-card border border-border rounded-2xl p-5">
-          <h3 className="font-semibold mb-3">Check Results</h3>
-          {displayResult.checks.map(c => <CheckRow key={c.id} check={c} />)}
-        </div>
-      )}
+          {/* Trend Chart */}
+          {chartData.length > 1 && (
+            <div className="bg-card border border-border rounded-2xl p-5">
+              <h3 className="font-semibold mb-4">Pass Rate — Last {chartData.length} Runs</h3>
+              <ResponsiveContainer width="100%" height={180}>
+                <LineChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis dataKey="date" tick={{ fontSize: 11 }} />
+                  <YAxis tick={{ fontSize: 11 }} />
+                  <Tooltip />
+                  <Line type="monotone" dataKey="passed" stroke="#22c55e" strokeWidth={2} dot={false} name="Passed" />
+                  <Line type="monotone" dataKey="warned" stroke="#f59e0b" strokeWidth={2} dot={false} name="Warned" />
+                  <Line type="monotone" dataKey="failed" stroke="#ef4444" strokeWidth={2} dot={false} name="Failed" />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          )}
 
-      {/* Trend Chart */}
-      {chartData.length > 1 && (
-        <div className="bg-card border border-border rounded-2xl p-5">
-          <h3 className="font-semibold mb-4">Pass Rate — Last {chartData.length} Runs</h3>
-          <ResponsiveContainer width="100%" height={180}>
-            <LineChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="date" tick={{ fontSize: 11 }} />
-              <YAxis tick={{ fontSize: 11 }} />
-              <Tooltip />
-              <Line type="monotone" dataKey="passed" stroke="#22c55e" strokeWidth={2} dot={false} name="Passed" />
-              <Line type="monotone" dataKey="warned" stroke="#f59e0b" strokeWidth={2} dot={false} name="Warned" />
-              <Line type="monotone" dataKey="failed" stroke="#ef4444" strokeWidth={2} dot={false} name="Failed" />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      )}
-
-      {/* Run History */}
-      <div className="bg-card border border-border rounded-2xl p-5">
-        <h3 className="font-semibold mb-3">Run History</h3>
-        {loadingHistory ? (
-          <div className="text-center py-6 text-muted-foreground text-sm">Loading history...</div>
-        ) : history.length === 0 ? (
-          <div className="text-center py-6 text-muted-foreground text-sm">No runs yet. Click "Run Now" to start.</div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-xs text-muted-foreground border-b border-border">
-                  <th className="text-left py-2 pr-4">Date</th>
-                  <th className="text-left pr-4">Triggered By</th>
-                  <th className="text-center pr-4">Pass</th>
-                  <th className="text-center pr-4">Warn</th>
-                  <th className="text-center pr-4">Fail</th>
-                  <th className="text-left pr-4">Status</th>
-                  <th className="text-left">Email</th>
-                </tr>
-              </thead>
-              <tbody>
-                {history.map(run => {
-                  const cfg = STATUS_CONFIG[run.overall_status] || STATUS_CONFIG.unknown;
-                  const isSelected = selectedRun?.id === run.id;
-                  return (
-                    <tr
-                      key={run.id}
-                      onClick={() => setSelectedRun(isSelected ? null : run)}
-                      className={`border-b border-border cursor-pointer transition-colors hover:bg-muted/40 ${isSelected ? "bg-muted/60" : ""}`}
-                    >
-                      <td className="py-2 pr-4 font-mono text-xs">
-                        {new Date(run.created_date).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
-                      </td>
-                      <td className="pr-4 text-muted-foreground">{run.triggered_by || "scheduled"}</td>
-                      <td className="text-center pr-4 text-green-700 font-semibold">{run.passed ?? "-"}</td>
-                      <td className="text-center pr-4 text-amber-700 font-semibold">{run.warned ?? "-"}</td>
-                      <td className="text-center pr-4 text-red-700 font-semibold">{run.failed ?? "-"}</td>
-                      <td className="pr-4">
-                        <span className={`text-xs font-semibold px-2 py-0.5 rounded ${cfg.badge}`}>
-                          {run.overall_status || "unknown"}
-                        </span>
-                      </td>
-                      <td className="text-muted-foreground">{run.email_sent ? <Mail className="w-3.5 h-3.5 text-green-600" /> : "—"}</td>
+          {/* Run History */}
+          <div className="bg-card border border-border rounded-2xl p-5">
+            <h3 className="font-semibold mb-3">Run History</h3>
+            {loadingHistory ? (
+              <div className="text-center py-6 text-muted-foreground text-sm">Loading history...</div>
+            ) : history.length === 0 ? (
+              <div className="text-center py-6 text-muted-foreground text-sm">No runs yet. Click "Run Now" to start.</div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-xs text-muted-foreground border-b border-border">
+                      <th className="text-left py-2 pr-4">Date</th>
+                      <th className="text-left pr-4">Triggered By</th>
+                      <th className="text-center pr-4">Pass</th>
+                      <th className="text-center pr-4">Warn</th>
+                      <th className="text-center pr-4">Fail</th>
+                      <th className="text-left pr-4">Status</th>
+                      <th className="text-left">Email</th>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                  </thead>
+                  <tbody>
+                    {history.map(run => {
+                      const cfg = STATUS_CONFIG[run.overall_status] || STATUS_CONFIG.unknown;
+                      const isSelected = selectedRun?.id === run.id;
+                      return (
+                        <tr
+                          key={run.id}
+                          onClick={() => setSelectedRun(isSelected ? null : run)}
+                          className={`border-b border-border cursor-pointer transition-colors hover:bg-muted/40 ${isSelected ? "bg-muted/60" : ""}`}
+                        >
+                          <td className="py-2 pr-4 font-mono text-xs">
+                            {new Date(run.created_date).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                          </td>
+                          <td className="pr-4 text-muted-foreground">{run.triggered_by || "scheduled"}</td>
+                          <td className="text-center pr-4 text-green-700 font-semibold">{run.passed ?? "-"}</td>
+                          <td className="text-center pr-4 text-amber-700 font-semibold">{run.warned ?? "-"}</td>
+                          <td className="text-center pr-4 text-red-700 font-semibold">{run.failed ?? "-"}</td>
+                          <td className="pr-4">
+                            <span className={`text-xs font-semibold px-2 py-0.5 rounded ${cfg.badge}`}>
+                              {run.overall_status || "unknown"}
+                            </span>
+                          </td>
+                          <td className="text-muted-foreground">{run.email_sent ? <Mail className="w-3.5 h-3.5 text-green-600" /> : "—"}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
-        )}
-      </div>
 
-      <div className="text-xs text-muted-foreground text-center">
-        Scheduled to run daily at 7:00 AM ET · Reports sent to drmhuwe@gmail.com
-      </div>
+          <div className="text-xs text-muted-foreground text-center">
+            Scheduled to run daily at 7:00 AM ET · Reports sent to drmhuwe@gmail.com
+          </div>
+        </div>
+      )}
     </div>
   );
 }
