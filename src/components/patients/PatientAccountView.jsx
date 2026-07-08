@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Printer, CreditCard, PlusCircle, ChevronDown, ChevronUp, FileText, Loader2, RefreshCw, Smartphone } from "lucide-react";
+import { Printer, CreditCard, PlusCircle, ChevronDown, ChevronUp, FileText, Loader2, RefreshCw, Smartphone, Send, X } from "lucide-react";
 import PatientStatementPrint from "./PatientStatementPrint";
 import PaymentModal from "../payment/PaymentModal";
 import PostPaymentModal from "./PostPaymentModal";
@@ -22,6 +22,7 @@ export default function PatientAccountView({ patient }) {
   const [expandedClaimId, setExpandedClaimId] = useState(null);
   const [soapNotes, setSoapNotes] = useState([]);
   const [generatingSoapNote, setGeneratingSoapNote] = useState(false);
+  const [selectedClaimIds, setSelectedClaimIds] = useState(new Set());
   const { toast } = useToast();
 
   const load = async () => {
@@ -164,46 +165,66 @@ export default function PatientAccountView({ patient }) {
 
       {/* Claims Table with per-row payment posting */}
       <div className="bg-card border border-border rounded-xl overflow-hidden">
-        <div className="p-4 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <h3 className="font-bold">{filteredClaims.length} Visits</h3>
-          <div className="flex flex-wrap gap-2">
-            <Button
-              onClick={() => setPostPaymentClaim("general")}
-              variant="outline"
-              className="gap-2 text-green-700 border-green-300 hover:bg-green-50"
-            >
-              <PlusCircle className="w-4 h-4" /> Post Manual Payment
-            </Button>
-            <Button
-              onClick={() => setShowStripePayment(true)}
-              className="gap-2 bg-green-600 hover:bg-green-700"
-            >
-              <CreditCard className="w-4 h-4" /> Collect via Stripe
-            </Button>
-            <Button
-              onClick={() => {
-                const amountCents = Math.round(Math.max(balance, 0) * 100);
-                window.location.href = `izettle://payment?amount=${amountCents}`;
-              }}
-              variant="outline"
-              className="gap-2 border-[#009AC7] text-[#009AC7] hover:bg-[#009AC7]/10"
-            >
-              <Smartphone className="w-4 h-4" /> Pay via Zettle
-            </Button>
-            <Button onClick={() => {
-              if (!startDate && !endDate) {
-                if (!window.confirm("No date filter is set — the statement will include ALL visits. Continue?")) return;
-              }
-              setShowPrint(true);
-            }} variant="outline" className="gap-2">
-              <Printer className="w-4 h-4" /> Statement PDF
-            </Button>
+        <div className="p-4 border-b border-border space-y-3">
+          {/* Date filter */}
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs text-muted-foreground font-medium whitespace-nowrap">Filter by DOS:</span>
+            <Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="h-8 w-36 text-xs" />
+            <span className="text-xs text-muted-foreground">–</span>
+            <Input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="h-8 w-36 text-xs" />
+            {(startDate || endDate) && (
+              <Button size="sm" variant="ghost" className="h-8 px-2 text-xs" onClick={() => { setStartDate(""); setEndDate(""); }}>
+                <X className="w-3 h-3 mr-1" /> Clear
+              </Button>
+            )}
+            <span className="text-sm font-bold ml-1">{filteredClaims.length} Visits</span>
+          </div>
+          {/* Actions */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 flex-wrap">
+            <div className="flex items-center gap-2 flex-wrap">
+              {selectedClaimIds.size > 0 ? (
+                <>
+                  <Button size="sm" className="gap-1.5 h-8 text-xs bg-blue-600 hover:bg-blue-700"
+                    onClick={() => [...selectedClaimIds].forEach(id => window.open(`/print-claim?id=${id}`, "_blank"))}>
+                    <Send className="w-3.5 h-3.5" /> Submit Selected ({selectedClaimIds.size})
+                  </Button>
+                  <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={() => setSelectedClaimIds(new Set())}>Deselect All</Button>
+                </>
+              ) : (
+                <Button size="sm" variant="outline" className="h-8 text-xs"
+                  onClick={() => setSelectedClaimIds(new Set(filteredClaims.map(c => c.id)))}>
+                  Select All Visible
+                </Button>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button onClick={() => setPostPaymentClaim("general")} variant="outline" className="gap-2 text-green-700 border-green-300 hover:bg-green-50">
+                <PlusCircle className="w-4 h-4" /> Post Manual Payment
+              </Button>
+              <Button onClick={() => setShowStripePayment(true)} className="gap-2 bg-green-600 hover:bg-green-700">
+                <CreditCard className="w-4 h-4" /> Collect via Stripe
+              </Button>
+              <Button onClick={() => { const amountCents = Math.round(Math.max(balance, 0) * 100); window.location.href = `izettle://payment?amount=${amountCents}`; }}
+                variant="outline" className="gap-2 border-[#009AC7] text-[#009AC7] hover:bg-[#009AC7]/10">
+                <Smartphone className="w-4 h-4" /> Pay via Zettle
+              </Button>
+              <Button onClick={() => { if (!startDate && !endDate) { if (!window.confirm("No date filter — statement will include ALL visits. Continue?")) return; } setShowPrint(true); }}
+                variant="outline" className="gap-2">
+                <Printer className="w-4 h-4" /> Statement PDF
+              </Button>
+            </div>
           </div>
         </div>
 
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b bg-muted/50">
+              <th className="py-2 px-3 w-8">
+                <input type="checkbox" className="rounded"
+                  checked={filteredClaims.length > 0 && filteredClaims.every(c => selectedClaimIds.has(c.id))}
+                  onChange={e => setSelectedClaimIds(e.target.checked ? new Set(filteredClaims.map(c => c.id)) : new Set())}
+                />
+              </th>
               <th className="text-left py-2 px-4 font-medium">Date of Service</th>
               <th className="text-left py-2 px-4 font-medium">Type</th>
               <th className="text-left py-2 px-4 font-medium hidden md:table-cell">Procedures</th>
@@ -221,7 +242,17 @@ export default function PatientAccountView({ patient }) {
               const isExpanded = expandedClaimId === c.id;
 
               return [
-                <tr key={c.id} className="border-b hover:bg-muted/30">
+                <tr key={c.id} className={`border-b hover:bg-muted/30 ${selectedClaimIds.has(c.id) ? "bg-blue-50/50" : ""}`}>
+                  <td className="py-2 px-3">
+                    <input type="checkbox" className="rounded"
+                      checked={selectedClaimIds.has(c.id)}
+                      onChange={e => {
+                        const next = new Set(selectedClaimIds);
+                        e.target.checked ? next.add(c.id) : next.delete(c.id);
+                        setSelectedClaimIds(next);
+                      }}
+                    />
+                  </td>
                   <td className="py-2 px-4 font-mono text-sm">{c.date_of_service}</td>
                   <td className="py-2 px-4">{c.visit_type}</td>
                   <td className="py-2 px-4 text-xs hidden md:table-cell">
@@ -237,6 +268,14 @@ export default function PatientAccountView({ patient }) {
                   </td>
                   <td className="py-2 px-4">
                     <div className="flex items-center gap-1 justify-end">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-xs text-blue-700 border-blue-300 hover:bg-blue-50 px-2"
+                        onClick={() => window.open(`/print-claim?id=${c.id}`, "_blank")}
+                      >
+                        <Send className="w-3 h-3 mr-1" /> Submit
+                      </Button>
                       <Button
                         size="sm"
                         variant="outline"
@@ -258,7 +297,7 @@ export default function PatientAccountView({ patient }) {
                 </tr>,
                 isExpanded && claimPayments.length > 0 && (
                   <tr key={`${c.id}-payments`} className="border-b bg-green-50/50">
-                    <td colSpan={7} className="px-8 py-2">
+                    <td colSpan={8} className="px-8 py-2">
                       <div className="text-xs font-semibold text-muted-foreground mb-1">Posted Payments</div>
                       <div className="space-y-1">
                         {claimPayments.map(p => (
@@ -275,7 +314,7 @@ export default function PatientAccountView({ patient }) {
             })}
             {filteredClaims.length === 0 && (
               <tr>
-                <td colSpan={7} className="py-8 text-center text-muted-foreground text-sm">No visits found</td>
+                <td colSpan={8} className="py-8 text-center text-muted-foreground text-sm">No visits found</td>
               </tr>
             )}
           </tbody>
@@ -340,19 +379,9 @@ export default function PatientAccountView({ patient }) {
         </div>
       )}
 
-      {/* Date Filter & SOAP Note Generator */}
+      {/* SOAP Note Generator */}
       <div className="bg-card border border-border rounded-xl p-4">
-        <Label className="text-sm font-semibold mb-3 block">Generate SOAP Note</Label>
-        <div className="grid grid-cols-2 gap-4 mb-3">
-          <div>
-            <Label className="text-xs text-muted-foreground">From</Label>
-            <Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="mt-1 h-9" />
-          </div>
-          <div>
-            <Label className="text-xs text-muted-foreground">To</Label>
-            <Input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="mt-1 h-9" />
-          </div>
-        </div>
+        <Label className="text-sm font-semibold mb-3 block">Generate SOAP Note (use DOS filter above)</Label>
         <div className="flex gap-2">
           <Button
             onClick={handleGenerateSoapNote}
@@ -360,29 +389,10 @@ export default function PatientAccountView({ patient }) {
             variant="outline"
             className="flex-1 gap-2"
           >
-            {generatingSoapNote ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" /> Generating...
-              </>
-            ) : (
-              <>
-                <FileText className="w-4 h-4" /> Generate
-              </>
-            )}
-          </Button>
-          <Button
-            onClick={() => {
-              const today = new Date().toISOString().split("T")[0];
-              setStartDate(today);
-              setEndDate(today);
-            }}
-            variant="outline"
-            className="px-3"
-            title="Quick-fill today's date"
-          >
-            Today
+            {generatingSoapNote ? <><Loader2 className="w-4 h-4 animate-spin" /> Generating...</> : <><FileText className="w-4 h-4" /> Generate SOAP Note</>}
           </Button>
         </div>
+        {(!startDate || !endDate) && <p className="text-xs text-muted-foreground mt-2">Set a date range above to generate a SOAP note for that period.</p>}
       </div>
 
 
