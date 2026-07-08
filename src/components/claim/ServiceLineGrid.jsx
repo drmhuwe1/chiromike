@@ -14,9 +14,11 @@ export default function ServiceLineGrid({ lines, onChange, defaultDate }) {
       .then(setFavCodes);
   }, []);
 
+  const lastDate = () => lines.length > 0 ? (lines[lines.length - 1].date_of_service || defaultDate) : defaultDate;
+
   const addLine = () => {
     onChange([...lines, {
-      date_of_service: defaultDate,
+      date_of_service: lastDate(),
       code: "", description: "", modifier: "",
       diagnosis_pointers: "1", charge: 0, units: 1, notes: "",
     }]);
@@ -31,13 +33,13 @@ export default function ServiceLineGrid({ lines, onChange, defaultDate }) {
   const removeLine = (idx) => onChange(lines.filter((_, i) => i !== idx));
 
   const duplicateLine = (idx) => {
-    const dup = { ...lines[idx], date_of_service: defaultDate };
+    const dup = { ...lines[idx] };
     onChange([...lines, dup]);
   };
 
   const addFromFavorite = (proc) => {
     onChange([...lines, {
-      date_of_service: defaultDate,
+      date_of_service: lastDate(),
       code: proc.code, description: proc.description,
       modifier: proc.default_modifier || "", diagnosis_pointers: "1",
       charge: proc.default_charge || 0, units: proc.default_units || 1,
