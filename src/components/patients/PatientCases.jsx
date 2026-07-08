@@ -501,7 +501,7 @@ export default function PatientCases({ patientId }) {
             {(c.accident_auto || c.accident_employment || c.accident_other) && <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">Accident</span>}
             {c.insurance_company && <span className="text-xs text-muted-foreground hidden md:inline truncate max-w-[150px]">{c.insurance_company}</span>}
             <div className="flex items-center gap-1 ml-2" onClick={e => e.stopPropagation()}>
-              <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setEditing(c)}><Edit2 className="w-3.5 h-3.5" /></Button>
+              <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setEditing({ ...c, patient_dob: c.patient_dob || patient?.dob || "" })}><Edit2 className="w-3.5 h-3.5" /></Button>
               <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => handleDelete(c.id)}><Trash2 className="w-3.5 h-3.5 text-destructive" /></Button>
             </div>
             {expanded === c.id ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
