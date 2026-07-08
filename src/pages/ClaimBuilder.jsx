@@ -366,7 +366,15 @@ export default function ClaimBuilder() {
   const handleSaveAndEmail = async () => {
     if (!claim.patient_id) { toast({ title: 'Select a patient', variant: 'destructive' }); return; }
     setEmailing(true);
-    const saved = await base44.entities.Claim.create({ ...claim, total_charge: totalCharge, status: 'Saved' });
+    // Reuse already-saved claim to prevent duplicates
+    let saved = savedClaim;
+    if (!saved) {
+      saved = await base44.entities.Claim.create({ ...claim, total_charge: totalCharge, status: 'Saved' });
+      setSavedClaim(saved);
+      localStorage.removeItem('claimDraft');
+      localStorage.removeItem('patientDxCodes');
+      localStorage.removeItem('persistedDiagnoses');
+    }
     logAudit("Created claim (email superbill)", "Claim", saved.id, claim.patient_name);
     try {
       const res = await base44.functions.invoke('emailSuperbill', { claim_id: saved.id, include_hcfa: includeHcfa });
@@ -381,7 +389,15 @@ export default function ClaimBuilder() {
   const doSaveAndPrint = async () => {
     if (!claim.patient_id) { toast({ title: "Select a patient", variant: "destructive" }); return; }
     setLoading(true);
-    const saved = await base44.entities.Claim.create({ ...claim, total_charge: totalCharge, status: "Saved" });
+    // Reuse already-saved claim to prevent duplicates
+    let saved = savedClaim;
+    if (!saved) {
+      saved = await base44.entities.Claim.create({ ...claim, total_charge: totalCharge, status: "Saved" });
+      setSavedClaim(saved);
+      localStorage.removeItem('claimDraft');
+      localStorage.removeItem('patientDxCodes');
+      localStorage.removeItem('persistedDiagnoses');
+    }
     logAudit("Created claim (save and print)", "Claim", saved.id, claim.patient_name);
     setLoading(false);
     navigate(isCash ? `/print-receipt?id=${saved.id}` : `/print-claim?id=${saved.id}`);

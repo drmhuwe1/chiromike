@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Printer, CreditCard, PlusCircle, ChevronDown, ChevronUp, FileText, Loader2, RefreshCw, Smartphone, Send, X } from "lucide-react";
+import { Printer, CreditCard, PlusCircle, ChevronDown, ChevronUp, FileText, Loader2, RefreshCw, Smartphone, Send, X, ClipboardList } from "lucide-react";
 import PatientStatementPrint from "./PatientStatementPrint";
 import PaymentModal from "../payment/PaymentModal";
 import PostPaymentModal from "./PostPaymentModal";
@@ -268,6 +268,15 @@ export default function PatientAccountView({ patient }) {
                   </td>
                   <td className="py-2 px-4">
                     <div className="flex items-center gap-1 justify-end">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-xs text-purple-700 border-purple-300 hover:bg-purple-50 px-2"
+                        onClick={() => window.open(`/print-claim?id=${c.id}`, "_blank")}
+                        title="Print HCFA / CMS-1500"
+                      >
+                        <ClipboardList className="w-3 h-3 mr-1" /> HCFA
+                      </Button>
                       <Button
                         size="sm"
                         variant="outline"
