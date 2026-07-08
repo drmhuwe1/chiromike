@@ -360,12 +360,7 @@ export default function ClaimBuilder() {
 
   const handleSave = async () => {
     if (!claim.patient_id) { toast({ title: "Select a patient", variant: "destructive" }); return; }
-    if (isInsuranceClaim) {
-      setPendingSaveAction(() => doSave);
-      setShowDocChecklist(true);
-    } else {
-      await doSave();
-    }
+    await doSave();
   };
 
   const handleSaveAndEmail = async () => {
@@ -394,12 +389,7 @@ export default function ClaimBuilder() {
 
   const handleSaveAndPrint = async () => {
     if (!claim.patient_id) { toast({ title: "Select a patient", variant: "destructive" }); return; }
-    if (isInsuranceClaim) {
-      setPendingSaveAction(() => doSaveAndPrint);
-      setShowDocChecklist(true);
-    } else {
-      await doSaveAndPrint();
-    }
+    await doSaveAndPrint();
   };
 
   const filteredPatients = patientSearch && patientSearch.length >= 3
