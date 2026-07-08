@@ -1,117 +1,57 @@
-const CACHE_VERSION = 'v1';
-const CACHE_NAMES = {
-  shell: `${CACHE_VERSION}-shell`,
-  assets: `${CACHE_VERSION}-assets`,
-  api: `${CACHE_VERSION}-api`
-};
+// Cache version — bump this string whenever you need to force a full cache purge
+const CACHE_NAME = 'chiromike-v5';
 
-const SHELL_ASSETS = [
-  '/',
-  '/index.html',
-  '/favicon.ico',
-  '/manifest.json'
-];
+// Only cache the app shell itself, not API calls or external resources
+const SHELL_ASSETS = ['/'];
 
-// Installation: cache critical shell assets
 self.addEventListener('install', (event) => {
-  console.log('[ServiceWorker] Installing...');
+  // Take over immediately without waiting for old SW to finish
+  self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAMES.shell).then((cache) => {
-      console.log('[ServiceWorker] Caching shell assets');
-      return cache.addAll(SHELL_ASSETS).catch((err) => {
-        console.warn('[ServiceWorker] Shell cache partial failure:', err.message);
-      });
-    }).then(() => self.skipWaiting())
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(SHELL_ASSETS))
   );
 });
 
-// Activation: clean up old cache versions
 self.addEventListener('activate', (event) => {
-  console.log('[ServiceWorker] Activating...');
+  // Claim all clients immediately so the new SW serves pages right away
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames
-          .filter((name) => !Object.values(CACHE_NAMES).includes(name))
-          .map((name) => {
-            console.log('[ServiceWorker] Deleting old cache:', name);
-            return caches.delete(name);
-          })
-      );
-    }).then(() => self.clients.claim())
+    Promise.all([
+      self.clients.claim(),
+      // Delete ALL old caches
+      caches.keys().then((keys) =>
+        Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
+      ),
+    ])
   );
 });
 
-// Fetch: cache-first for assets, network-first for API
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Skip non-GET requests
-  if (request.method !== 'GET') {
-    return;
-  }
+  // Only handle same-origin GET requests
+  if (request.method !== 'GET' || url.origin !== self.location.origin) return;
 
-  // Skip external origins and data URLs
-  if (url.origin !== self.location.origin) {
-    return;
-  }
+  // Never cache API / backend function calls
+  if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/functions/')) return;
 
-  // Navigation requests: cache-first (fallback to network)
-  if (request.mode === 'navigate') {
-    event.respondWith(
-      caches.match(request).then((response) => {
-        if (response) {
-          return response;
-        }
-        return fetch(request).then((response) => {
-          // Cache successful navigation responses
-          if (response && response.status === 200) {
-            const cache = caches.open(CACHE_NAMES.shell);
-            cache.then((c) => c.put(request, response.clone()));
-          }
-          return response;
-        }).catch(() => {
-          // Return cached version if offline
-          return caches.match('/index.html');
-        });
-      })
-    );
-    return;
-  }
-
-  // Static assets (.js, .css, .woff2, images): cache-first
-  if (/\.(js|css|woff2|png|jpg|jpeg|svg|ico|webp)$/.test(url.pathname)) {
-    event.respondWith(
-      caches.match(request).then((response) => {
-        if (response) {
-          return response;
-        }
-        return fetch(request).then((response) => {
-          if (response && response.status === 200) {
-            const cache = caches.open(CACHE_NAMES.assets);
-            cache.then((c) => c.put(request, response.clone()));
-          }
-          return response;
-        });
-      })
-    );
-    return;
-  }
-
-  // API calls: network-first
-  if (url.pathname.includes('/api') || url.pathname.includes('/functions')) {
-    event.respondWith(
-      fetch(request).then((response) => {
-        if (response && response.status === 200) {
-          const cache = caches.open(CACHE_NAMES.api);
-          cache.then((c) => c.put(request, response.clone()));
+  // Network-first strategy: always try network, fall back to cache only for navigation
+  event.respondWith(
+    fetch(request)
+      .then((response) => {
+        // Only cache valid responses
+        if (response && response.status === 200 && response.type === 'basic') {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
         }
         return response;
-      }).catch(() => {
+      })
+      .catch(() => {
+        // On network failure, serve cached version for navigation requests
+        if (request.mode === 'navigate') {
+          return caches.match('/') || caches.match(request);
+        }
         return caches.match(request);
       })
-    );
-    return;
-  }
+  );
 });
