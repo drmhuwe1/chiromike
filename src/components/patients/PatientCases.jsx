@@ -87,8 +87,14 @@ function InsuranceComboInput({ value, onChange }) {
   );
 }
 
-function CaseForm({ patientId, caseData, onSave, onCancel }) {
-  const [form, setForm] = useState({ ...emptyCase, patient_id: patientId, ...(caseData || {}) });
+function CaseForm({ patientId, caseData, patient, onSave, onCancel }) {
+  const [form, setForm] = useState({
+    ...emptyCase,
+    patient_id: patientId,
+    ...(caseData || {}),
+    patient_dob: caseData?.patient_dob || patient?.dob || "",
+    insured_dob: caseData?.insured_dob || patient?.dob || "",
+  });
   const [dxLibrary, setDxLibrary] = useState([]);
   const [providerOptions, setProviderOptions] = useState([]);
   const set = (f, v) => setForm(p => ({ ...p, [f]: v }));
@@ -481,6 +487,7 @@ export default function PatientCases({ patientId }) {
         <CaseForm
           patientId={patientId}
           caseData={editing}
+          patient={patient}
           onSave={handleSave}
           onCancel={() => setEditing(null)}
         />
