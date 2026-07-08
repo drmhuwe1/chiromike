@@ -196,7 +196,7 @@ export default function PatientAccountView({ patient }) {
               {selectedClaimIds.size > 0 ? (
                 <>
                   <Button size="sm" className="gap-1.5 h-8 text-xs bg-blue-600 hover:bg-blue-700"
-                    onClick={() => [...selectedClaimIds].forEach(id => window.open(`/print-claim?id=${id}`, "_blank"))}>
+                    onClick={() => { const ids = [...selectedClaimIds]; if (ids.length > 0) window.location.href = `/print-claim?id=${ids[0]}`; }}>
                     <Send className="w-3.5 h-3.5" /> Submit Selected ({selectedClaimIds.size})
                   </Button>
                   <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={() => setSelectedClaimIds(new Set())}>Deselect All</Button>
@@ -283,7 +283,7 @@ export default function PatientAccountView({ patient }) {
                         size="sm"
                         variant="outline"
                         className="h-7 text-xs text-purple-700 border-purple-300 hover:bg-purple-50 px-2"
-                        onClick={() => window.open(`/print-claim?id=${c.id}`, "_blank")}
+                        onClick={() => window.location.href = `/print-claim?id=${c.id}`}
                         title="Print HCFA / CMS-1500"
                       >
                         <ClipboardList className="w-3 h-3 mr-1" /> HCFA
@@ -292,7 +292,7 @@ export default function PatientAccountView({ patient }) {
                         size="sm"
                         variant="outline"
                         className="h-7 text-xs text-blue-700 border-blue-300 hover:bg-blue-50 px-2"
-                        onClick={() => window.open(`/print-claim?id=${c.id}`, "_blank")}
+                        onClick={() => window.location.href = `/print-claim?id=${c.id}`}
                       >
                         <Send className="w-3 h-3 mr-1" /> Submit
                       </Button>
