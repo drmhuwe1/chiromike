@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Printer, CreditCard, PlusCircle, ChevronDown, ChevronUp, FileText, Loader2, RefreshCw } from "lucide-react";
+import { Printer, CreditCard, PlusCircle, ChevronDown, ChevronUp, FileText, Loader2, RefreshCw, Smartphone } from "lucide-react";
 import PatientStatementPrint from "./PatientStatementPrint";
 import PaymentModal from "../payment/PaymentModal";
 import PostPaymentModal from "./PostPaymentModal";
@@ -179,6 +179,19 @@ export default function PatientAccountView({ patient }) {
               className="gap-2 bg-green-600 hover:bg-green-700"
             >
               <CreditCard className="w-4 h-4" /> Collect via Stripe
+            </Button>
+            <Button
+              onClick={() => {
+                const amountCents = Math.round(Math.max(balance, 0) * 100);
+                window.location.href = `izettle://payment?amount=${amountCents}`;
+                setTimeout(() => {
+                  if (!document.hidden) window.open("https://www.zettle.com/gb/go", "_blank");
+                }, 1500);
+              }}
+              variant="outline"
+              className="gap-2 border-[#009AC7] text-[#009AC7] hover:bg-[#009AC7]/10"
+            >
+              <Smartphone className="w-4 h-4" /> Pay via Zettle
             </Button>
             <Button onClick={() => {
               if (!startDate && !endDate) {
