@@ -230,8 +230,9 @@ export default function ClaimBuilder() {
   );
 
   const handleApplyTemplate = (template) => {
+    const lastDate = getLastLineDate(claim.service_lines, claim.date_of_service);
     const newLines = (template.procedures || []).map(p => ({
-      date_of_service: claim.date_of_service,
+      date_of_service: lastDate,
       code: p.code, description: p.description,
       charge: p.charge, units: p.units || 1,
       modifier: p.modifier || "", diagnosis_pointers: p.diagnosis_pointers || "1", notes: "",
@@ -251,7 +252,7 @@ export default function ClaimBuilder() {
     setClaim(prev => ({
       ...prev,
       service_lines: [...prev.service_lines, {
-        date_of_service: prev.date_of_service,
+        date_of_service: getLastLineDate(prev.service_lines, prev.date_of_service),
         code: proc.code, description: proc.description,
         modifier: proc.default_modifier || "", diagnosis_pointers: "1",
         charge: proc.default_charge || 0, units: proc.default_units || 1, notes: "",
@@ -271,11 +272,20 @@ export default function ClaimBuilder() {
     });
   };
 
+  // Returns the last entered date from service lines, fallback to claim date
+  const getLastLineDate = (lines, fallback) => {
+    if (lines && lines.length > 0) {
+      const lastDate = lines[lines.length - 1].date_of_service;
+      if (lastDate) return lastDate;
+    }
+    return fallback;
+  };
+
   const addBlankLine = () => {
     setClaim(prev => ({
       ...prev,
       service_lines: [...prev.service_lines, {
-        date_of_service: prev.date_of_service,
+        date_of_service: getLastLineDate(prev.service_lines, prev.date_of_service),
         code: "", description: "", modifier: "", diagnosis_pointers: "1", charge: 0, units: 1, notes: "",
       }],
     }));
@@ -911,7 +921,7 @@ export default function ClaimBuilder() {
               setClaim(prev => ({
                 ...prev,
                 service_lines: [...prev.service_lines, {
-                  date_of_service: prev.date_of_service,
+                  date_of_service: getLastLineDate(prev.service_lines, prev.date_of_service),
                   code: code.code,
                   description: code.description,
                   modifier: code.default_modifier || "",
