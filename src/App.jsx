@@ -23,6 +23,7 @@ import SLA from './pages/SLA';
 import About from './pages/About';
 import Contact from './pages/Contact';
 import PatientIntake from './pages/PatientIntake';
+import FAQ from './pages/FAQ';
 import IntakeKiosk from './pages/IntakeKiosk';
 import PaymentSuccess from './pages/PaymentSuccess';
 import PaymentCancelled from './pages/PaymentCancelled';
@@ -121,6 +122,7 @@ const AuthenticatedApp = () => {
       <Route path="/intake-kiosk" element={<IntakeKiosk />} />
       <Route path="/payment-success" element={<PaymentSuccess />} />
       <Route path="/payment-cancelled" element={<PaymentCancelled />} />
+      <Route path="/faq" element={<FAQ />} />
       
       {/* Protected app routes with layout */}
       <Route element={<Layout />}>
