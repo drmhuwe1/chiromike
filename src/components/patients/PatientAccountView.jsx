@@ -184,9 +184,6 @@ export default function PatientAccountView({ patient }) {
               onClick={() => {
                 const amountCents = Math.round(Math.max(balance, 0) * 100);
                 window.location.href = `izettle://payment?amount=${amountCents}`;
-                setTimeout(() => {
-                  if (!document.hidden) window.open("https://play.google.com/store/apps/details?id=com.izettle.android", "_blank");
-                }, 1500);
               }}
               variant="outline"
               className="gap-2 border-[#009AC7] text-[#009AC7] hover:bg-[#009AC7]/10"

@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
-import { Save, Printer, Copy, CalendarDays, Search, User, Plus, Trash2, Star, Zap, Mail, Sparkles, ChevronDown, CreditCard, RefreshCw } from "lucide-react";
+import { Save, Printer, Copy, CalendarDays, Search, User, Plus, Trash2, Star, Zap, Mail, Sparkles, ChevronDown, CreditCard, RefreshCw, Smartphone } from "lucide-react";
 import { logAudit } from "../utils/auditLog";
 import PayerAlertBanner from "../components/claim/PayerAlertBanner";
 import SoapNoteModal from "../components/claim/SoapNoteModal";
@@ -755,6 +755,16 @@ export default function ClaimBuilder() {
               <>
                 <Button onClick={() => setShowPaymentModal(true)} className="w-full h-10 bg-green-600 hover:bg-green-700 text-white">
                   <CreditCard className="w-4 h-4 mr-2" /> Collect Payment (Stripe)
+                </Button>
+                <Button
+                  onClick={() => {
+                    const amountCents = Math.round(totalCharge * 100);
+                    window.location.href = `izettle://payment?amount=${amountCents}`;
+                  }}
+                  variant="outline"
+                  className="w-full h-10 border-[#009AC7] text-[#009AC7] hover:bg-[#009AC7]/10"
+                >
+                  <Smartphone className="w-4 h-4 mr-2" /> Pay via Zettle
                 </Button>
                 <Button onClick={() => setShowRecurringModal(true)} className="w-full h-10 bg-blue-600 hover:bg-blue-700 text-white">
                   <RefreshCw className="w-4 h-4 mr-2" /> Set Up Monthly Membership
