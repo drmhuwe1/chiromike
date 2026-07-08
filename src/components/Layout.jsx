@@ -102,7 +102,7 @@ export default function Layout() {
       </aside>
 
       {/* Main content */}
-       <div className="flex-1 flex flex-col overflow-hidden min-h-screen">
+       <div className="flex-1 flex flex-col overflow-hidden">
          {/* Top bar */}
          <header role="banner" className="h-16 min-h-[64px] border-b border-border bg-card flex items-center px-4 lg:px-6 shrink-0 z-30">
           <button 
