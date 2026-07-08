@@ -17,16 +17,18 @@ export default function Patients() {
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [letterFilter, setLetterFilter] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [expandedPatient, setExpandedPatient] = useState(null);
   const [editPatient, setEditPatient] = useState(null);
   const [faxTarget, setFaxTarget] = useState(null);
   const navigate = useNavigate();
+  const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 
   const loadPatients = async () => {
     setLoading(true);
     const [patientData, claimData, paymentData] = await Promise.all([
-      base44.entities.Patient.list("-updated_date", 200),
+      base44.entities.Patient.list("-updated_date", 500),
       base44.entities.Claim.list("-created_date", 500),
       base44.entities.Payment.list("-created_date", 500)
     ]);
@@ -39,15 +41,27 @@ export default function Patients() {
 
   useEffect(() => { loadPatients(); }, []);
 
-  const filtered = patients.filter(p => {
-    const q = search.toLowerCase();
-    return (
-      p.first_name?.toLowerCase().includes(q) ||
-      p.last_name?.toLowerCase().includes(q) ||
-      p.phone?.includes(q) ||
-      p.insurance_id?.includes(q)
-    );
-  });
+  const filtered = patients
+    .filter(p => {
+      const q = search.toLowerCase();
+      const matchesSearch = !q || (
+        p.first_name?.toLowerCase().includes(q) ||
+        p.last_name?.toLowerCase().includes(q) ||
+        p.phone?.includes(q) ||
+        p.insurance_id?.includes(q)
+      );
+      const matchesLetter = !letterFilter || (
+        p.first_name?.toUpperCase().startsWith(letterFilter) ||
+        p.last_name?.toUpperCase().startsWith(letterFilter)
+      );
+      return matchesSearch && matchesLetter;
+    })
+    .sort((a, b) => {
+      const la = (a.last_name || "").toLowerCase();
+      const lb = (b.last_name || "").toLowerCase();
+      if (la !== lb) return la.localeCompare(lb);
+      return (a.first_name || "").toLowerCase().localeCompare((b.first_name || "").toLowerCase());
+    });
 
   const handleSave = async (data) => {
     let savedPatient;
@@ -85,14 +99,33 @@ export default function Patients() {
         </div>
       </div>
 
-      <div className="relative mb-4">
+      <div className="relative mb-3">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input
           placeholder="Search patients by name, phone, or insurance ID..."
           className="pl-10"
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => { setSearch(e.target.value); setLetterFilter(""); }}
         />
+      </div>
+
+      {/* Letter filter bar */}
+      <div className="flex flex-wrap gap-1 mb-4">
+        <button
+          onClick={() => setLetterFilter("")}
+          className={`px-2 py-0.5 rounded text-xs font-semibold border transition-colors ${!letterFilter ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border hover:bg-muted"}`}
+        >
+          All
+        </button>
+        {LETTERS.map(l => (
+          <button
+            key={l}
+            onClick={() => { setLetterFilter(letterFilter === l ? "" : l); setSearch(""); }}
+            className={`px-2 py-0.5 rounded text-xs font-semibold border transition-colors ${letterFilter === l ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border hover:bg-muted"}`}
+          >
+            {l}
+          </button>
+        ))}
       </div>
 
       {showForm && (
