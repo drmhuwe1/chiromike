@@ -339,7 +339,7 @@ export default function CMS1500Form({ effectiveClaim, patient, office, ep, dx, s
               {Array.from({ length: 12 }).map((_, i) => (
                 <div key={i} style={{ display: "flex", alignItems: "baseline", gap: "2px", borderBottom: i < 8 ? border : "none", paddingBottom: "1px", fontSize: "7.5px" }}>
                   <span style={{ fontWeight: "bold", color: R, fontSize: "6.5px", minWidth: "9px" }}>{String.fromCharCode(65 + i)}.</span>
-                  <span>{dx[i]?.code || (i < 8 ? <span style={{ borderBottom: "0.5px solid #ccc", display: "inline-block", width: "50px" }}>&nbsp;</span> : "")}</span>
+                  <span>{dx[i]?.code || ""}</span>
                 </div>
               ))}
             </div>
@@ -481,12 +481,7 @@ export default function CMS1500Form({ effectiveClaim, patient, office, ep, dx, s
                 </td>
                 {/* Rendering NPI */}
                 <td style={{ padding: "1px 2px", fontSize: "7.5px" }}>
-                  {line ? (
-                    <div>
-                      <div>{ep.rendering_npi || ""}</div>
-                      <div style={{ fontSize: "5.5px", color: "#555", borderTop: `0.5px dashed #ccc`, marginTop: "1px" }}>{line.description || ""}</div>
-                    </div>
-                  ) : ""}
+                  {line ? (ep.rendering_npi || "") : ""}
                 </td>
               </tr>
             );
