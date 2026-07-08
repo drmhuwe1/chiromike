@@ -101,6 +101,11 @@
         "Other"
       ]
     },
+    "patient_dob": {
+      "type": "string",
+      "format": "date",
+      "title": "Patient Date of Birth (Box 3)"
+    },
     "authorization_number": {
       "type": "string",
       "title": "Authorization Number"

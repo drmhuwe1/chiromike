@@ -210,7 +210,10 @@ function CaseForm({ patientId, caseData, onSave, onCancel }) {
 
       {/* CONDITION (HCFA Boxes 10, 14, 15, 16, 19) */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <SectionHeader title="CONDITION (HCFA Boxes 10, 14, 15, 16)" />
+        <SectionHeader title="CONDITION (HCFA Boxes 3, 10, 14, 15, 16)" />
+        <Field label="Patient DOB (Box 3)">
+          <Input className="h-8" type="date" value={form.patient_dob || ""} onChange={e => set("patient_dob", e.target.value)} />
+        </Field>
         <Field label="Onset Date of Current Illness (Box 14)">
           <Input className="h-8" type="date" value={form.onset_date} onChange={e => set("onset_date", e.target.value)} />
         </Field>
@@ -353,6 +356,7 @@ export default function PatientCases({ patientId }) {
         date_of_first_visit: pt.date_of_first_visit || "",
         attorney_name: pt.attorney_name || "",
         attorney_phone: pt.attorney_phone || "",
+        patient_dob: pt.dob || "",
         diagnoses: pt.diagnoses || [],
         notes: "",
         active: true,
@@ -422,6 +426,7 @@ export default function PatientCases({ patientId }) {
     date_of_first_visit: patient?.date_of_first_visit || "",
     attorney_name: patient?.attorney_name || "",
     attorney_phone: patient?.attorney_phone || "",
+    patient_dob: patient?.dob || "",
     diagnoses: patient?.diagnoses || [],
     place_of_service: "11",
   });
