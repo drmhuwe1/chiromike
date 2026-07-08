@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { Printer, ArrowLeft } from "lucide-react";
+import { Printer, ArrowLeft, FileText } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export default function PrintReceipt() {
@@ -53,7 +53,10 @@ export default function PrintReceipt() {
     <div>
       <div className="flex flex-wrap items-center gap-3 mb-4 no-print">
         <Link to="/saved-claims"><Button variant="outline" size="sm"><ArrowLeft className="w-4 h-4 mr-1" /> Back</Button></Link>
-        <Button onClick={handlePrint}><Printer className="w-4 h-4 mr-2" /> Print Receipt</Button>
+        <Button onClick={handlePrint}><Printer className="w-4 h-4 mr-2" /> Print Superbill</Button>
+        <Button variant="outline" onClick={() => window.open(`/print-claim?id=${claimId}`, "_blank")} className="gap-1.5 border-blue-300 text-blue-700 hover:bg-blue-50">
+          <FileText className="w-4 h-4" /> Print HCFA
+        </Button>
         {office?.additional_providers?.length > 0 && (
           <div className="flex items-center gap-2 ml-2">
             <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">Provider:</span>

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { Printer, ArrowLeft, Send, CheckCircle, History, RefreshCw } from "lucide-react";
+import { Printer, ArrowLeft, Send, CheckCircle, History, RefreshCw, FileText } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -223,8 +223,26 @@ export default function PrintClaim() {
                 <CheckCircle className="w-4 h-4" /> {claim.status}
               </div>
             )}
+            <Button
+              variant="outline"
+              onClick={() => window.open(`/print-receipt?id=${claimId}`, "_blank")}
+              className="gap-1.5 border-purple-300 text-purple-700 hover:bg-purple-50"
+            >
+              <FileText className="w-4 h-4" /> Print Superbill
+            </Button>
+            <Button
+              variant="outline"
+              onClick={async () => {
+                // Print HCFA first, then open superbill in new tab
+                await handlePrint();
+                setTimeout(() => window.open(`/print-receipt?id=${claimId}`, "_blank"), 500);
+              }}
+              className="gap-1.5 border-amber-400 text-amber-700 hover:bg-amber-50"
+            >
+              <Printer className="w-4 h-4" /> Print Both
+            </Button>
             <Button onClick={handlePrint} className="gap-1.5">
-              <Printer className="w-4 h-4" /> Print / Save PDF
+              <Printer className="w-4 h-4" /> Print HCFA
             </Button>
           </div>
         </div>
