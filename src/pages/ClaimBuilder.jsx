@@ -115,6 +115,14 @@ export default function ClaimBuilder() {
         }
       }
 
+      // Restore patient dx code highlighting
+      const storedPatientCodes = localStorage.getItem('patientDxCodes');
+      if (storedPatientCodes) {
+        try {
+          setPatientDxCodes(new Set(JSON.parse(storedPatientCodes)));
+        } catch (e) { /* ignore */ }
+      }
+
       if (presetPatientId) {
         const p = pts.find(p => p.id === presetPatientId);
         if (p) {
@@ -172,12 +180,14 @@ export default function ClaimBuilder() {
     }));
     
     // Persist diagnoses to localStorage
+    const patientCodes = enrichedDiagnoses.map(d => d.code).filter(Boolean);
     if (enrichedDiagnoses.length > 0) {
       localStorage.setItem('persistedDiagnoses', JSON.stringify(enrichedDiagnoses));
+      localStorage.setItem('patientDxCodes', JSON.stringify(patientCodes));
     }
 
     // Mark these as patient-record diagnoses
-    setPatientDxCodes(new Set(enrichedDiagnoses.map(d => d.code).filter(Boolean)));
+    setPatientDxCodes(new Set(patientCodes));
     
     setPatientSearch("");
     setShowPatientDrop(false);
@@ -322,6 +332,9 @@ export default function ClaimBuilder() {
     setLoading(false);
     setSavedClaim(saved);
     localStorage.removeItem('claimDraft');
+    localStorage.removeItem('patientDxCodes');
+    localStorage.removeItem('persistedDiagnoses');
+    setPatientDxCodes(new Set());
     logAudit("Created claim", "Claim", saved.id, claim.patient_name);
     toast({ title: "Claim saved! You can now email, print, collect payment, or generate a SOAP note below." });
   };
