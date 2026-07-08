@@ -374,7 +374,7 @@ export default function PatientCases({ patientId }) {
         insurance_plan: pt.insurance_plan || "",
         insurance_id: pt.insurance_id || "",
         insurance_group: pt.insurance_group || "",
-        insured_name: pt.insured_name || "",
+        insured_name: pt.insured_name || `${pt.first_name || ""} ${pt.last_name || ""}`.trim(),
         insured_dob: pt.insured_dob || "",
         insured_employer: pt.insured_employer || "",
         accident_employment: false,
