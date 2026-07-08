@@ -75,6 +75,7 @@ export default function ClaimBuilder() {
   const [showDocChecklist, setShowDocChecklist] = useState(false);
   const [showRecurringModal, setShowRecurringModal] = useState(false);
   const [pendingSaveAction, setPendingSaveAction] = useState(null); // function to call after checklist
+  const [patientDxCodes, setPatientDxCodes] = useState(new Set()); // codes auto-loaded from patient record
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -174,6 +175,9 @@ export default function ClaimBuilder() {
     if (enrichedDiagnoses.length > 0) {
       localStorage.setItem('persistedDiagnoses', JSON.stringify(enrichedDiagnoses));
     }
+
+    // Mark these as patient-record diagnoses
+    setPatientDxCodes(new Set(enrichedDiagnoses.map(d => d.code).filter(Boolean)));
     
     setPatientSearch("");
     setShowPatientDrop(false);
@@ -604,12 +608,12 @@ export default function ClaimBuilder() {
         )}
         <div className="space-y-1.5">
           {claim.diagnoses.map((dx, idx) => (
-            <div key={idx} className="flex gap-2 items-center group">
+            <div key={idx} className={`flex gap-2 items-center group rounded-lg px-1 py-0.5 ${patientDxCodes.has(dx.code) ? 'bg-blue-50 border border-blue-200' : ''}`}>
               <span className="text-xs font-mono text-muted-foreground w-4">{idx + 1}.</span>
               <button
                 type="button"
                 onClick={() => setShowDxCodeModal(idx)}
-                className="h-8 w-28 font-mono text-sm px-2 rounded border border-input hover:bg-muted bg-white text-left truncate"
+                className={`h-8 w-28 font-mono text-sm px-2 rounded border text-left truncate ${patientDxCodes.has(dx.code) ? 'border-blue-400 bg-blue-100 text-blue-800 font-bold hover:bg-blue-200' : 'border-input hover:bg-muted bg-white'}`}
                 title="Click to search diagnosis codes"
               >
                 {dx.code || '⊕ Search'}
