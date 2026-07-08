@@ -185,7 +185,7 @@ export default function PatientAccountView({ patient }) {
                 const amountCents = Math.round(Math.max(balance, 0) * 100);
                 window.location.href = `izettle://payment?amount=${amountCents}`;
                 setTimeout(() => {
-                  if (!document.hidden) window.open("https://www.zettle.com/gb/go", "_blank");
+                  if (!document.hidden) window.open("https://play.google.com/store/apps/details?id=com.izettle.android", "_blank");
                 }, 1500);
               }}
               variant="outline"
