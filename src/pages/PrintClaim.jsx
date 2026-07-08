@@ -19,6 +19,7 @@ export default function PrintClaim() {
   const [resubmitMethod, setResubmitMethod] = useState("Print");
   const { toast } = useToast();
   const [user, setUser] = useState(null);
+  const [patientCase, setPatientCase] = useState(null);
   const [selectedProvider, setSelectedProvider] = useState(null); // overrides office defaults
 
   useEffect(() => {
@@ -32,13 +33,16 @@ export default function PrintClaim() {
       const c = claims[0];
       setClaim(c);
       if (c) {
-        const [patients, subs] = await Promise.all([
-          base44.entities.Patient.filter({ id: c.patient_id }),
-          base44.entities.ClaimSubmission.filter({ claim_id: claimId }, "-submitted_at", 50)
-        ]);
-        setPatient(patients[0] || null);
-        setSubmissions(subs);
-      }
+          const [patients, subs, cases] = await Promise.all([
+            base44.entities.Patient.filter({ id: c.patient_id }),
+            base44.entities.ClaimSubmission.filter({ claim_id: claimId }, "-submitted_at", 50),
+            base44.entities.PatientCase.filter({ patient_id: c.patient_id }, "-created_date", 50)
+          ]);
+          setPatient(patients[0] || null);
+          setSubmissions(subs);
+          const defaultCase = cases.find(pc => pc.is_default) || cases[0] || null;
+          setPatientCase(defaultCase);
+        }
       const officeData = settings[0] || null;
       setOffice(officeData);
       // Auto-select default additional provider if set
@@ -98,11 +102,31 @@ export default function PrintClaim() {
   const lines = claim.service_lines || [];
   const payerType = claim.payer_type || "";
 
+  // Enrich claim fields from patientCase/patient as fallback for older claims
+  const effectiveClaim = {
+    ...claim,
+    insured_name: claim.insured_name || patient?.insured_name || claim.patient_name || "",
+    insured_dob: claim.insured_dob || patientCase?.insured_dob || patient?.insured_dob || "",
+    insured_sex: claim.insured_sex || patient?.sex || "",
+    insured_employer: claim.insured_employer || patient?.insured_employer || "",
+    insurance_plan: claim.insurance_plan || patientCase?.insurance_plan || patient?.insurance_plan || "",
+    insurance_group: claim.insurance_group || patientCase?.insurance_group || patient?.insurance_group || "",
+    relationship_to_insured: claim.relationship_to_insured || patient?.relationship_to_insured || "Self",
+    accident_state: claim.accident_state || patientCase?.accident_state || patient?.accident_state || "",
+    date_of_first_visit: claim.date_of_first_visit || patientCase?.date_of_first_visit || patient?.date_of_first_visit || "",
+    accident_date: claim.accident_date || patientCase?.accident_date || "",
+    accident_type: claim.accident_type || patientCase?.accident_type || "",
+  };
+
   const isMedicare = payerType === "Medicare";
+  const isMedicaid = payerType === "Medicaid";
   const isBCBS = payerType === "BCBS";
   const isAutoPI = payerType === "Auto/PI";
   const isCash = payerType === "Cash";
-  const isOther = !isMedicare && !isBCBS && !isAutoPI && !isCash;
+  const isOther = !isMedicare && !isMedicaid && !isBCBS && !isAutoPI && !isCash;
+
+  // Relationship to insured — use claim field, fall back to patient
+  const relationship = effectiveClaim.relationship_to_insured;
 
   // Effective provider — selectedProvider overrides office defaults
   const ep = selectedProvider ? {
@@ -266,17 +290,17 @@ export default function PrintClaim() {
         <div style={{ display: "flex", borderBottom: "1px solid #000", padding: "3px 6px", alignItems: "flex-start" }}>
           <div style={{ marginRight: "6px" }}>
             <div style={{ fontSize: "7px", fontWeight: "bold" }}>1. MEDICARE MEDICAID TRICARE CHAMPVA GROUP HEALTH PLAN FECA OTHER</div>
-            <div style={{ marginTop: "2px", display: "flex", gap: "10px" }}>
+            <div style={{ marginTop: "2px", display: "flex", gap: "8px" }}>
               <span>[{chk(isMedicare)}] Medicare</span>
-              <span>[{chk(isBCBS)}] BCBS</span>
+              <span>[{chk(isMedicaid)}] Medicaid</span>
+              <span>[{chk(isBCBS)}] Group Health</span>
               <span>[{chk(isAutoPI)}] Auto/PI</span>
-              <span>[{chk(isCash)}] Cash</span>
               <span>[{chk(isOther)}] Other</span>
             </div>
           </div>
           <div style={{ marginLeft: "auto", textAlign: "right" }}>
             <div style={{ fontSize: "7px", fontWeight: "bold" }}>1a. INSURED'S I.D. NUMBER</div>
-            <div>{claim.insurance_id || ""}</div>
+            <div>{effectiveClaim.insurance_id || ""}</div>
           </div>
         </div>
 
@@ -286,7 +310,7 @@ export default function PrintClaim() {
           <Cell label="3. PATIENT'S BIRTH DATE / SEX" borderRight>
             <div>{patient?.dob || ""} &nbsp; Sex: {patient?.sex || ""}</div>
           </Cell>
-          <Cell label="4. INSURED'S NAME (Last Name, First Name, Middle Initial)" value={claim.insured_name || claim.patient_name} />
+          <Cell label="4. INSURED'S NAME (Last Name, First Name, Middle Initial)" value={effectiveClaim.insured_name} />
         </div>
 
         {/* ── ROW 3: Patient address | Relationship | Insured address ── */}
@@ -297,10 +321,10 @@ export default function PrintClaim() {
             <div>Tel: {patient?.phone || ""}</div>
           </Cell>
           <Cell label="6. PATIENT RELATIONSHIP TO INSURED" borderRight>
-            <div>[{chk(patient?.relationship_to_insured === "Self")}] Self</div>
-            <div>[{chk(patient?.relationship_to_insured === "Spouse")}] Spouse</div>
-            <div>[{chk(patient?.relationship_to_insured === "Child")}] Child</div>
-            <div>[{chk(patient?.relationship_to_insured === "Other")}] Other</div>
+            <div>[{chk(relationship === "Self")}] Self</div>
+            <div>[{chk(relationship === "Spouse")}] Spouse</div>
+            <div>[{chk(relationship === "Child")}] Child</div>
+            <div>[{chk(relationship === "Other")}] Other</div>
           </Cell>
           <Cell label="7. INSURED'S ADDRESS (No., Street)">
             <div>{patient?.address_line1 || ""}</div>
@@ -318,14 +342,18 @@ export default function PrintClaim() {
             <div style={{ height: "36px" }}></div>
           </Cell>
           <Cell label="10. IS PATIENT'S CONDITION RELATED TO:" borderRight>
-            <div>[{chk(claim.accident_type === "Work")}] Employment</div>
-            <div>[{chk(claim.accident_type === "Auto")}] Auto Accident &nbsp; State: {claim.accident_related ? (patient?.accident_state || "") : ""}</div>
-            <div>[{chk(claim.accident_related && claim.accident_type === "Other")}] Other Accident</div>
+            <div>[{chk(effectiveClaim.accident_type === "Work")}] Employment</div>
+            <div>[{chk(effectiveClaim.accident_type === "Auto")}] Auto Accident &nbsp; State: {effectiveClaim.accident_related ? effectiveClaim.accident_state : ""}</div>
+            <div>[{chk(effectiveClaim.accident_related && effectiveClaim.accident_type !== "Auto" && effectiveClaim.accident_type !== "Work")}] Other Accident</div>
           </Cell>
           <Cell label="11. INSURED'S POLICY GROUP OR FECA NUMBER">
-            <div>{claim.insurance_group || ""}</div>
-            <div style={{ marginTop: "4px", fontSize: "7px", fontWeight: "bold" }}>11a. INSURED'S DATE OF BIRTH / SEX</div>
-            <div>{claim.insured_dob || ""}</div>
+            <div>{effectiveClaim.insurance_group}</div>
+            <div style={{ marginTop: "2px", fontSize: "7px", fontWeight: "bold" }}>11a. INSURED'S DATE OF BIRTH / SEX</div>
+            <div>{effectiveClaim.insured_dob} &nbsp; {effectiveClaim.insured_sex}</div>
+            <div style={{ marginTop: "2px", fontSize: "7px", fontWeight: "bold" }}>11b. EMPLOYER / GROUP NAME</div>
+            <div style={{ fontSize: "8px" }}>{effectiveClaim.insured_employer}</div>
+            <div style={{ marginTop: "2px", fontSize: "7px", fontWeight: "bold" }}>11c. INSURANCE PLAN / PROGRAM NAME</div>
+            <div style={{ fontSize: "8px" }}>{effectiveClaim.insurance_plan}</div>
           </Cell>
         </div>
 
@@ -333,24 +361,25 @@ export default function PrintClaim() {
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", borderBottom: "1px solid #000" }}>
           <Cell label="12. PATIENT'S OR AUTHORIZED PERSON'S SIGNATURE" borderRight>
             <div>Signature on File</div>
-            <div>Date: {claim.date_of_service || ""}</div>
+            <div>Date: {effectiveClaim.date_of_service || ""}</div>
           </Cell>
           <Cell label="13. INSURED'S OR AUTHORIZED PERSON'S SIGNATURE" borderRight>
             <div>Signature on File</div>
           </Cell>
           <Cell label="14. DATE OF CURRENT ILLNESS, INJURY, OR PREGNANCY" borderRight>
-            <div>{claim.accident_related ? (claim.accident_date || claim.date_of_service || "") : claim.date_of_service || ""}</div>
+            <div>{effectiveClaim.accident_related ? (effectiveClaim.accident_date || "") : (effectiveClaim.date_of_first_visit || effectiveClaim.date_of_service || "")}</div>
+            <div style={{ fontSize: "7px", marginTop: "2px", color: "#555" }}>Qual: {effectiveClaim.accident_related ? "439" : "431"}</div>
           </Cell>
-          <Cell label="15. OTHER DATE">
-            <div></div>
+          <Cell label="15. OTHER DATE (First Visit / Symptom Onset)">
+            <div>{effectiveClaim.date_of_first_visit || ""}</div>
           </Cell>
         </div>
 
         {/* ── ROW 6: Referring provider | Outside lab | Resubmission | Auth # ── */}
         <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 2fr", borderBottom: "1px solid #000" }}>
           <Cell label="17. NAME OF REFERRING PROVIDER OR OTHER SOURCE" borderRight>
-            <div>{claim.referring_provider || ""}</div>
-            <div style={{ fontSize: "7px", fontWeight: "bold", marginTop: "2px" }}>17b. NPI: {claim.referring_npi || ""}</div>
+            <div>{effectiveClaim.referring_provider || ""}</div>
+            <div style={{ fontSize: "7px", fontWeight: "bold", marginTop: "2px" }}>17b. NPI: {effectiveClaim.referring_npi || ""}</div>
           </Cell>
           <Cell label="20. OUTSIDE LAB" borderRight>
             <div>[ ] YES &nbsp; [X] NO</div>
@@ -359,7 +388,7 @@ export default function PrintClaim() {
             <div></div>
           </Cell>
           <Cell label="23. PRIOR AUTHORIZATION NUMBER">
-            <div>{claim.authorization_number || ""}</div>
+            <div>{effectiveClaim.authorization_number || ""}</div>
           </Cell>
         </div>
 
@@ -403,8 +432,8 @@ export default function PrintClaim() {
               padding: "2px 4px",
               alignItems: "center"
             }}>
-              <div>{line ? `${line.date_of_service || claim.date_of_service}` : ""}</div>
-              <div style={{ borderLeft: "1px solid #ccc", paddingLeft: "2px" }}>{line ? (claim.place_of_service || "11") : ""}</div>
+              <div>{line ? `${line.date_of_service || effectiveClaim.date_of_service}` : ""}</div>
+              <div style={{ borderLeft: "1px solid #ccc", paddingLeft: "2px" }}>{line ? (effectiveClaim.place_of_service || "11") : ""}</div>
               <div style={{ borderLeft: "1px solid #ccc", paddingLeft: "2px" }}></div>
               <div style={{ borderLeft: "1px solid #ccc", paddingLeft: "2px", fontWeight: line ? "bold" : "normal" }}>{line?.code || ""}</div>
               <div style={{ borderLeft: "1px solid #ccc", paddingLeft: "2px" }}>{line?.modifier || ""}</div>
@@ -429,10 +458,10 @@ export default function PrintClaim() {
             <div>[X] YES</div>
           </Cell>
           <Cell label="28. TOTAL CHARGE" borderRight>
-            <div style={{ fontWeight: "bold" }}>${(claim.total_charge || 0).toFixed(2)}</div>
+            <div style={{ fontWeight: "bold" }}>${(effectiveClaim.total_charge || 0).toFixed(2)}</div>
           </Cell>
           <Cell label="29. AMOUNT PAID" borderRight>
-            <div>${(claim.amount_paid || 0).toFixed(2)}</div>
+            <div>${(effectiveClaim.amount_paid || 0).toFixed(2)}</div>
           </Cell>
           <Cell label="30. RESERVED FOR NUCC USE">
             <div></div>
@@ -443,7 +472,7 @@ export default function PrintClaim() {
         <div style={{ display: "grid", gridTemplateColumns: "2fr 3fr 3fr" }}>
           <Cell label="31. SIGNATURE OF PHYSICIAN OR SUPPLIER (MD, DO, OTHER)" borderRight>
             <div style={{ marginTop: "4px" }}>{ep.rendering_provider || ""}</div>
-            <div>Date: {claim.date_of_service || ""}</div>
+            <div>Date: {effectiveClaim.date_of_service || ""}</div>
             <div style={{ fontSize: "7px", marginTop: "2px" }}>NPI: {ep.rendering_npi || ""}</div>
             <div style={{ fontSize: "7px" }}>Taxonomy: {ep.taxonomy_code || ""}</div>
           </Cell>

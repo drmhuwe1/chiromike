@@ -47,11 +47,13 @@ export default function ClaimBuilder() {
     diagnoses: [], service_lines: [],
     total_charge: 0, amount_paid: 0,
     insurance_company: "", insurance_id: "", insurance_group: "",
-    insured_name: "", insured_dob: "",
+    insured_name: "", insured_dob: "", insured_sex: "", insured_employer: "",
+    relationship_to_insured: "Self",
     referring_provider: "", referring_npi: "",
     authorization_number: "", place_of_service: "11",
     claim_notes: "", accident_related: false,
-    accident_date: "", accident_type: "",
+    accident_date: "", accident_type: "", accident_state: "",
+    date_of_first_visit: "",
   });
 
   const [patients, setPatients] = useState([]);
@@ -164,18 +166,25 @@ export default function ClaimBuilder() {
       }));
     }
     
+    const patientFullName = `${patient.first_name} ${patient.last_name}`;
     setClaim(prev => ({
       ...prev,
       patient_id: patient.id,
-      patient_name: `${patient.first_name} ${patient.last_name}`,
+      patient_name: patientFullName,
       insurance_company: defaultCase?.insurance_company || patient.insurance_company || "",
+      insurance_plan: defaultCase?.insurance_plan || patient.insurance_plan || "",
       insurance_id: defaultCase?.insurance_id || patient.insurance_id || "",
       insurance_group: defaultCase?.insurance_group || patient.insurance_group || "",
-      insured_name: defaultCase?.insured_name || patient.insured_name || `${patient.first_name} ${patient.last_name}`,
+      insured_name: defaultCase?.insured_name || patient.insured_name || patientFullName,
       insured_dob: defaultCase?.insured_dob || patient.insured_dob || patient.dob || "",
+      insured_sex: patient.sex || "",
+      insured_employer: patient.insured_employer || "",
+      relationship_to_insured: patient.relationship_to_insured || "Self",
       accident_related: defaultCase?.is_accident_related || patient.is_accident_related || false,
       accident_date: defaultCase?.accident_date || patient.accident_date || "",
       accident_type: defaultCase?.accident_type || patient.accident_type || "",
+      accident_state: defaultCase?.accident_state || patient.accident_state || "",
+      date_of_first_visit: defaultCase?.date_of_first_visit || patient.date_of_first_visit || "",
       diagnoses: enrichedDiagnoses.map((d, i) => ({ code: d.code, description: d.description, pointer: String(i + 1) })),
     }));
     
@@ -512,6 +521,37 @@ export default function ClaimBuilder() {
               <Label className="text-xs text-muted-foreground">Auth #</Label>
               <Input className="h-8 text-sm mt-0.5" value={claim.authorization_number} onChange={e => set("authorization_number", e.target.value)} />
             </div>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2 pt-2 border-t border-border">
+            <div>
+              <Label className="text-xs text-muted-foreground">Insured Name</Label>
+              <Input className="h-8 text-sm mt-0.5" value={claim.insured_name} onChange={e => set("insured_name", e.target.value)} />
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground">Insured DOB</Label>
+              <Input className="h-8 text-sm mt-0.5" type="date" value={claim.insured_dob} onChange={e => set("insured_dob", e.target.value)} />
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground">Relationship to Insured</Label>
+              <select className="h-8 text-sm mt-0.5 w-full border border-input rounded-md px-2 bg-transparent"
+                value={claim.relationship_to_insured} onChange={e => set("relationship_to_insured", e.target.value)}>
+                <option>Self</option><option>Spouse</option><option>Child</option><option>Other</option>
+              </select>
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground">Insured Employer / Group</Label>
+              <Input className="h-8 text-sm mt-0.5" value={claim.insured_employer} onChange={e => set("insured_employer", e.target.value)} />
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground">Date of First Visit / Onset</Label>
+              <Input className="h-8 text-sm mt-0.5" type="date" value={claim.date_of_first_visit} onChange={e => set("date_of_first_visit", e.target.value)} />
+            </div>
+            {claim.accident_related && (
+              <div>
+                <Label className="text-xs text-muted-foreground">Accident State</Label>
+                <Input className="h-8 text-sm mt-0.5" placeholder="e.g. TX" value={claim.accident_state} onChange={e => set("accident_state", e.target.value)} />
+              </div>
+            )}
           </div>
         </div>
       )}

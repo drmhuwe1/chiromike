@@ -114,6 +114,10 @@
       "type": "string",
       "title": "Insurance Company"
     },
+    "insurance_plan": {
+      "type": "string",
+      "title": "Insurance Plan"
+    },
     "insurance_id": {
       "type": "string",
       "title": "Insurance ID"
@@ -129,6 +133,34 @@
     "insured_dob": {
       "type": "string",
       "title": "Insured DOB"
+    },
+    "insured_sex": {
+      "type": "string",
+      "title": "Insured Sex",
+      "enum": [
+        "Male",
+        "Female",
+        "Other"
+      ]
+    },
+    "insured_employer": {
+      "type": "string",
+      "title": "Insured Employer / Group Name"
+    },
+    "relationship_to_insured": {
+      "type": "string",
+      "title": "Relationship to Insured",
+      "enum": [
+        "Self",
+        "Spouse",
+        "Child",
+        "Other"
+      ]
+    },
+    "date_of_first_visit": {
+      "type": "string",
+      "format": "date",
+      "title": "Date of First Visit / Symptom Onset"
     },
     "referring_provider": {
       "type": "string",
@@ -164,6 +196,10 @@
       "type": "string",
       "title": "Accident Type"
     },
+    "accident_state": {
+      "type": "string",
+      "title": "State of Accident"
+    },
     "template_used": {
       "type": "string",
       "title": "Template Used"
@@ -183,7 +219,7 @@
     "create": {
       "$or": [
         {
-          "created_by_id": "{{user.id}}"
+          "created_by": "{{user.email}}"
         },
         {
           "user_condition": {
@@ -195,7 +231,7 @@
     "read": {
       "$or": [
         {
-          "created_by_id": "{{user.id}}"
+          "created_by": "{{user.email}}"
         },
         {
           "user_condition": {
@@ -207,7 +243,7 @@
     "update": {
       "$or": [
         {
-          "created_by_id": "{{user.id}}"
+          "created_by": "{{user.email}}"
         },
         {
           "user_condition": {
@@ -219,7 +255,7 @@
     "delete": {
       "$or": [
         {
-          "created_by_id": "{{user.id}}"
+          "created_by": "{{user.email}}"
         },
         {
           "user_condition": {
