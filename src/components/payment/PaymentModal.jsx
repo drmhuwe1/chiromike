@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { X, Loader2, Plus, Trash2, Package } from "lucide-react";
+import { X, Loader2, Plus, Trash2, Package, Smartphone } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
 const PACKAGE_VISIT_COUNT = {
@@ -241,8 +241,36 @@ export default function PaymentModal({ claim, patient, onClose, onSuccess: _onSu
         </div>
 
         <p className="text-xs text-muted-foreground text-center">
-          Redirects to secure Stripe checkout. Receipt emailed automatically.
+          Stripe: redirects to secure checkout. Receipt emailed automatically.
         </p>
+
+        {/* Zettle deep-link */}
+        {total > 0 && (
+          <div className="border-t border-border pt-3 space-y-2">
+            <p className="text-xs text-muted-foreground text-center font-medium">— or pay in person —</p>
+            <Button
+              variant="outline"
+              className="w-full h-11 border-[#009AC7] text-[#009AC7] hover:bg-[#009AC7]/10 gap-2"
+              onClick={() => {
+                // Zettle deep link — opens the Zettle app with the amount pre-filled (amount in minor units / cents)
+                const amountCents = Math.round(total * 100);
+                window.location.href = `izettle://payment?amount=${amountCents}`;
+                // Fallback: if app isn't installed, open the App Store / Play Store after a short delay
+                setTimeout(() => {
+                  if (!document.hidden) {
+                    window.open("https://www.zettle.com/gb/go", "_blank");
+                  }
+                }, 1500);
+              }}
+            >
+              <Smartphone className="w-4 h-4" />
+              Open Zettle — ${total.toFixed(2)}
+            </Button>
+            <p className="text-xs text-muted-foreground text-center">
+              Opens the Zettle app on this device with the amount pre-filled.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
