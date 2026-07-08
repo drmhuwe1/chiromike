@@ -133,12 +133,15 @@
   }
 
   .print-area > div {
-    page-break-after: always;
-    page-break-inside: avoid;
+    page-break-after: always !important;
+    break-after: page !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 
   .print-area > div:last-child {
-    page-break-after: auto;
+    page-break-after: auto !important;
+    break-after: auto !important;
   }
 
   table {

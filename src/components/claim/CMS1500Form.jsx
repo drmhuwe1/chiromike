@@ -45,6 +45,9 @@ export default function CMS1500Form({ effectiveClaim, patient, office, ep, dx, s
     border: `1px solid ${R}`,
     boxSizing: "border-box",
     pageBreakAfter: pageNum < totalPages ? "always" : "auto",
+    breakAfter: pageNum < totalPages ? "page" : "auto",
+    pageBreakInside: "avoid",
+    breakInside: "avoid",
   };
 
   // Pad service lines to exactly 6
