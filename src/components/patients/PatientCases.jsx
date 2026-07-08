@@ -62,8 +62,22 @@ function InsuranceComboInput({ value, onChange }) {
 }
 
 function CaseForm({ patientId, caseData, onSave, onCancel }) {
-  const [form, setForm] = useState(caseData || { ...emptyCase, patient_id: patientId });
+  const [form, setForm] = useState({ ...emptyCase, patient_id: patientId, ...(caseData || {}) });
+  const [dxLibrary, setDxLibrary] = useState([]);
   const set = (f, v) => setForm(p => ({ ...p, [f]: v }));
+
+  useEffect(() => {
+    base44.entities.DiagnosisCode.filter({ active: true }, "-updated_date", 500).then(setDxLibrary);
+  }, []);
+
+  const handleDxCodeChange = (idx, code) => {
+    const u = [...form.diagnoses];
+    u[idx] = { ...u[idx], code };
+    // Auto-lookup description
+    const match = dxLibrary.find(d => d.code?.toLowerCase() === code.toLowerCase());
+    if (match) u[idx].description = match.description;
+    set("diagnoses", u);
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -168,8 +182,9 @@ function CaseForm({ patientId, caseData, onSave, onCancel }) {
           {(form.diagnoses || []).map((dx, idx) => (
             <div key={idx} className="flex gap-2 items-center">
               <Input className="h-8 w-28 font-mono text-xs" placeholder="Code" value={dx.code}
-                onChange={e => { const u = [...form.diagnoses]; u[idx] = { ...u[idx], code: e.target.value }; set("diagnoses", u); }} />
-              <Input className="h-8 flex-1 text-xs" placeholder="Description" value={dx.description}
+                onChange={e => handleDxCodeChange(idx, e.target.value)}
+                onBlur={e => handleDxCodeChange(idx, e.target.value)} />
+              <Input className="h-8 flex-1 text-xs" placeholder="Description (auto-fills from code)" value={dx.description}
                 onChange={e => { const u = [...form.diagnoses]; u[idx] = { ...u[idx], description: e.target.value }; set("diagnoses", u); }} />
               <button type="button" onClick={() => set("diagnoses", form.diagnoses.filter((_, i) => i !== idx))} className="text-destructive hover:opacity-70">
                 <Trash2 className="w-4 h-4" />
@@ -203,17 +218,21 @@ export default function PatientCases({ patientId }) {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(null); // null = closed, {} = new, case obj = edit
   const [expanded, setExpanded] = useState(null);
+  const [patient, setPatient] = useState(null);
   const { toast } = useToast();
 
   const load = async () => {
     setLoading(true);
-    const data = await base44.entities.PatientCase.filter({ patient_id: patientId }, "-created_date", 50);
-    
+    const [data, allPts] = await Promise.all([
+      base44.entities.PatientCase.filter({ patient_id: patientId }, "-created_date", 50),
+      base44.entities.Patient.filter({ id: patientId }, "", 1),
+    ]);
+    const pt = allPts[0] || null;
+    setPatient(pt);
+
     // If no cases exist, auto-create first case from patient data
     if (data.length === 0) {
-      const patient = await base44.entities.Patient.list("", 1)
-        .then(pts => pts.find(p => p.id === patientId));
-      
+      const patient = pt;
       if (patient) {
         const firstCase = {
           patient_id: patientId,
@@ -236,8 +255,8 @@ export default function PatientCases({ patientId }) {
           notes: "",
           active: true
         };
-        await base44.entities.PatientCase.create(firstCase);
-        data.push(firstCase);
+        const created = await base44.entities.PatientCase.create(firstCase);
+        data.push(created);
       }
     }
     
@@ -294,7 +313,25 @@ export default function PatientCases({ patientId }) {
           <span className="text-xs text-muted-foreground">({cases.length})</span>
         </div>
         {!editing && (
-          <Button size="sm" variant="outline" onClick={() => setEditing({})}>
+          <Button size="sm" variant="outline" onClick={() => {
+            // Pre-populate new case with patient's current insurance info
+            setEditing({
+              insurance_company: patient?.insurance_company || "",
+              insurance_plan: patient?.insurance_plan || "",
+              insurance_id: patient?.insurance_id || "",
+              insurance_group: patient?.insurance_group || "",
+              insured_name: patient?.insured_name || "",
+              insured_dob: patient?.insured_dob || "",
+              is_accident_related: patient?.is_accident_related || false,
+              accident_date: patient?.accident_date || "",
+              accident_state: patient?.accident_state || "",
+              accident_type: patient?.accident_type || "None",
+              date_of_first_visit: patient?.date_of_first_visit || "",
+              attorney_name: patient?.attorney_name || "",
+              attorney_phone: patient?.attorney_phone || "",
+              diagnoses: patient?.diagnoses || [],
+            });
+          }}>
             <Plus className="w-3.5 h-3.5 mr-1" /> New Case
           </Button>
         )}
@@ -303,7 +340,7 @@ export default function PatientCases({ patientId }) {
       {editing && (
         <CaseForm
           patientId={patientId}
-          caseData={editing.id ? editing : null}
+          caseData={editing}
           onSave={handleSave}
           onCancel={() => setEditing(null)}
         />
