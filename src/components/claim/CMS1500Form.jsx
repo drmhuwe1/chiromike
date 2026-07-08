@@ -39,15 +39,18 @@ export default function CMS1500Form({ effectiveClaim, patient, office, ep, dx, s
   );
 
   const pageStyle = {
-    width: "7.5in",
-    margin: "0 auto",
+    width: "8in",
+    minHeight: "10.5in",
+    margin: "0",
     backgroundColor: "#fff",
     border: `1px solid ${R}`,
     boxSizing: "border-box",
-    pageBreakAfter: pageNum < totalPages ? "always" : "auto",
-    breakAfter: pageNum < totalPages ? "page" : "auto",
+    pageBreakAfter: "always",
+    breakAfter: "page",
     pageBreakInside: "avoid",
     breakInside: "avoid",
+    display: "flex",
+    flexDirection: "column",
   };
 
   // Pad service lines to exactly 6

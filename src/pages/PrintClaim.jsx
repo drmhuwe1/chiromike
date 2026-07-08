@@ -270,7 +270,7 @@ export default function PrintClaim() {
       </div>
 
       {/* CMS-1500 FORM — one CMS1500Form component per page of 6 service lines */}
-      <div className="print-area" style={{ display: "flex", flexDirection: "column", gap: "0" }}>
+      <div className="print-area" style={{ display: "block", margin: 0, padding: 0 }}>
         {pages.map((pageLines, idx) => (
           <CMS1500Form
             key={idx}
