@@ -103,19 +103,27 @@ export default function PrintClaim() {
   const payerType = claim.payer_type || "";
 
   // Enrich claim fields from patientCase/patient as fallback for older claims
+  const pc = patientCase;
   const effectiveClaim = {
     ...claim,
-    insured_name: claim.insured_name || patient?.insured_name || claim.patient_name || "",
-    insured_dob: claim.insured_dob || patientCase?.insured_dob || patient?.insured_dob || "",
-    insured_sex: claim.insured_sex || patient?.sex || "",
-    insured_employer: claim.insured_employer || patient?.insured_employer || "",
-    insurance_plan: claim.insurance_plan || patientCase?.insurance_plan || patient?.insurance_plan || "",
-    insurance_group: claim.insurance_group || patientCase?.insurance_group || patient?.insurance_group || "",
-    relationship_to_insured: claim.relationship_to_insured || patient?.relationship_to_insured || "Self",
-    accident_state: claim.accident_state || patientCase?.accident_state || patient?.accident_state || "",
-    date_of_first_visit: claim.date_of_first_visit || patientCase?.date_of_first_visit || patient?.date_of_first_visit || "",
-    accident_date: claim.accident_date || patientCase?.accident_date || "",
-    accident_type: claim.accident_type || patientCase?.accident_type || "",
+    insured_name: claim.insured_name || pc?.insured_name || patient?.insured_name || claim.patient_name || "",
+    insured_dob: claim.insured_dob || pc?.insured_dob || patient?.insured_dob || "",
+    insured_sex: claim.insured_sex || pc?.insured_sex || patient?.sex || "",
+    insured_employer: claim.insured_employer || pc?.insured_employer || patient?.insured_employer || "",
+    insurance_plan: claim.insurance_plan || pc?.insurance_plan || patient?.insurance_plan || "",
+    insurance_group: claim.insurance_group || pc?.insurance_group || patient?.insurance_group || "",
+    relationship_to_insured: claim.relationship_to_insured || pc?.relationship_to_insured || patient?.relationship_to_insured || "Self",
+    authorization_number: claim.authorization_number || pc?.authorization_number || "",
+    referring_provider: claim.referring_provider || pc?.referring_provider || "",
+    referring_npi: claim.referring_npi || pc?.referring_npi || "",
+    place_of_service: claim.place_of_service || pc?.place_of_service || "11",
+    date_of_first_visit: claim.date_of_first_visit || pc?.date_of_first_visit || patient?.date_of_first_visit || "",
+    onset_date: pc?.onset_date || "",
+    accident_date: claim.accident_date || pc?.accident_date || patient?.accident_date || "",
+    accident_employment: pc?.accident_employment || false,
+    accident_auto: pc?.accident_auto || claim.accident_type === "Auto" || false,
+    accident_other: pc?.accident_other || (claim.accident_related && claim.accident_type !== "Auto" && claim.accident_type !== "Work") || false,
+    accident_auto_state: pc?.accident_auto_state || claim.accident_state || patient?.accident_state || "",
   };
 
   const isMedicare = payerType === "Medicare";
@@ -342,9 +350,9 @@ export default function PrintClaim() {
             <div style={{ height: "36px" }}></div>
           </Cell>
           <Cell label="10. IS PATIENT'S CONDITION RELATED TO:" borderRight>
-            <div>[{chk(effectiveClaim.accident_type === "Work")}] Employment</div>
-            <div>[{chk(effectiveClaim.accident_type === "Auto")}] Auto Accident &nbsp; State: {effectiveClaim.accident_related ? effectiveClaim.accident_state : ""}</div>
-            <div>[{chk(effectiveClaim.accident_related && effectiveClaim.accident_type !== "Auto" && effectiveClaim.accident_type !== "Work")}] Other Accident</div>
+            <div>[{chk(effectiveClaim.accident_employment)}] Employment (10a)</div>
+            <div>[{chk(effectiveClaim.accident_auto)}] Auto Accident (10b) &nbsp; State: {effectiveClaim.accident_auto_state}</div>
+            <div>[{chk(effectiveClaim.accident_other)}] Other Accident (10c)</div>
           </Cell>
           <Cell label="11. INSURED'S POLICY GROUP OR FECA NUMBER">
             <div>{effectiveClaim.insurance_group}</div>
@@ -367,10 +375,10 @@ export default function PrintClaim() {
             <div>Signature on File</div>
           </Cell>
           <Cell label="14. DATE OF CURRENT ILLNESS, INJURY, OR PREGNANCY" borderRight>
-            <div>{effectiveClaim.accident_related ? (effectiveClaim.accident_date || "") : (effectiveClaim.date_of_first_visit || effectiveClaim.date_of_service || "")}</div>
-            <div style={{ fontSize: "7px", marginTop: "2px", color: "#555" }}>Qual: {effectiveClaim.accident_related ? "439" : "431"}</div>
+            <div>{effectiveClaim.onset_date || effectiveClaim.accident_date || effectiveClaim.date_of_first_visit || ""}</div>
+            <div style={{ fontSize: "7px", marginTop: "2px", color: "#555" }}>Qual: {(effectiveClaim.accident_auto || effectiveClaim.accident_employment || effectiveClaim.accident_other) ? "439" : "431"}</div>
           </Cell>
-          <Cell label="15. OTHER DATE (First Visit / Symptom Onset)">
+          <Cell label="15. OTHER DATE (First Visit / Similar Illness)">
             <div>{effectiveClaim.date_of_first_visit || ""}</div>
           </Cell>
         </div>

@@ -15,33 +15,43 @@
       "title": "Default Case",
       "default": false
     },
-    "is_accident_related": {
+    "active": {
       "type": "boolean",
-      "title": "Accident Related"
+      "title": "Active",
+      "default": true
     },
-    "accident_date": {
+    "place_of_service": {
       "type": "string",
-      "format": "date",
-      "title": "Date of Accident"
+      "title": "Place of Service",
+      "default": "11"
     },
-    "accident_state": {
+    "rendering_provider": {
       "type": "string",
-      "title": "State of Accident"
+      "title": "Rendering Provider"
     },
-    "accident_type": {
+    "referring_provider": {
       "type": "string",
-      "enum": [
-        "Auto",
-        "Work",
-        "Other",
-        "None"
-      ],
-      "title": "Accident Type"
+      "title": "Referring Provider"
     },
-    "date_of_first_visit": {
+    "referring_npi": {
       "type": "string",
-      "format": "date",
-      "title": "Date of First Visit"
+      "title": "Referring NPI"
+    },
+    "supervising_physician": {
+      "type": "string",
+      "title": "Supervising Physician"
+    },
+    "employer": {
+      "type": "string",
+      "title": "Employer"
+    },
+    "attorney_name": {
+      "type": "string",
+      "title": "Attorney Name"
+    },
+    "attorney_phone": {
+      "type": "string",
+      "title": "Attorney Phone"
     },
     "insurance_company": {
       "type": "string",
@@ -68,17 +78,90 @@
       "format": "date",
       "title": "Insured DOB"
     },
-    "attorney_name": {
+    "insured_sex": {
       "type": "string",
-      "title": "Attorney Name"
+      "title": "Insured Sex",
+      "enum": [
+        "Male",
+        "Female",
+        "Other"
+      ]
     },
-    "attorney_phone": {
+    "insured_employer": {
       "type": "string",
-      "title": "Attorney Phone"
+      "title": "Insured Employer / Group Name"
+    },
+    "relationship_to_insured": {
+      "type": "string",
+      "title": "Relationship to Insured",
+      "enum": [
+        "Self",
+        "Spouse",
+        "Child",
+        "Other"
+      ]
+    },
+    "authorization_number": {
+      "type": "string",
+      "title": "Authorization Number"
+    },
+    "date_of_first_visit": {
+      "type": "string",
+      "format": "date",
+      "title": "Date of First Visit / Initial Treatment"
+    },
+    "onset_date": {
+      "type": "string",
+      "format": "date",
+      "title": "Onset Date of Current Illness / Injury"
+    },
+    "date_unable_to_work_from": {
+      "type": "string",
+      "format": "date",
+      "title": "Date Unable to Work (From)"
+    },
+    "date_unable_to_work_to": {
+      "type": "string",
+      "format": "date",
+      "title": "Date Unable to Work (To)"
+    },
+    "last_xray_date": {
+      "type": "string",
+      "format": "date",
+      "title": "Last X-Ray Date"
+    },
+    "last_seen_date": {
+      "type": "string",
+      "format": "date",
+      "title": "Last Seen Date"
+    },
+    "accident_employment": {
+      "type": "boolean",
+      "title": "Employment Accident",
+      "default": false
+    },
+    "accident_auto": {
+      "type": "boolean",
+      "title": "Auto Accident",
+      "default": false
+    },
+    "accident_auto_state": {
+      "type": "string",
+      "title": "Auto Accident State"
+    },
+    "accident_other": {
+      "type": "boolean",
+      "title": "Other Accident",
+      "default": false
+    },
+    "accident_date": {
+      "type": "string",
+      "format": "date",
+      "title": "Date of Accident"
     },
     "diagnoses": {
       "type": "array",
-      "title": "Diagnosis Codes",
+      "title": "Diagnosis Codes (ICD-10)",
       "items": {
         "type": "object",
         "properties": {
@@ -94,11 +177,6 @@
     "notes": {
       "type": "string",
       "title": "Case Notes"
-    },
-    "active": {
-      "type": "boolean",
-      "title": "Active",
-      "default": true
     }
   },
   "required": [
