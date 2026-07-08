@@ -29,6 +29,10 @@
       "type": "string",
       "title": "Rendering Provider"
     },
+    "rendering_npi": {
+      "type": "string",
+      "title": "Rendering Provider NPI"
+    },
     "referring_provider": {
       "type": "string",
       "title": "Referring Provider"

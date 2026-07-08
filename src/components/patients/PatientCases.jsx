@@ -90,11 +90,28 @@ function InsuranceComboInput({ value, onChange }) {
 function CaseForm({ patientId, caseData, onSave, onCancel }) {
   const [form, setForm] = useState({ ...emptyCase, patient_id: patientId, ...(caseData || {}) });
   const [dxLibrary, setDxLibrary] = useState([]);
+  const [providerOptions, setProviderOptions] = useState([]);
   const set = (f, v) => setForm(p => ({ ...p, [f]: v }));
 
   useEffect(() => {
     base44.entities.DiagnosisCode.filter({ active: true }, "-updated_date", 500).then(setDxLibrary);
+    base44.entities.OfficeSettings.list("-updated_date", 1).then(all => {
+      const s = all[0];
+      if (!s) return;
+      const opts = [];
+      if (s.rendering_provider) opts.push({ name: s.rendering_provider, npi: s.rendering_npi || "" });
+      (s.additional_providers || []).forEach(p => {
+        if (p.provider_name) opts.push({ name: p.provider_name, npi: p.npi || "" });
+      });
+      setProviderOptions(opts);
+    });
   }, []);
+
+  const handleProviderSelect = (name) => {
+    const match = providerOptions.find(p => p.name === name);
+    set("rendering_provider", name);
+    if (match) set("rendering_npi", match.npi);
+  };
 
   const handleDxCodeChange = (idx, code) => {
     const u = [...form.diagnoses];
@@ -136,7 +153,19 @@ function CaseForm({ patientId, caseData, onSave, onCancel }) {
           </Select>
         </Field>
         <Field label="Rendering Provider">
-          <Input className="h-8" value={form.rendering_provider} onChange={e => set("rendering_provider", e.target.value)} placeholder="Name" />
+          {providerOptions.length > 0 ? (
+            <Select value={form.rendering_provider || ""} onValueChange={handleProviderSelect}>
+              <SelectTrigger className="h-8"><SelectValue placeholder="Select provider..." /></SelectTrigger>
+              <SelectContent>
+                {providerOptions.map(p => <SelectItem key={p.name} value={p.name}>{p.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          ) : (
+            <Input className="h-8" value={form.rendering_provider || ""} onChange={e => set("rendering_provider", e.target.value)} placeholder="Name" />
+          )}
+        </Field>
+        <Field label="Rendering NPI (auto-filled)">
+          <Input className="h-8" value={form.rendering_npi || ""} onChange={e => set("rendering_npi", e.target.value)} placeholder="NPI" />
         </Field>
         <Field label="Supervising Physician">
           <Input className="h-8" value={form.supervising_physician} onChange={e => set("supervising_physician", e.target.value)} />
@@ -277,7 +306,7 @@ function CaseForm({ patientId, caseData, onSave, onCancel }) {
             return (
               <div key={idx} className="flex flex-col gap-1">
                 <Label className="text-xs text-muted-foreground">D{idx + 1}</Label>
-                <Input className="h-7 font-mono text-xs" placeholder="Code"
+                <Input className="h-7 font-mono text-xs text-green-700 font-semibold" placeholder="Code"
                   value={dx.code}
                   onChange={e => {
                     const u = [...(form.diagnoses || [])];
@@ -493,7 +522,7 @@ export default function PatientCases({ patientId }) {
               {c.diagnoses?.length > 0 && (
                 <div className="col-span-2 md:col-span-4">
                   <span className="text-muted-foreground text-xs">Dx: </span>
-                  {c.diagnoses.filter(d => d.code).map(d => d.code).join(", ")}
+                  <span className="text-green-700 font-semibold font-mono">{c.diagnoses.filter(d => d.code).map(d => d.code).join(", ")}</span>
                 </div>
               )}
               {c.notes && <div className="col-span-2 md:col-span-4 text-muted-foreground text-xs italic">{c.notes}</div>}
