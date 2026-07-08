@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Printer, CreditCard, PlusCircle, ChevronDown, ChevronUp, FileText, Loader2, RefreshCw, Smartphone, Send, X, ClipboardList, Trash2 } from "lucide-react";
+import { Printer, CreditCard, PlusCircle, ChevronDown, ChevronUp, FileText, Loader2, RefreshCw, Smartphone, Send, X, ClipboardList, Trash2, Download } from "lucide-react";
 import PatientStatementPrint from "./PatientStatementPrint";
 import PaymentModal from "../payment/PaymentModal";
 import PostPaymentModal from "./PostPaymentModal";
@@ -108,6 +108,24 @@ export default function PatientAccountView({ patient }) {
   }
 
   const mostRecentClaim = filteredClaims[0] || claims[0] || null;
+
+  const handleDownload837 = async (claim) => {
+    try {
+      const res = await base44.functions.invoke("generateEDI837", { claim_id: claim.id });
+      const content = res.data;
+      const filename = `claim_${claim.patient_name?.replace(/\s+/g, '_') || 'unknown'}_${claim.date_of_service || 'unknown'}.837`;
+      const blob = new Blob([content], { type: "text/plain" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast({ title: `837 downloaded: ${filename}` });
+    } catch (e) {
+      toast({ title: e.message || "Failed to generate 837", variant: "destructive" });
+    }
+  };
 
   const handleDeleteClaim = async (claim) => {
     if (!window.confirm(`Delete claim for ${claim.date_of_service} ($${(claim.total_charge || 0).toFixed(2)})? This cannot be undone.`)) return;
@@ -291,10 +309,11 @@ export default function PatientAccountView({ patient }) {
                       <Button
                         size="sm"
                         variant="outline"
-                        className="h-7 text-xs text-blue-700 border-blue-300 hover:bg-blue-50 px-2"
-                        onClick={() => window.location.href = `/print-claim?id=${c.id}`}
+                        className="h-7 text-xs text-orange-700 border-orange-300 hover:bg-orange-50 px-2"
+                        onClick={() => handleDownload837(c)}
+                        title="Download 837 EDI file for Office Ally"
                       >
-                        <Send className="w-3 h-3 mr-1" /> Submit
+                        <Download className="w-3 h-3 mr-1" /> 837
                       </Button>
                       <Button
                         size="sm"
