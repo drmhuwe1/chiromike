@@ -94,6 +94,7 @@ function CaseForm({ patientId, caseData, patient, onSave, onCancel }) {
     ...(caseData || {}),
     patient_dob: caseData?.patient_dob || patient?.dob || "",
     insured_dob: caseData?.insured_dob || patient?.dob || "",
+    insured_sex: caseData?.insured_sex || patient?.sex || "",
   });
   const [dxLibrary, setDxLibrary] = useState([]);
   const [providerOptions, setProviderOptions] = useState([]);
@@ -381,7 +382,8 @@ export default function PatientCases({ patientId }) {
         insurance_id: pt.insurance_id || "",
         insurance_group: pt.insurance_group || "",
         insured_name: pt.insured_name || `${pt.first_name || ""} ${pt.last_name || ""}`.trim(),
-        insured_dob: pt.insured_dob || "",
+        insured_dob: pt.insured_dob || pt.dob || "",
+        insured_sex: pt.sex || "",
         insured_employer: pt.insured_employer || "",
         accident_employment: false,
         accident_auto: pt.accident_type === "Auto",
@@ -451,7 +453,8 @@ export default function PatientCases({ patientId }) {
     insurance_id: patient?.insurance_id || "",
     insurance_group: patient?.insurance_group || "",
     insured_name: patient?.insured_name || "",
-    insured_dob: patient?.insured_dob || "",
+    insured_dob: patient?.insured_dob || patient?.dob || "",
+    insured_sex: patient?.sex || "",
     insured_employer: patient?.insured_employer || "",
     relationship_to_insured: patient?.relationship_to_insured || "Self",
     accident_auto: patient?.accident_type === "Auto",
@@ -508,7 +511,7 @@ export default function PatientCases({ patientId }) {
             {(c.accident_auto || c.accident_employment || c.accident_other) && <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">Accident</span>}
             {c.insurance_company && <span className="text-xs text-muted-foreground hidden md:inline truncate max-w-[150px]">{c.insurance_company}</span>}
             <div className="flex items-center gap-1 ml-2" onClick={e => e.stopPropagation()}>
-              <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setEditing({ ...c, patient_dob: c.patient_dob || patient?.dob || "" })}><Edit2 className="w-3.5 h-3.5" /></Button>
+              <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setEditing({ ...c, patient_dob: c.patient_dob || patient?.dob || "", insured_dob: c.insured_dob || patient?.dob || "", insured_sex: c.insured_sex || patient?.sex || "" })}><Edit2 className="w-3.5 h-3.5" /></Button>
               <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => handleDelete(c.id)}><Trash2 className="w-3.5 h-3.5 text-destructive" /></Button>
             </div>
             {expanded === c.id ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}

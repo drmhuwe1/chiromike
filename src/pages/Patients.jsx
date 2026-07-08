@@ -28,9 +28,9 @@ export default function Patients() {
   const loadPatients = async () => {
     setLoading(true);
     const [patientData, claimData, paymentData] = await Promise.all([
-      base44.entities.Patient.list("-updated_date", 500),
-      base44.entities.Claim.list("-created_date", 500),
-      base44.entities.Payment.list("-created_date", 500)
+      base44.entities.Patient.list("-updated_date", 2000),
+      base44.entities.Claim.list("-created_date", 2000),
+      base44.entities.Payment.list("-created_date", 2000)
     ]);
     setPatients(patientData);
     setClaims(claimData);
