@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Printer, CreditCard, PlusCircle, ChevronDown, ChevronUp, FileText, Loader2, RefreshCw, Smartphone, Send, X, ClipboardList } from "lucide-react";
+import { Printer, CreditCard, PlusCircle, ChevronDown, ChevronUp, FileText, Loader2, RefreshCw, Smartphone, Send, X, ClipboardList, Trash2 } from "lucide-react";
 import PatientStatementPrint from "./PatientStatementPrint";
 import PaymentModal from "../payment/PaymentModal";
 import PostPaymentModal from "./PostPaymentModal";
@@ -109,17 +109,28 @@ export default function PatientAccountView({ patient }) {
 
   const mostRecentClaim = filteredClaims[0] || claims[0] || null;
 
+  const handleDeleteClaim = async (claim) => {
+    if (!window.confirm(`Delete claim for ${claim.date_of_service} ($${(claim.total_charge || 0).toFixed(2)})? This cannot be undone.`)) return;
+    await base44.entities.Claim.delete(claim.id);
+    setClaims(prev => prev.filter(c => c.id !== claim.id));
+    toast({ title: "Claim deleted" });
+  };
+
   const handleGenerateSoapNote = async () => {
-    if (!startDate || !endDate) {
-      toast({ title: "Please select both From and To dates", variant: "destructive" });
-      return;
-    }
     setGeneratingSoapNote(true);
+    // Use date filter if set, otherwise derive range from filtered claims
+    let dateFrom = startDate;
+    let dateTo = endDate;
+    if (!dateFrom || !dateTo) {
+      const dates = filteredClaims.map(c => c.date_of_service).filter(Boolean).sort();
+      dateFrom = dates[0] || new Date().toISOString().split("T")[0];
+      dateTo = dates[dates.length - 1] || dateFrom;
+    }
     try {
       const res = await base44.functions.invoke("generateSoapNote", {
         patient_id: patient.id,
-        date_from: startDate,
-        date_to: endDate,
+        date_from: dateFrom,
+        date_to: dateTo,
         form_type: "claim"
       });
       if (res.data) {
@@ -301,6 +312,13 @@ export default function PatientAccountView({ patient }) {
                           {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                         </button>
                       )}
+                      <button
+                        className="text-destructive/50 hover:text-destructive p-1"
+                        title="Delete claim"
+                        onClick={() => handleDeleteClaim(c)}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
                     </div>
                   </td>
                 </tr>,
@@ -390,18 +408,18 @@ export default function PatientAccountView({ patient }) {
 
       {/* SOAP Note Generator */}
       <div className="bg-card border border-border rounded-xl p-4">
-        <Label className="text-sm font-semibold mb-3 block">Generate SOAP Note (use DOS filter above)</Label>
+        <Label className="text-sm font-semibold mb-3 block">Generate SOAP Note</Label>
         <div className="flex gap-2">
           <Button
             onClick={handleGenerateSoapNote}
-            disabled={generatingSoapNote || !startDate || !endDate}
+            disabled={generatingSoapNote || filteredClaims.length === 0}
             variant="outline"
             className="flex-1 gap-2"
           >
             {generatingSoapNote ? <><Loader2 className="w-4 h-4 animate-spin" /> Generating...</> : <><FileText className="w-4 h-4" /> Generate SOAP Note</>}
           </Button>
         </div>
-        {(!startDate || !endDate) && <p className="text-xs text-muted-foreground mt-2">Set a date range above to generate a SOAP note for that period.</p>}
+        <p className="text-xs text-muted-foreground mt-2">{startDate || endDate ? "Generating for filtered date range." : "Generating for all visits. Use DOS filter above to narrow the range."}</p>
       </div>
 
 
