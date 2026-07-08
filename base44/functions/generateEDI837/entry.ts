@@ -209,11 +209,17 @@ Deno.serve(async (req) => {
     const patient = patientArr[0] || {};
     const office = settingsArr[0] || {};
 
-    // Try to pull payer EDI ID from InsuranceCompany records
+    // Try to pull payer EDI ID from InsuranceCompany records — use fuzzy match in case name differs slightly
     let payerId = '';
     if (claim.insurance_company) {
-      const insurers = await base44.asServiceRole.entities.InsuranceCompany.filter({ name: claim.insurance_company });
-      if (insurers[0]?.edi_payer_id) payerId = insurers[0].edi_payer_id;
+      const allInsurers = await base44.asServiceRole.entities.InsuranceCompany.list('-updated_date', 500);
+      const claimName = claim.insurance_company.toLowerCase();
+      const match = allInsurers.find(ins =>
+        ins.name?.toLowerCase() === claimName ||
+        ins.name?.toLowerCase().includes(claimName) ||
+        claimName.includes(ins.name?.toLowerCase() || '')
+      );
+      if (match?.edi_payer_id) payerId = match.edi_payer_id;
     }
     claim.payer_id = payerId;
 
