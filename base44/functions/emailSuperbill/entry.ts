@@ -160,7 +160,7 @@ Deno.serve(async (req) => {
   ${insurerAddress ? `
   <div style="margin-top:24px;border:2px dashed #cbd5e1;border-radius:8px;padding:16px;background:#f8fafc;">
     <p style="margin:0 0 6px 0;font-size:13px;font-weight:bold;color:#1e40af;">📬 Mail Your Claim To:</p>
-    <p style="margin:0;font-size:14px;line-height:1.8;">${claim.insurance_company}<br>${insurerAddress}</p>
+    <p style="margin:0;font-size:14px;line-height:1.8;">${esc(claim.insurance_company)}<br>${insurerAddress}</p>
     <p style="margin:8px 0 0 0;font-size:12px;color:#64748b;">Write your Member ID (${claim.insurance_id || '—'}) on the envelope and on the top of this superbill before mailing.</p>
   </div>` : `
   <div style="margin-top:24px;border:2px dashed #cbd5e1;border-radius:8px;padding:16px;background:#f8fafc;">
