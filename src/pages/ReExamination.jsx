@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { Search, Save, ChevronDown, ChevronUp } from "lucide-react";
+import { logAudit } from "../utils/auditLog";
 import NotePolishModal from "../components/claim/NotePolishModal";
 import VoiceDictation from "../components/VoiceDictation";
 import OrthoTestsSection from "../components/exam/OrthoTestsSection";
@@ -48,6 +49,7 @@ export default function ReExaminationPage() {
         const match = patientData.find(p => p.id === presetId);
         if (match) selectPatient(match);
       }
+      logAudit("Viewed Re-Examination", "NewPatientExam");
     });
   }, []);
 
@@ -111,6 +113,7 @@ export default function ReExaminationPage() {
     setSaving(true);
     try {
       await base44.entities.NewPatientExam.create(exam);
+      logAudit("Created Re-Examination", "NewPatientExam", exam.patient_id, exam.patient_name);
       toast({ title: "Re-Examination saved successfully" });
       navigate("/patients");
     } catch (e) {
