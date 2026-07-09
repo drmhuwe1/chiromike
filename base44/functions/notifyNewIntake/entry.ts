@@ -2,6 +2,13 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 Deno.serve(async (req) => {
   try {
+    // Validate shared secret to prevent unauthenticated abuse
+    const expectedToken = Deno.env.get('INTAKE_WEBHOOK_SECRET');
+    const providedToken = req.headers.get('x-intake-secret');
+    if (!expectedToken || providedToken !== expectedToken) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const base44 = createClientFromRequest(req);
     const body = await req.json();
 

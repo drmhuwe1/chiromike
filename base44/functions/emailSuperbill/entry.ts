@@ -56,10 +56,11 @@ Deno.serve(async (req) => {
       const insurer = insurers.find(i => i.name?.toLowerCase() === claim.insurance_company?.toLowerCase());
       if (insurer) {
         if (insurer.claims_address_line1) {
+          const escField = (s) => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
           insurerAddress = [
-            insurer.claims_address_line1,
-            insurer.claims_address_line2,
-            [insurer.claims_city, insurer.claims_state, insurer.claims_zip].filter(Boolean).join(', ')
+            escField(insurer.claims_address_line1),
+            escField(insurer.claims_address_line2),
+            [escField(insurer.claims_city), escField(insurer.claims_state), escField(insurer.claims_zip)].filter(Boolean).join(', ')
           ].filter(Boolean).join('<br>');
         }
         // Prefer provider_portal, fall back to website
