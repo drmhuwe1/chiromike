@@ -3,7 +3,8 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 // Simple XOR-based obfuscation for SFTP password at rest in DB.
 // The real secret key is stored in an env var, never in code or DB.
 function encryptPassword(plain) {
-  const key = Deno.env.get('SFTP_ENCRYPTION_KEY') || 'chiromike-default-key-32chars!!';
+  const key = Deno.env.get('OFFICEALLY_ENCRYPTION_KEY');
+  if (!key) throw new Error('OFFICEALLY_ENCRYPTION_KEY is not configured.');
   let result = '';
   for (let i = 0; i < plain.length; i++) {
     result += String.fromCharCode(plain.charCodeAt(i) ^ key.charCodeAt(i % key.length));
@@ -12,7 +13,8 @@ function encryptPassword(plain) {
 }
 
 function decryptPassword(encrypted) {
-  const key = Deno.env.get('SFTP_ENCRYPTION_KEY') || 'chiromike-default-key-32chars!!';
+  const key = Deno.env.get('OFFICEALLY_ENCRYPTION_KEY');
+  if (!key) throw new Error('OFFICEALLY_ENCRYPTION_KEY is not configured.');
   const decoded = atob(encrypted);
   let result = '';
   for (let i = 0; i < decoded.length; i++) {
