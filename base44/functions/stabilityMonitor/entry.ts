@@ -143,7 +143,7 @@ Deno.serve(async (req) => {
 
     // ─── APP-SPECIFIC CHECK A1: HIPAA — Sensitive Entities Have Audit Coverage ─
     try {
-      const recentAudit = await base44.asServiceRole.entities.AuditLog.list("-created_date", 5);
+      const recentAudit = await base44.asServiceRole.entities.AuditLog.list("-created_date", 50);
       const hasAuditActivity = recentAudit.length > 0;
       const sensitiveResources = ["Patient", "Claim", "SoapNote", "NewPatientExam"];
       const coveredResources = [...new Set(recentAudit.map(l => l.resource_type))];

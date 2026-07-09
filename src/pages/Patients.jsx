@@ -68,8 +68,10 @@ export default function Patients() {
     if (editPatient) {
       await base44.entities.Patient.update(editPatient.id, data);
       savedPatient = editPatient;
+      logAudit("Updated patient record", "Patient", editPatient.id, `${editPatient.first_name} ${editPatient.last_name}`);
     } else {
       savedPatient = await base44.entities.Patient.create(data);
+      logAudit("Created patient record", "Patient", savedPatient.id, `${data.first_name} ${data.last_name}`);
     }
     setEditPatient(savedPatient);
     loadPatients();
@@ -78,6 +80,7 @@ export default function Patients() {
   const handleDelete = async (patient) => {
     if (!window.confirm(`Are you sure you want to delete ${patient.first_name} ${patient.last_name}? This cannot be undone.`)) return;
     await base44.entities.Patient.delete(patient.id);
+    logAudit("Deleted patient record", "Patient", patient.id, `${patient.first_name} ${patient.last_name}`);
     loadPatients();
   };
 
