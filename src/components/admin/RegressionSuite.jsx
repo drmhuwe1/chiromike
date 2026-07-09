@@ -145,7 +145,7 @@ export default function RegressionSuite({ baseline, onSaveBaseline, lastCrawlRes
         {lastCrawlResults && (
           <div className="rounded-xl border border-border bg-card px-4 py-3 text-sm flex-1 min-w-[200px]">
             <p className="font-semibold text-xs text-muted-foreground uppercase tracking-wide mb-0.5">Latest Crawl</p>
-            <p className="text-foreground">{lastCrawlResults.length} routes · {lastCrawlResults.reduce((s, r) => s + r.errors.length, 0)} errors · {lastCrawlResults.reduce((s, r) => s + r.failedNetworkCalls.length, 0)} failed calls</p>
+            <p className="text-foreground">{lastCrawlResults.length} routes · {lastCrawlResults.reduce((s, r) => s + (r.errors?.length || 0), 0)} errors · {lastCrawlResults.reduce((s, r) => s + (r.failedNetworkCalls?.length || 0), 0)} failed calls</p>
           </div>
         )}
       </div>
@@ -197,10 +197,10 @@ export default function RegressionSuite({ baseline, onSaveBaseline, lastCrawlRes
                 {reg.newBroken && (
                   <p className="text-xs text-red-700 bg-red-100 rounded px-2 py-1 mb-1 font-semibold">NEW BROKEN ROUTE — was OK at baseline</p>
                 )}
-                {reg.newErrors.map((e, i) => (
+                {(reg.newErrors || []).map((e, i) => (
                   <p key={i} className="text-xs text-red-600 font-mono bg-red-100 rounded px-2 py-1 mb-1">NEW ERROR: {e}</p>
                 ))}
-                {reg.newFailedCalls.map((n, i) => (
+                {(reg.newFailedCalls || []).map((n, i) => (
                   <p key={i} className="text-xs text-amber-700 font-mono bg-amber-50 border border-amber-200 rounded px-2 py-1 mb-1">NEW FAILED CALL: {n}</p>
                 ))}
               </div>
