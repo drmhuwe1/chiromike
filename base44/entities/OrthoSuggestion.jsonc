@@ -61,6 +61,20 @@
           "positive_finding": {
             "type": "string",
             "title": "Positive Sign / Clinical Significance"
+          },
+          "performed": {
+            "type": "boolean",
+            "title": "Performed",
+            "default": false
+          },
+          "result": {
+            "type": "string",
+            "title": "Result",
+            "enum": [
+              "",
+              "Positive",
+              "Negative"
+            ]
           }
         }
       }

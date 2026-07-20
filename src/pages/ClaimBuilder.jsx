@@ -29,7 +29,7 @@ const CANNED_NOTES = [
   "Patient reports significant improvement. Pain reduced by 50%. Continue care 1–2x/week for 4 more weeks then discharge evaluation.",
 ];
 
-const visitTypes = ["Insurance", "Auto", "Cash", "Cash Office Visit", "Cash Package"];
+const visitTypes = ["Insurance", "Auto", "Work Comp", "Cash", "Cash Office Visit", "Cash Package"];
 const today = new Date().toISOString().split("T")[0];
 
 export default function ClaimBuilder() {
@@ -506,7 +506,16 @@ export default function ClaimBuilder() {
       {/* Visit Type Buttons */}
       <div className="flex flex-wrap gap-2">
         {visitTypes.map(t => (
-          <button key={t} onClick={() => { set("visit_type", t); if (t.includes("Cash")) set("payer_type", "Cash"); if (t === "Auto") set("payer_type", "Auto/PI"); }}
+          <button key={t} onClick={() => {
+              set("visit_type", t);
+              if (t.includes("Cash")) set("payer_type", "Cash");
+              if (t === "Auto") { set("payer_type", "Auto/PI"); set("accident_related", true); }
+              if (t === "Work Comp") {
+                set("payer_type", "Workers Comp");
+                set("accident_related", true);
+                if (!claim.accident_type) set("accident_type", "Work");
+              }
+            }}
             className={`px-4 py-2 rounded-lg border text-sm font-medium transition-colors ${
               claim.visit_type === t
                 ? "bg-primary text-primary-foreground border-primary"

@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Printer, CreditCard, PlusCircle, ChevronDown, ChevronUp, FileText, Loader2, RefreshCw, Smartphone, Send, X, ClipboardList, Trash2, Download, BookOpen, Trash, Stethoscope, ChevronRight } from "lucide-react";
 import OrthoSuggestionModal from "./OrthoSuggestionModal";
+import LegalCaseSummaryModal from "@/components/reports/LegalCaseSummaryModal";
+import SoapNotePrintModal from "@/components/soap/SoapNotePrintModal";
 import PatientStatementPrint from "./PatientStatementPrint";
 import PaymentModal from "../payment/PaymentModal";
 import PostPaymentModal from "./PostPaymentModal";
@@ -26,6 +28,8 @@ export default function PatientAccountView({ patient }) {
   const [orthoSuggestions, setOrthoSuggestions] = useState([]);
   const [showOrthoModal, setShowOrthoModal] = useState(false);
   const [expandedOrthoId, setExpandedOrthoId] = useState(null);
+  const [showLegalReport, setShowLegalReport] = useState(false);
+  const [soapPrintNote, setSoapPrintNote] = useState(null);
   const [generatingSoapNote, setGeneratingSoapNote] = useState(false);
   const [selectedClaimIds, setSelectedClaimIds] = useState(new Set());
   const { toast } = useToast();
@@ -470,6 +474,9 @@ export default function PatientAccountView({ patient }) {
                     <p className="font-semibold text-sm">{note.visit_type} · {note.date_of_service}</p>
                     <p className="text-xs text-muted-foreground mt-1">Provider: {note.provider_name}</p>
                   </div>
+                  <Button size="sm" variant="outline" className="h-7 text-xs gap-1.5" onClick={() => setSoapPrintNote(note)}>
+                    <Printer className="w-3 h-3" /> Print
+                  </Button>
                 </div>
                 <div className="mt-2 space-y-1 text-xs">
                   <p><strong>Subjective:</strong> {note.subjective?.substring(0, 100)}...</p>
@@ -683,7 +690,24 @@ export default function PatientAccountView({ patient }) {
         >
           <RefreshCw className="w-4 h-4" /> Re-Exam
         </Button>
+        <Button
+          onClick={() => setShowLegalReport(true)}
+          variant="outline"
+          className="gap-2 text-amber-700 border-amber-300 hover:bg-amber-50"
+        >
+          <FileText className="w-4 h-4" /> Generate Legal Report
+        </Button>
       </div>
+
+      {/* Legal Case Summary Modal */}
+      {showLegalReport && (
+        <LegalCaseSummaryModal patient={patient} claims={claims} onClose={() => setShowLegalReport(false)} />
+      )}
+
+      {/* SOAP Note Print Modal */}
+      {soapPrintNote && (
+        <SoapNotePrintModal note={soapPrintNote} onClose={() => setSoapPrintNote(null)} />
+      )}
     </div>
   );
 }

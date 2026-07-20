@@ -15,6 +15,7 @@
       "enum": [
         "Insurance",
         "Auto",
+        "Work Comp",
         "Cash",
         "Cash Office Visit",
         "Cash Package"
@@ -27,6 +28,7 @@
         "Medicare",
         "BCBS",
         "Auto/PI",
+        "Workers Comp",
         "Cash",
         "Other Commercial",
         "Patient"
