@@ -6,8 +6,10 @@ import { Label } from "@/components/ui/label";
 import { Search, Printer, FileText, ChevronDown, ChevronUp, Send, Plus, X, Trash2 } from "lucide-react";
 import FaxModal from "../components/claim/FaxModal";
 import SoapFieldEditModal from "../components/soap/SoapFieldEditModal";
+import LiteratureSearchModal from "../components/literature/LiteratureSearchModal";
 import { useToast } from "@/components/ui/use-toast";
 import { logAudit } from "../utils/auditLog";
+import { BookOpen } from "lucide-react";
 
 export default function SoapNotes() {
   const [notes, setNotes] = useState([]);
@@ -19,6 +21,7 @@ export default function SoapNotes() {
   const [generating, setGenerating] = useState(null); // { patientId, dateFrom, dateTo, formType }
   const [editingNote, setEditingNote] = useState(null);
   const [editingField, setEditingField] = useState(null);
+  const [literatureTarget, setLiteratureTarget] = useState(null);
   const [patients, setPatients] = useState([]);
   const [patientSearch, setPatientSearch] = useState("");
   const { toast } = useToast();
@@ -99,6 +102,32 @@ export default function SoapNotes() {
       }).slice(0, 15)
     : [];
 
+  const handleAddLiterature = async (note, citations) => {
+    if (!citations || citations.length === 0) return;
+    const lines = citations.map((c, i) => `${i + 1}. ${c.ama_citation}${c.relevance_summary ? ` — ${c.relevance_summary}` : ""}`);
+    const block = `\n\n--- Supporting Literature ---\n${lines.join("\n")}`;
+    const updatedAssessment = (note.assessment || "") + block;
+    try {
+      await base44.entities.SoapNote.update(note.id, { assessment: updatedAssessment });
+      logAudit("Added literature citations", "SoapNote", note.id, note.patient_name);
+      await refreshNotes();
+      toast({ title: `${citations.length} citation(s) added to note` });
+    } catch (e) {
+      toast({ title: e.message || "Failed to add citations", variant: "destructive" });
+    }
+  };
+
+  const getLiteratureContext = (note) => {
+    const owner = patients.find(p => p.id === note.patient_id);
+    return {
+      diagnoses: note.diagnoses?.length ? note.diagnoses : owner?.diagnoses || [],
+      chief_complaint: owner?.chief_complaint || "",
+      pain_areas: owner?.pain_areas || [],
+      accident_type: note.accident_type || owner?.accident_type || "",
+      additional_context: `SOAP note visit date ${note.date_of_service}. Visit type: ${note.visit_type || "chiropractic treatment"}.${note.pain_scale_current ? ` Current pain level: ${note.pain_scale_current}/10.` : ""}`,
+    };
+  };
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -165,7 +194,7 @@ export default function SoapNotes() {
                       Signed: {note.doctor_signature} — {note.date_of_service}
                     </div>
                   )}
-                  <div className="pt-2 flex gap-2">
+                  <div className="pt-2 flex gap-2 flex-wrap">
                     <Button 
                       size="sm" 
                       className="text-blue-600 border-blue-200 hover:bg-blue-50" 
@@ -173,6 +202,14 @@ export default function SoapNotes() {
                       onClick={() => { setEditingNote(note); setEditingField("subjective"); }}
                     >
                       Edit Fields
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="text-purple-600 border-purple-200 hover:bg-purple-50" 
+                      onClick={() => setLiteratureTarget(note)}
+                    >
+                      <BookOpen className="w-3.5 h-3.5 mr-1.5" /> Add Literature
                     </Button>
                     <Button 
                       size="sm" 
@@ -223,6 +260,15 @@ export default function SoapNotes() {
             toast({ title: "Field updated" });
           }}
           onClose={() => { setEditingNote(null); setEditingField(null); }}
+        />
+      )}
+
+      {/* Literature search modal */}
+      {literatureTarget && (
+        <LiteratureSearchModal
+          context={getLiteratureContext(literatureTarget)}
+          onSelect={(citations) => handleAddLiterature(literatureTarget, citations)}
+          onClose={() => setLiteratureTarget(null)}
         />
       )}
 

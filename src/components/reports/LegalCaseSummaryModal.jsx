@@ -1,13 +1,22 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { X, Printer, Loader2 } from "lucide-react";
+import { X, Printer, Loader2, BookOpen } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import LiteratureSearchModal from "@/components/literature/LiteratureSearchModal";
 
 export default function LegalCaseSummaryModal({ patient, claims, onClose }) {
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [literature, setLiterature] = useState([]);
+  const [showLiterature, setShowLiterature] = useState(false);
   const { toast } = useToast();
+
+  const handleAddLiterature = (citations) => {
+    setLiterature(citations);
+    setShowLiterature(false);
+    toast({ title: `${citations.length} citations added to report` });
+  };
 
   useEffect(() => {
     generateReport();
@@ -155,6 +164,26 @@ export default function LegalCaseSummaryModal({ patient, claims, onClose }) {
                   </div>
                 </div>
 
+                {literature.length > 0 && (
+                  <div>
+                    <p className="font-bold">SUPPORTING MEDICAL LITERATURE</p>
+                    <div className="text-xs mt-2 space-y-2 bg-blue-50 border border-blue-200 rounded p-3">
+                      {literature.map((article, i) => (
+                        <div key={i} className="border-b border-blue-100 pb-2 last:border-0">
+                          <p className="font-semibold text-blue-900">
+                            {i + 1}. {article.ama_citation}
+                          </p>
+                          {article.relevance_summary && (
+                            <p className="text-xs text-blue-700 mt-1 italic">
+                              {article.relevance_summary}
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <div>
                   <p className="font-bold">ASSESSMENT & RECOMMENDATIONS</p>
                   <p className="text-xs mt-2">
@@ -173,20 +202,47 @@ export default function LegalCaseSummaryModal({ patient, claims, onClose }) {
               </div>
             </div>
 
-            <div className="flex gap-3 pt-4 border-t">
-              <Button onClick={handlePrint} variant="outline" className="flex-1">
+            <div className="flex gap-3 pt-4 border-t flex-wrap">
+              <Button onClick={handlePrint} variant="outline" className="flex-1 min-w-[140px]">
                 <Printer className="w-4 h-4 mr-2" /> Print Report
               </Button>
-              <Button onClick={generateReport} variant="outline" className="flex-1">
+              <Button
+                onClick={() => setShowLiterature(true)}
+                variant="outline"
+                className="flex-1 min-w-[140px] text-purple-600 border-purple-200 hover:bg-purple-50"
+              >
+                <BookOpen className="w-4 h-4 mr-2" />
+                {literature.length > 0
+                  ? `Literature (${literature.length})`
+                  : "Add Literature"}
+              </Button>
+              <Button onClick={generateReport} variant="outline" className="flex-1 min-w-[140px]">
                 🔄 Regenerate with AI
               </Button>
-              <Button onClick={onClose} variant="outline" className="flex-1">
+              <Button onClick={onClose} variant="outline" className="flex-1 min-w-[140px]">
                 Close
               </Button>
             </div>
           </>
         ) : null}
       </div>
+
+      {showLiterature && (
+        <LiteratureSearchModal
+          context={{
+            diagnoses: patient.diagnoses || [],
+            chief_complaint: patient.chief_complaint || "",
+            pain_areas: patient.pain_areas || [],
+            accident_type:
+              claims.find((c) => c.accident_related)?.accident_type ||
+              patient.accident_type ||
+              "Personal injury",
+            additional_context: `Personal injury legal case. Initial pain ${patient.pain_scale || "unspecified"}/10. Pain frequency: ${patient.pain_frequency || "ongoing"}. Total treatment visits: ${claims.length}. Total charges: $${claims.reduce((s, c) => s + (c.total_charge || 0), 0).toFixed(2)}.`,
+          }}
+          onSelect={handleAddLiterature}
+          onClose={() => setShowLiterature(false)}
+        />
+      )}
     </div>
   );
 }
