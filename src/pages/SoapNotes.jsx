@@ -110,8 +110,21 @@ export default function SoapNotes() {
     try {
       await base44.entities.SoapNote.update(note.id, { assessment: updatedAssessment });
       logAudit("Added literature citations", "SoapNote", note.id, note.patient_name);
+      // Persist a copy on the patient's file for future reuse
+      try {
+        await base44.entities.MedicalLiterature.create({
+          patient_id: note.patient_id,
+          patient_name: note.patient_name,
+          source: "SOAP Note",
+          associated_note_id: note.id,
+          search_context: `SOAP note — ${note.visit_type || "chiropractic treatment"} visit on ${note.date_of_service}.`,
+          citations,
+        });
+      } catch (e) {
+        console.error("Failed to save literature citations to patient file:", e);
+      }
       await refreshNotes();
-      toast({ title: `${citations.length} citation(s) added to note` });
+      toast({ title: `${citations.length} citation(s) added — saved to patient file` });
     } catch (e) {
       toast({ title: e.message || "Failed to add citations", variant: "destructive" });
     }

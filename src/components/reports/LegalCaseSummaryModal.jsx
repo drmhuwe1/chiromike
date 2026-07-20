@@ -12,10 +12,23 @@ export default function LegalCaseSummaryModal({ patient, claims, onClose }) {
   const [showLiterature, setShowLiterature] = useState(false);
   const { toast } = useToast();
 
-  const handleAddLiterature = (citations) => {
+  const handleAddLiterature = async (citations) => {
     setLiterature(citations);
     setShowLiterature(false);
-    toast({ title: `${citations.length} citations added to report` });
+    try {
+      await base44.entities.MedicalLiterature.create({
+        patient_id: patient.id,
+        patient_name: `${patient.first_name} ${patient.last_name}`,
+        source: "Legal Case Summary",
+        search_context: `Legal case — ${patient.accident_type || "Personal injury"}; ${citations.length} article(s) cited for attorney submission.`,
+        citations,
+      });
+    } catch (e) {
+      console.error("Failed to save literature citations:", e);
+    }
+    toast({
+      title: `${citations.length} citation(s) added — saved to patient file`,
+    });
   };
 
   useEffect(() => {

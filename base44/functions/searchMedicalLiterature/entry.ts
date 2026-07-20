@@ -38,10 +38,12 @@ Search peer-reviewed medical journals and clinical practice guidelines that esta
 5. The clinical rationale for the treatment course provided
 
 PRIORITIZE sources that are:
+- Recent articles — strongly prefer those published in the last 10 years (2016-present). Current year is 2026. When a recent article and an older article have similar relevance, prefer the more recent one. Only use older articles when they are landmark/seminal research or clinical practice guidelines still considered current.
 - Peer-reviewed journals (e.g., J Manipulative Physiol Ther, Spine, Spine Journal, European Spine Journal, JCCA, Pain, BMC Musculoskelet Disord)
 - Clinical practice guidelines (CCG, CCGI, American Chiropractic Association, American Pain Society)
 - Systematic reviews, RCTs, cohort studies, or meta-analyses
-- Published within the last 20 years when possible
+
+For each article, ensure the 'year' field accurately reflects publication year. Sort the returned array by relevance_score descending, with recency used as a tiebreaker between equally relevant articles.
 
 Return 5-8 most relevant articles in order of relevance. For each, fill out every field. The ama_citation must follow AMA Manual of Style format:
 "Author(s). Title. Journal. Year;Volume(Issue):Pages." (e.g., "Smith J, Jones A, et al. Treatment of whiplash-associated disorders. J Manipulative Physiol Ther. 2019;42(3):145-153.")

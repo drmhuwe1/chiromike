@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Printer, CreditCard, PlusCircle, ChevronDown, ChevronUp, FileText, Loader2, RefreshCw, Smartphone, Send, X, ClipboardList, Trash2, Download } from "lucide-react";
+import { Printer, CreditCard, PlusCircle, ChevronDown, ChevronUp, FileText, Loader2, RefreshCw, Smartphone, Send, X, ClipboardList, Trash2, Download, BookOpen, Trash } from "lucide-react";
 import PatientStatementPrint from "./PatientStatementPrint";
 import PaymentModal from "../payment/PaymentModal";
 import PostPaymentModal from "./PostPaymentModal";
@@ -21,22 +21,40 @@ export default function PatientAccountView({ patient }) {
   const [postPaymentClaim, setPostPaymentClaim] = useState(null);
   const [expandedClaimId, setExpandedClaimId] = useState(null);
   const [soapNotes, setSoapNotes] = useState([]);
+  const [literature, setLiterature] = useState([]);
   const [generatingSoapNote, setGeneratingSoapNote] = useState(false);
   const [selectedClaimIds, setSelectedClaimIds] = useState(new Set());
   const { toast } = useToast();
 
   const load = async () => {
-    const [c, p, s, notes] = await Promise.all([
+    const [c, p, s, notes, lit] = await Promise.all([
       base44.entities.Claim.filter({ patient_id: patient.id }, "-date_of_service", 500),
       base44.entities.Payment.filter({ patient_id: patient.id }, "-payment_date", 500),
       base44.entities.OfficeSettings.list("-updated_date", 1),
-      base44.entities.SoapNote.filter({ patient_id: patient.id }, "-date_of_service", 50)
+      base44.entities.SoapNote.filter({ patient_id: patient.id }, "-date_of_service", 50),
+      base44.entities.MedicalLiterature.filter({ patient_id: patient.id }, "-created_date", 100),
     ]);
     setClaims(c);
     setPayments(p);
     setOffice(s[0] || null);
     setSoapNotes(notes);
+    setLiterature(lit);
     setLoading(false);
+  };
+
+  const handleDeleteLiterature = async (entry) => {
+    if (!window.confirm(`Delete this saved literature set (${entry.citations?.length || 0} citation(s))? The citations were already inserted where used; this only removes the stored copy.`)) return;
+    await base44.entities.MedicalLiterature.delete(entry.id);
+    setLiterature(prev => prev.filter(l => l.id !== entry.id));
+    toast({ title: "Saved literature removed" });
+  };
+
+  const handleCopyCitationBlock = (entry) => {
+    const text = (entry.citations || [])
+      .map((c, i) => `${i + 1}. ${c.ama_citation}${c.relevance_summary ? ` — ${c.relevance_summary}` : ""}`)
+      .join("\n");
+    navigator.clipboard?.writeText(text);
+    toast({ title: `${entry.citations?.length || 0} citation(s) copied to clipboard` });
   };
 
   useEffect(() => { load(); }, [patient.id]);
@@ -366,6 +384,64 @@ export default function PatientAccountView({ patient }) {
           </tbody>
         </table>
       </div>
+
+      {/* Saved Medical Literature */}
+      {literature.length > 0 && (
+        <div className="bg-card border border-border rounded-xl overflow-hidden">
+          <div className="p-4 border-b border-border flex items-center justify-between">
+            <h3 className="font-bold flex items-center gap-2">
+              <BookOpen className="w-4 h-4 text-purple-600" /> Saved Medical Literature ({literature.length})
+            </h3>
+            <p className="text-xs text-muted-foreground">Copies kept on file for future use</p>
+          </div>
+          <div className="space-y-3 p-4">
+            {literature.map((entry) => (
+              <div key={entry.id} className="border border-purple-200 rounded-lg p-3 bg-purple-50/30">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-xs font-semibold bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full">
+                        {entry.source}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(entry.created_date).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        · {entry.citations?.length || 0} citation(s)
+                      </span>
+                    </div>
+                    {entry.search_context && (
+                      <p className="text-xs text-muted-foreground mt-1 italic">{entry.search_context}</p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => handleCopyCitationBlock(entry)} title="Copy all citations to clipboard">
+                      Copy
+                    </Button>
+                    <button
+                      className="text-destructive/50 hover:text-destructive p-1"
+                      title="Remove saved literature"
+                      onClick={() => handleDeleteLiterature(entry)}
+                    >
+                      <Trash className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+                <ol className="mt-2 space-y-1 text-xs">
+                  {(entry.citations || []).map((c, i) => (
+                    <li key={i} className="border-l-2 border-purple-200 pl-2">
+                      <p className="italic">{c.ama_citation}</p>
+                      {c.relevance_summary && (
+                        <p className="text-muted-foreground mt-0.5">{c.relevance_summary}</p>
+                      )}
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* SOAP Notes */}
       {soapNotes.length > 0 && (

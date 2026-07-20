@@ -1,0 +1,126 @@
+{
+  "name": "MedicalLiterature",
+  "type": "object",
+  "properties": {
+    "patient_id": {
+      "type": "string",
+      "title": "Patient ID"
+    },
+    "patient_name": {
+      "type": "string",
+      "title": "Patient Name"
+    },
+    "source": {
+      "type": "string",
+      "title": "Source",
+      "enum": [
+        "Legal Case Summary",
+        "SOAP Note",
+        "Manual"
+      ]
+    },
+    "associated_note_id": {
+      "type": "string",
+      "title": "Associated SOAP Note ID"
+    },
+    "search_context": {
+      "type": "string",
+      "title": "Search Context Summary"
+    },
+    "citations": {
+      "type": "array",
+      "title": "Cited Articles",
+      "items": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "authors": {
+            "type": "string"
+          },
+          "journal": {
+            "type": "string"
+          },
+          "year": {
+            "type": "string"
+          },
+          "volume_issue_pages": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "relevance_summary": {
+            "type": "string"
+          },
+          "relevance_score": {
+            "type": "number"
+          },
+          "ama_citation": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "description": {
+      "type": "string",
+      "title": "Description",
+      "maxLength": 1000
+    }
+  },
+  "required": [
+    "patient_id",
+    "source"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}
