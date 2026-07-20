@@ -8,6 +8,9 @@ Deno.serve(async (req) => {
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    if (user.role !== 'admin') {
+      return Response.json({ error: 'Forbidden: admin role required' }, { status: 403 });
+    }
 
     const { patient_id, patient_name, patient_email, price_id, plan_name, visits_per_month } = await req.json();
 
