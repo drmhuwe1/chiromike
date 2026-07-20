@@ -29,6 +29,7 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    if (user.role !== 'admin') return Response.json({ error: 'Forbidden: admin role required' }, { status: 403 });
 
     const { claim_id, include_hcfa } = await req.json();
     if (!claim_id) return Response.json({ error: 'claim_id required' }, { status: 400 });
