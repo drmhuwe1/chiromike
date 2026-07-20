@@ -12,6 +12,7 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 import ClaimReadinessCheck, { validateClaimReadiness } from "@/components/officeally/ClaimReadinessCheck";
 import OfficeAllyExportModal from "@/components/officeally/OfficeAllyExportModal";
+import OfficeAllyInstructions from "@/components/officeally/OfficeAllyInstructions";
 
 const STATUS_COLORS = {
   Draft: "bg-gray-100 text-gray-700",
@@ -91,12 +92,32 @@ export default function OfficeAllySubmissions() {
       toast({ title: `${validationFails.length} claim(s) have validation errors. Fix them before exporting.`, variant: "destructive" });
       return;
     }
+    // Office Ally's first-file rule: first batch should have >=10 claims.
+    if (batches.length === 0 && selectedIds.length < 10) {
+      if (!confirm(
+        `Office Ally typically requires at least 10 claims on your VERY FIRST file submission to verify formatting.\n\n` +
+        `You have ${selectedIds.length} selected. Submitting now may be rejected by Office Ally.\n\n` +
+        `Continue anyway?`
+      )) return;
+    }
     setSftp(s => ({ ...s, submitting: true }));
     try {
       const res = await base44.functions.invoke('officeAllyExport', { claim_ids: selectedIds, mode: 'batch' });
       if (res.data?.error) throw new Error(res.data.error);
-      // Trigger download
-      toast({ title: `Batch of ${selectedIds.length} claims exported. Download initiated.` });
+      // Trigger browser download of the batch EDI text
+      const ediText = typeof res.data === 'string' ? res.data : JSON.stringify(res.data);
+      const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+      const fname = `batch_${selectedIds.length}claims_${dateStr}.edi`;
+      const blob = new Blob([ediText], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fname;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast({ title: `Batch of ${selectedIds.length} claims exported`, description: `${fname} downloaded` });
       setSelectedIds([]);
       load();
     } catch (err) {
@@ -161,6 +182,9 @@ export default function OfficeAllySubmissions() {
           </div>
         </div>
       )}
+
+      {/* Batch instructions */}
+      <OfficeAllyInstructions />
 
       {/* Tabs */}
       <div className="flex gap-1 border-b border-border">
