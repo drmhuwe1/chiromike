@@ -3,7 +3,8 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Printer, CreditCard, PlusCircle, ChevronDown, ChevronUp, FileText, Loader2, RefreshCw, Smartphone, Send, X, ClipboardList, Trash2, Download, BookOpen, Trash } from "lucide-react";
+import { Printer, CreditCard, PlusCircle, ChevronDown, ChevronUp, FileText, Loader2, RefreshCw, Smartphone, Send, X, ClipboardList, Trash2, Download, BookOpen, Trash, Stethoscope, ChevronRight } from "lucide-react";
+import OrthoSuggestionModal from "./OrthoSuggestionModal";
 import PatientStatementPrint from "./PatientStatementPrint";
 import PaymentModal from "../payment/PaymentModal";
 import PostPaymentModal from "./PostPaymentModal";
@@ -22,24 +23,36 @@ export default function PatientAccountView({ patient }) {
   const [expandedClaimId, setExpandedClaimId] = useState(null);
   const [soapNotes, setSoapNotes] = useState([]);
   const [literature, setLiterature] = useState([]);
+  const [orthoSuggestions, setOrthoSuggestions] = useState([]);
+  const [showOrthoModal, setShowOrthoModal] = useState(false);
+  const [expandedOrthoId, setExpandedOrthoId] = useState(null);
   const [generatingSoapNote, setGeneratingSoapNote] = useState(false);
   const [selectedClaimIds, setSelectedClaimIds] = useState(new Set());
   const { toast } = useToast();
 
   const load = async () => {
-    const [c, p, s, notes, lit] = await Promise.all([
+    const [c, p, s, notes, lit, ortho] = await Promise.all([
       base44.entities.Claim.filter({ patient_id: patient.id }, "-date_of_service", 500),
       base44.entities.Payment.filter({ patient_id: patient.id }, "-payment_date", 500),
       base44.entities.OfficeSettings.list("-updated_date", 1),
       base44.entities.SoapNote.filter({ patient_id: patient.id }, "-date_of_service", 50),
       base44.entities.MedicalLiterature.filter({ patient_id: patient.id }, "-created_date", 100),
+      base44.entities.OrthoSuggestion.filter({ patient_id: patient.id }, "-created_date", 50),
     ]);
     setClaims(c);
     setPayments(p);
     setOffice(s[0] || null);
     setSoapNotes(notes);
     setLiterature(lit);
+    setOrthoSuggestions(ortho);
     setLoading(false);
+  };
+
+  const handleDeleteOrthoSuggestion = async (entry) => {
+    if (!window.confirm(`Delete this AI suggestion set (${entry.recommended_tests?.length || 0} test(s))? The recommendation was already reviewed; this only removes the stored copy.`)) return;
+    await base44.entities.OrthoSuggestion.delete(entry.id);
+    setOrthoSuggestions(prev => prev.filter(o => o.id !== entry.id));
+    toast({ title: "Suggestion removed" });
   };
 
   const handleDeleteLiterature = async (entry) => {
@@ -501,6 +514,106 @@ export default function PatientAccountView({ patient }) {
         </div>
       )}
 
+      {/* AI Orthopedic / Treatment Suggestion Generator */}
+      <div className="bg-card border border-purple-200 rounded-xl p-4 bg-purple-50/30">
+        <Label className="text-sm font-semibold mb-2 flex items-center gap-2">
+          <Stethoscope className="w-4 h-4 text-purple-600" /> AI Suggested Ortho Tests & Treatment Plan
+        </Label>
+        <p className="text-xs text-muted-foreground mb-3">AI scans current peer-reviewed journals & clinical guidelines to recommend orthopedic / neurological tests, imaging considerations, and an evidence-based treatment plan based on this patient's complaint, pain areas, and mechanism of injury.</p>
+        <Button onClick={() => setShowOrthoModal(true)} variant="outline" className="gap-2 w-full border-purple-300 text-purple-700 hover:bg-purple-50">
+          <Stethoscope className="w-4 h-4" /> Generate Suggestions for {patient.first_name}
+        </Button>
+        {orthoSuggestions.length > 0 && (
+          <div className="mt-3 space-y-2">
+            {orthoSuggestions.map((sug) => {
+              const expanded = expandedOrthoId === sug.id;
+              return (
+                <div key={sug.id} className="border border-purple-200 rounded-lg p-3 bg-card">
+                  <div className="flex items-start justify-between gap-2">
+                    <button
+                      className="flex-1 text-left"
+                      onClick={() => setExpandedOrthoId(expanded ? null : sug.id)}
+                    >
+                      <div className="flex items-center gap-1 flex-wrap text-xs">
+                        {expanded ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                        <span className="font-semibold">{new Date(sug.created_date).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}</span>
+                        <span className="text-muted-foreground">· {sug.recommended_tests?.length || 0} test(s)</span>
+                        {sug.visit_frequency && <span className="text-muted-foreground">· {sug.visit_frequency}</span>}
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1 italic">{sug.context_summary}</p>
+                    </button>
+                    <button
+                      className="text-destructive/50 hover:text-destructive p-1 shrink-0"
+                      title="Remove suggestion"
+                      onClick={() => handleDeleteOrthoSuggestion(sug)}
+                    >
+                      <Trash className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                  {expanded && (
+                    <div className="mt-3 space-y-2 text-xs">
+                      {/* Tests table */}
+                      {(sug.recommended_tests || []).length > 0 && (
+                        <div className="border border-border rounded overflow-hidden">
+                          <table className="w-full text-xs">
+                            <thead className="bg-muted/50">
+                              <tr className="border-b">
+                                <th className="text-left py-1.5 px-2 font-semibold w-1/4">Test</th>
+                                <th className="text-left py-1.5 px-2 font-semibold">Purpose</th>
+                                <th className="text-left py-1.5 px-2 font-semibold">Positive Finding</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {sug.recommended_tests.map((t, i) => (
+                                <tr key={i} className="border-b last:border-0 align-top">
+                                  <td className="py-1.5 px-2 font-semibold text-purple-700">{t.test_name}</td>
+                                  <td className="py-1.5 px-2">{t.purpose}</td>
+                                  <td className="py-1.5 px-2">{t.positive_finding}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                      {sug.diagnostic_considerations && (
+                        <div className="border border-amber-200 bg-amber-50/40 rounded p-2">
+                          <p className="font-semibold text-amber-800 mb-0.5">Diagnostic Considerations</p>
+                          <p className="whitespace-pre-wrap">{sug.diagnostic_considerations}</p>
+                        </div>
+                      )}
+                      {sug.treatment_plan && (
+                        <div className="border border-blue-200 bg-blue-50/40 rounded p-2">
+                          <p className="font-semibold text-blue-800 mb-0.5">Treatment Plan</p>
+                          <p className="whitespace-pre-wrap">{sug.treatment_plan}</p>
+                          <div className="flex gap-2 mt-1">
+                            {sug.visit_frequency && <span className="text-muted-foreground">Visit freq: {sug.visit_frequency}</span>}
+                            {sug.expected_duration && <span className="text-muted-foreground">Duration: {sug.expected_duration}</span>}
+                          </div>
+                        </div>
+                      )}
+                      {sug.supporting_summary && (
+                        <div className="border border-border bg-muted/20 rounded p-2">
+                          <p className="font-semibold mb-0.5">Clinical Rationale</p>
+                          <p className="whitespace-pre-wrap">{sug.supporting_summary}</p>
+                        </div>
+                      )}
+                      {(sug.cited_sources || []).length > 0 && (
+                        <div className="text-xs">
+                          <p className="font-semibold mb-0.5">Supporting Sources</p>
+                          <ul className="list-disc list-inside text-muted-foreground">
+                            {sug.cited_sources.map((src, i) => <li key={i}>{src}</li>)}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
       {/* SOAP Note Generator */}
       <div className="bg-card border border-border rounded-xl p-4">
         <Label className="text-sm font-semibold mb-3 block">Generate SOAP Note</Label>
@@ -536,6 +649,15 @@ export default function PatientAccountView({ patient }) {
           patient={patient}
           onClose={() => setShowStripePayment(false)}
           onSuccess={() => { setShowStripePayment(false); load(); }}
+        />
+      )}
+
+      {/* AI Ortho Suggestion Modal */}
+      {showOrthoModal && (
+        <OrthoSuggestionModal
+          patient={patient}
+          onClose={() => setShowOrthoModal(false)}
+          onSaved={() => load()}
         />
       )}
 

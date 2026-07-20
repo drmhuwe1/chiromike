@@ -1,0 +1,154 @@
+{
+  "name": "OrthoSuggestion",
+  "type": "object",
+  "properties": {
+    "patient_id": {
+      "type": "string",
+      "title": "Patient ID"
+    },
+    "patient_name": {
+      "type": "string",
+      "title": "Patient Name"
+    },
+    "context_summary": {
+      "type": "string",
+      "title": "Context Summary"
+    },
+    "chief_complaint": {
+      "type": "string",
+      "title": "Chief Complaint"
+    },
+    "pain_areas": {
+      "type": "array",
+      "title": "Pain Areas",
+      "items": {
+        "type": "string"
+      }
+    },
+    "diagnoses": {
+      "type": "array",
+      "title": "Diagnoses",
+      "items": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "accident_type": {
+      "type": "string",
+      "title": "Injury Mechanism"
+    },
+    "recommended_tests": {
+      "type": "array",
+      "title": "Recommended Orthopedic Tests",
+      "items": {
+        "type": "object",
+        "properties": {
+          "test_name": {
+            "type": "string",
+            "title": "Test Name"
+          },
+          "purpose": {
+            "type": "string",
+            "title": "Indication / What It Tests"
+          },
+          "positive_finding": {
+            "type": "string",
+            "title": "Positive Sign / Clinical Significance"
+          }
+        }
+      }
+    },
+    "diagnostic_considerations": {
+      "type": "string",
+      "title": "Diagnostic Considerations (Imaging, Red Flags)"
+    },
+    "treatment_plan": {
+      "type": "string",
+      "title": "Recommended Treatment Plan"
+    },
+    "visit_frequency": {
+      "type": "string",
+      "title": "Visit Frequency"
+    },
+    "expected_duration": {
+      "type": "string",
+      "title": "Expected Duration / Re-Evaluation Timeline"
+    },
+    "supporting_summary": {
+      "type": "string",
+      "title": "Clinical Rationale Summary"
+    },
+    "cited_sources": {
+      "type": "array",
+      "title": "Supporting Sources / Guidelines",
+      "items": {
+        "type": "string"
+      }
+    },
+    "description": {
+      "type": "string",
+      "title": "Description",
+      "maxLength": 1000
+    }
+  },
+  "required": [
+    "patient_id"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}
