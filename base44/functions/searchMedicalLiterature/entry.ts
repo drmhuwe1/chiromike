@@ -45,8 +45,13 @@ PRIORITIZE sources that are:
 
 For each article, ensure the 'year' field accurately reflects publication year. Sort the returned array by relevance_score descending, with recency used as a tiebreaker between equally relevant articles.
 
-Return 5-8 most relevant articles in order of relevance. For each, fill out every field. The ama_citation must follow AMA Manual of Style format:
-"Author(s). Title. Journal. Year;Volume(Issue):Pages." (e.g., "Smith J, Jones A, et al. Treatment of whiplash-associated disorders. J Manipulative Physiol Ther. 2019;42(3):145-153.")
+Return 5-8 most relevant articles in order of relevance. For each, fill out EVERY field — especially 'url', which must contain the article's direct DOI link (preferred, e.g., https://doi.org/10.xxxx/yyyy) or its full direct-access URL (PubMed, journal site, or publisher page). Do not use search-result landing pages; use the most direct link to the article itself.
+
+The ama_citation must follow AMA Manual of Style format AND include the direct link at the end:
+- With DOI:  "Smith J, Jones A, et al. Treatment of whiplash-associated disorders. J Manipulative Physiol Ther. 2019;42(3):145-153. doi:10.1016/j.jmpt.2018.10.004"
+- Without DOI (include direct URL):  "Smith J, Jones A, et al. Treatment of whiplash-associated disorders. J Manipulative Physiol Ther. 2019;42(3):145-153. Available at: https://www.ncbi.nlm.nih.gov/pubmed/12345678"
+
+Always append either "doi:..." or "Available at: <full URL>" at the end of the ama_citation — the citation must end with a clickable direct link, never with page numbers alone.
 
 Format response as JSON. Do NOT include any explanation text outside the JSON object.`;
 
