@@ -86,7 +86,7 @@ export default function ResubmissionQueue({ claims, payments }) {
                   </td>
                   <td className="py-2.5 px-4 text-right">
                     <Button size="sm" className="h-7 text-xs mr-2" onClick={() => setAnalyzingClaim(c)}>
-                      <BrainCircuit className="w-3 h-3 mr-1" />Analyze
+                      <BrainCircuit className="w-3 h-3 mr-1" />Why Wasn't I Paid?
                     </Button>
                     <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => navigate(`/claim-builder?duplicate=${c.id}`)}>
                       <Copy className="w-3 h-3 mr-1" /> Resubmit

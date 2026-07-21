@@ -21,6 +21,7 @@ const navItems = [
   { path: "/billing", label: "Billing Dashboard", icon: Wallet },
   { path: "/task-center", label: "Task Center", icon: BellRing },
   { path: "/revenue-recovery", label: "Revenue Recovery", icon: BarChart3 },
+  { path: "/ai-operations", label: "AI Operations Center", icon: Activity },
   { path: "/soap-notes", label: "SOAP Notes", icon: ClipboardList },
   { path: "/reports", label: "Reports", icon: BarChart3 },
   { path: "/financial-reports", label: "Financial Reports", icon: Wallet },
