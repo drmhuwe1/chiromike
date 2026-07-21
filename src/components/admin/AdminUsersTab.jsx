@@ -20,9 +20,8 @@ export default function AdminUsersTab() {
   const loadUsers = async () => {
     setLoading(true);
     try {
-      const data = await base44.asServiceRole?.entities?.User?.list("-created_date", 200)
-        || await base44.entities.User.list("-created_date", 200);
-      setUsers(data);
+      const data = await base44.entities.User.list("-created_date", 500);
+      setUsers(data || []);
     } catch (e) {
       console.error("Failed to load users:", e);
     }
