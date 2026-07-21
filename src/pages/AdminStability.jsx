@@ -3,11 +3,18 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import {
   CheckCircle2, AlertTriangle, XCircle, RefreshCw,
-  Mail, Copy, ChevronDown, ChevronRight, Clock, Activity, Wrench
+  Mail, Copy, ChevronDown, ChevronRight, Clock, Activity, Wrench,
+  Users, BarChart3, DollarSign, CreditCard, List, Settings
 } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import AutomatedCrawl from "@/components/admin/AutomatedCrawl";
 import RegressionSuite from "@/components/admin/RegressionSuite";
+import AdminUsersTab from "@/components/admin/AdminUsersTab";
+import AdminAnalyticsTab from "@/components/admin/AdminAnalyticsTab";
+import AdminFinancialTab from "@/components/admin/AdminFinancialTab";
+import AdminSubscriptionsTab from "@/components/admin/AdminSubscriptionsTab";
+import AdminFeatureInventoryTab from "@/components/admin/AdminFeatureInventoryTab";
+import AdminSettingsTab from "@/components/admin/AdminSettingsTab";
 
 const BASELINE_KEY = "chiromike_crawl_baseline";
 
@@ -80,7 +87,7 @@ After fixing, the stability monitor check [${check.id}] should pass.`;
 }
 
 export default function AdminStability() {
-  const [activeTab, setActiveTab] = useState("monitor");
+  const [activeTab, setActiveTab] = useState("users");
   const [running, setRunning] = useState(false);
   const [currentResult, setCurrentResult] = useState(null);
   const [history, setHistory] = useState([]);
@@ -193,7 +200,7 @@ export default function AdminStability() {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-xl font-bold">ChiroMike Admin Center</h1>
+          <h1 className="text-xl font-bold">🔐 ChiroMike Admin Center</h1>
           {activeTab === "monitor" && displayResult?.run_date && (
             <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
               <Clock className="w-3 h-3" />
@@ -219,11 +226,17 @@ export default function AdminStability() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 border-b border-border">
+      <div className="flex flex-wrap gap-1 border-b border-border">
         {[
-          { key: "monitor",    label: "⚙️ Stability Monitor" },
-          { key: "crawl",      label: "🌐 Automated Crawl" },
-          { key: "regression", label: "🔁 Regression Suite" },
+          { key: "users",       label: "👥 Users" },
+          { key: "analytics",   label: "📊 Analytics" },
+          { key: "financial",   label: "💰 Financial" },
+          { key: "subscriptions", label: "💳 Subscriptions" },
+          { key: "monitor",     label: "⚙️ Stability" },
+          { key: "crawl",       label: "🌐 Crawl" },
+          { key: "regression",  label: "🔁 Regression" },
+          { key: "inventory",   label: "📋 Features" },
+          { key: "settings",    label: "⚙️ Settings" },
         ].map(tab => (
           <button
             key={tab.key}
@@ -238,6 +251,24 @@ export default function AdminStability() {
           </button>
         ))}
       </div>
+
+      {/* Users tab */}
+      {activeTab === "users" && <AdminUsersTab />}
+
+      {/* Analytics tab */}
+      {activeTab === "analytics" && <AdminAnalyticsTab />}
+
+      {/* Financial tab */}
+      {activeTab === "financial" && <AdminFinancialTab />}
+
+      {/* Subscriptions tab */}
+      {activeTab === "subscriptions" && <AdminSubscriptionsTab />}
+
+      {/* Feature Inventory tab */}
+      {activeTab === "inventory" && <AdminFeatureInventoryTab />}
+
+      {/* Settings tab */}
+      {activeTab === "settings" && <AdminSettingsTab />}
 
       {/* Automated Crawl tab */}
       {activeTab === "crawl" && (

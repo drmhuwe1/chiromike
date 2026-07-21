@@ -1,11 +1,12 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { 
   LayoutDashboard, Users, FileText, Settings, BookOpen, 
-  Library, Zap, BarChart3, Menu, Wallet, HelpCircle, ShieldCheck, ClipboardList, Stethoscope, Calendar, LogOut, Activity, Send, BellRing
+  Library, Zap, BarChart3, Menu, Wallet, HelpCircle, ShieldCheck, ClipboardList, Stethoscope, Calendar, LogOut, Activity, Send, BellRing, Lock
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/AuthContext";
 import AppFooter from "./AppFooter";
+import { base44 } from "@/api/base44Client";
 
 const navItems = [
   { path: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -36,7 +37,12 @@ const navItems = [
 export default function Layout() {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const { logout } = useAuth();
+
+  useEffect(() => {
+    base44.auth.me().then(u => setIsAdmin(u?.role === "admin")).catch(() => {});
+  }, []);
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
@@ -80,7 +86,7 @@ export default function Layout() {
         </div>
 
         <nav aria-label="Sidebar navigation" className="flex-1 py-3 px-3 space-y-0.5 overflow-y-auto relative z-0">
-          {navItems.map((item) => {
+          {navItems.filter(item => item.path !== "/admin/stability").map((item) => {
             const isActive = location.pathname === item.path;
             const Icon = item.icon;
             return (
@@ -101,6 +107,23 @@ export default function Layout() {
               </Link>
             );
           })}
+          {/* Admin-only link — hidden from non-admin users */}
+          {isAdmin && (
+            <Link
+              to="/admin/stability"
+              onClick={() => setMobileOpen(false)}
+              className={`
+                relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium
+                transition-colors duration-150 mt-2 border border-sidebar-border
+                ${location.pathname === "/admin/stability"
+                  ? 'bg-sidebar-primary text-sidebar-primary-foreground'
+                  : 'text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'}
+              `}
+            >
+              <Lock className="w-4 h-4 shrink-0" />
+              <span className="truncate">Admin Center</span>
+            </Link>
+          )}
         </nav>
       </aside>
 
