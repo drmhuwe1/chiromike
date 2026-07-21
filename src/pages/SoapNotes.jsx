@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Search, Printer, FileText, ChevronDown, ChevronUp, Send, Plus, X, Trash2 } from "lucide-react";
+import { Search, Printer, FileText, ChevronDown, ChevronUp, Send, Plus, X, Trash2, Copy } from "lucide-react";
 import FaxModal from "../components/claim/FaxModal";
 import SoapFieldEditModal from "../components/soap/SoapFieldEditModal";
 import LiteratureSearchModal from "../components/literature/LiteratureSearchModal";
@@ -52,6 +52,27 @@ export default function SoapNotes() {
     await refreshNotes();
     setExpanded(null);
     toast({ title: "SOAP note deleted" });
+  };
+
+  const handleSmartVisitClone = async (note) => {
+    if (!window.confirm(`Create a new visit draft for ${note.patient_name} using the diagnoses, procedures, and plan from ${note.date_of_service}? Clinical findings will be marked for required updating.`)) return;
+    try {
+      const today = new Date().toISOString().split("T")[0];
+      const cloned = await base44.entities.SoapNote.create({
+        patient_id: note.patient_id, patient_name: note.patient_name, date_of_service: today,
+        visit_type: note.visit_type, provider_name: note.provider_name,
+        subjective: "[UPDATE REQUIRED FOR TODAY’S VISIT] " + (note.subjective || ""),
+        objective: "[UPDATE REQUIRED FOR TODAY’S VISIT] " + (note.objective || ""),
+        assessment: "[REVIEW AND UPDATE] " + (note.assessment || ""), plan: note.plan || "",
+        diagnoses: note.diagnoses || [], procedures: note.procedures || [],
+        accident_related: note.accident_related, accident_date: note.accident_date, accident_type: note.accident_type,
+        functional_limitations: note.functional_limitations || "", doctor_signature: "",
+        description: `Smart Visit Clone from SOAP note ${note.id}; all current findings require provider review.`,
+      });
+      await logAudit("Created Smart Visit Clone", "SoapNote", cloned.id, `${note.patient_name} from ${note.date_of_service}`);
+      await refreshNotes(); setExpanded(cloned.id);
+      toast({ title: "Visit draft cloned. Update today’s findings before signing." });
+    } catch (error) { toast({ title: error.message || "Unable to clone visit", variant: "destructive" }); }
   };
 
   const filtered = notes.filter(n => {
@@ -183,6 +204,9 @@ export default function SoapNotes() {
                   </Button>
                   <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => handlePrint(note)} title="Print PDF">
                     <Printer className="w-3.5 h-3.5" />
+                  </Button>
+                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => handleSmartVisitClone(note)} title="Smart Visit Clone">
+                    <Copy className="w-3.5 h-3.5 text-purple-600" />
                   </Button>
                   <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => handleDeleteNote(note)} title="Delete SOAP Note">
                     <Trash2 className="w-3.5 h-3.5 text-destructive" />

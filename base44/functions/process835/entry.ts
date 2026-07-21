@@ -90,7 +90,37 @@ Deno.serve(async (req) => {
           denial_reason: denial ? 'Posted from Office Ally 835; review adjustment codes and remittance.' : '',
           notes: `Payer claim control: ${transaction.payer_claim_control_number}. Service lines: ${transaction.service_lines.map((line) => `${line.procedure_code} paid $${line.paid.toFixed(2)}`).join('; ')}`,
           era_source: eraSource,
+          service_line_payments: transaction.service_lines.map((line) => ({ procedure_code: line.procedure_code, charged_amount: line.charged, paid_amount: line.paid, units: line.units || 1, paid_per_unit: line.paid / (line.units || 1) })),
         });
+
+        if (!denial) {
+          for (const line of transaction.service_lines) {
+            if (!line.procedure_code || line.paid <= 0) continue;
+            const perUnit = line.paid / (line.units || 1);
+            const matchingRates = await base44.asServiceRole.entities.PayerReimbursementRate.filter({ payer_name: claim.insurance_company, procedure_code: line.procedure_code, rate_method: '835 Learned' });
+            const learned = matchingRates[0];
+            if (learned) {
+              const oldCount = learned.sample_count || 0;
+              const newCount = oldCount + 1;
+              const rollingAverage = (((learned.expected_allowed_amount || 0) * oldCount) + perUnit) / newCount;
+              await base44.asServiceRole.entities.PayerReimbursementRate.update(learned.id, {
+                expected_allowed_amount: Number(rollingAverage.toFixed(2)), sample_count: newCount,
+                lowest_observed_amount: Math.min(learned.lowest_observed_amount ?? perUnit, perUnit),
+                highest_observed_amount: Math.max(learned.highest_observed_amount ?? perUnit, perUnit),
+                last_observed_date: new Date().toISOString().slice(0, 10), auto_update: true, active: true,
+                source: 'Automatically learned from this practice’s posted Office Ally 835 remittances',
+              });
+            } else {
+              await base44.asServiceRole.entities.PayerReimbursementRate.create({
+                payer_name: claim.insurance_company, plan_name: claim.insurance_plan || '', procedure_code: line.procedure_code,
+                expected_allowed_amount: Number(perUnit.toFixed(2)), effective_date: claim.date_of_service || new Date().toISOString().slice(0, 10),
+                source: 'Automatically learned from this practice’s posted Office Ally 835 remittances', rate_method: '835 Learned',
+                sample_count: 1, lowest_observed_amount: perUnit, highest_observed_amount: perUnit,
+                last_observed_date: new Date().toISOString().slice(0, 10), auto_update: true, active: true,
+              });
+            }
+          }
+        }
 
         const newPaid = (claim.amount_paid || 0) + transaction.payment_amount;
         const fullyResolved = newPaid + (claim.written_off_amount || 0) >= (claim.total_charge || 0) - 0.01;

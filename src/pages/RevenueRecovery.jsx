@@ -78,6 +78,8 @@ export default function RevenueRecovery() {
         expected_allowed_amount: Number(form.expected_allowed_amount),
         effective_date: format(new Date(), "yyyy-MM-dd"),
         source: form.source.trim(),
+        rate_method: "Manual",
+        auto_update: false,
         active: true,
       });
       setForm({ payer_name: "", procedure_code: "", expected_allowed_amount: "", source: "" });
@@ -107,7 +109,7 @@ export default function RevenueRecovery() {
         <Metric label="Potential Underpayments" value={currency(potentialRecovery)} tone="text-red-600" />
         <Metric label="Underpaid Claims" value={underpayments.length} tone="text-orange-600" />
         <Metric label="Open Appeals" value={openAppeals.length} tone="text-purple-600" />
-        <Metric label="Payer Rates Stored" value={rates.length} tone="text-primary" />
+        <Metric label="Rates Learned from 835" value={rates.filter(rate => rate.rate_method === "835 Learned").length} tone="text-primary" />
       </div>
       <div className="flex gap-2 flex-wrap">{[["underpayments", "Underpayment Detection"], ["appeals", "Appeal Tracking"], ["rates", "Expected Payer Rates"]].map(([key, label]) => <Button key={key} size="sm" variant={tab === key ? "default" : "outline"} onClick={() => setTab(key)}>{label}</Button>)}</div>
 
@@ -115,7 +117,7 @@ export default function RevenueRecovery() {
         <>
           {tab === "underpayments" && <UnderpaymentTable items={underpayments} hasRates={rates.length > 0} />}
           {tab === "appeals" && <AppealTable appeals={appeals} onStatusChange={updateAppeal} />}
-          {tab === "rates" && <RateManager rates={rates} form={form} setForm={setForm} onAdd={addRate} saving={saving} />}
+          {tab === "rates" && <><div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-sm text-emerald-900 mb-4"><strong>Automatic rate learning is on.</strong> Each posted Office Ally 835 teaches ChiroMike the actual paid amount for that payer and CPT. Expected rates update automatically as a rolling average.</div><RateManager rates={rates} form={form} setForm={setForm} onAdd={addRate} saving={saving} /></>}
         </>
       )}
     </div>

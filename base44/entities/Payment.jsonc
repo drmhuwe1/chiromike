@@ -79,6 +79,20 @@
     "era_source": {
       "type": "string",
       "title": "ERA Source"
+    },
+    "service_line_payments": {
+      "type": "array",
+      "title": "835 Service-Line Payments",
+      "items": {
+        "type": "object",
+        "properties": {
+          "procedure_code": { "type": "string" },
+          "charged_amount": { "type": "number" },
+          "paid_amount": { "type": "number" },
+          "units": { "type": "number" },
+          "paid_per_unit": { "type": "number" }
+        }
+      }
     }
   },
   "required": [

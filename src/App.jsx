@@ -54,6 +54,7 @@ const OfficeAllySettingsPage = lazy(() => import(/* webpackChunkName: "admin" */
 const OfficeAllySubmissions = lazy(() => import(/* webpackChunkName: "admin" */ './pages/OfficeAllySubmissions'));
 const TaskCenter = lazy(() => import(/* webpackChunkName: "billing" */ './pages/TaskCenter'));
 const RevenueRecovery = lazy(() => import(/* webpackChunkName: "billing" */ './pages/RevenueRecovery'));
+const AIOperationsCenter = lazy(() => import(/* webpackChunkName: "billing" */ './pages/AIOperationsCenter'));
 
 const AuthenticatedApp = () => {
   const location = useLocation();
@@ -145,6 +146,7 @@ const AuthenticatedApp = () => {
         <Route path="/billing" element={<BillingDashboard />} />
         <Route path="/task-center" element={<TaskCenter />} />
         <Route path="/revenue-recovery" element={<RevenueRecovery />} />
+        <Route path="/ai-operations" element={<AIOperationsCenter />} />
         <Route path="/guide" element={<HelpGuide />} />
         <Route path="/compliance" element={<Compliance />} />
         <Route path="/soap-notes" element={<SoapNotes />} />

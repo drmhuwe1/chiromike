@@ -9,6 +9,12 @@
     "effective_date": { "type": "string", "format": "date", "title": "Effective Date" },
     "end_date": { "type": "string", "format": "date", "title": "End Date" },
     "source": { "type": "string", "title": "Rate Source" },
+    "rate_method": { "type": "string", "enum": ["835 Learned", "Public Fee Schedule", "Contract", "Manual"], "title": "Rate Method", "default": "Manual" },
+    "sample_count": { "type": "number", "title": "835 Sample Count", "default": 0 },
+    "lowest_observed_amount": { "type": "number", "title": "Lowest Observed Payment" },
+    "highest_observed_amount": { "type": "number", "title": "Highest Observed Payment" },
+    "last_observed_date": { "type": "string", "format": "date", "title": "Last Observed Date" },
+    "auto_update": { "type": "boolean", "title": "Automatically Learn from 835", "default": false },
     "active": { "type": "boolean", "title": "Active", "default": true },
     "notes": { "type": "string", "title": "Notes", "maxLength": 2000 }
   },
