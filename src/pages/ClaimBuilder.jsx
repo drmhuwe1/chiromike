@@ -627,7 +627,7 @@ export default function ClaimBuilder() {
       <PackageAlertBanner patient={selectedPatient} />
 
       {/* Payer Alert Banner */}
-      <PayerAlertBanner payerType={claim.payer_type} />
+      <PayerAlertBanner payerType={claim.payer_type} serviceLines={claim.service_lines} />
 
       {/* Quick Panel - always visible */}
       <div className="bg-card border border-border rounded-xl p-3">

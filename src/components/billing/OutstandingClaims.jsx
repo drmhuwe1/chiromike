@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Copy, Trash2 } from "lucide-react";
+import { claimBalance } from "@/utils/claimBalance";
 
 const statusColors = {
   Draft: "bg-gray-100 text-gray-600",
@@ -30,7 +31,7 @@ export default function OutstandingClaims({ claims, onRefresh }) {
     if (onRefresh) onRefresh();
   };
   const outstanding = claims
-    .filter(c => !["Paid"].includes(c.status) && (c.total_charge || 0) - (c.amount_paid || 0) > 0)
+    .filter(c => !["Paid"].includes(c.status) && claimBalance(c) > 0)
     .sort((a, b) => new Date(a.date_of_service) - new Date(b.date_of_service));
 
   return (
@@ -50,7 +51,7 @@ export default function OutstandingClaims({ claims, onRefresh }) {
         </thead>
         <tbody>
           {outstanding.map(c => {
-            const balance = (c.total_charge || 0) - (c.amount_paid || 0);
+            const balance = claimBalance(c);
             const age = daysSince(c.date_of_service);
             return (
               <tr key={c.id} className="border-b last:border-0 hover:bg-muted/20">

@@ -50,6 +50,34 @@
       "type": "string",
       "title": "Fax"
     },
+    "appeals_address_line1": {
+      "type": "string",
+      "title": "Appeals Address Line 1"
+    },
+    "appeals_address_line2": {
+      "type": "string",
+      "title": "Appeals Address Line 2"
+    },
+    "appeals_city": {
+      "type": "string",
+      "title": "Appeals City"
+    },
+    "appeals_state": {
+      "type": "string",
+      "title": "Appeals State"
+    },
+    "appeals_zip": {
+      "type": "string",
+      "title": "Appeals ZIP"
+    },
+    "appeals_fax": {
+      "type": "string",
+      "title": "Appeals Fax"
+    },
+    "appeal_filing_days": {
+      "type": "number",
+      "title": "Appeal Filing Limit (days)"
+    },
     "website": {
       "type": "string",
       "title": "Website"

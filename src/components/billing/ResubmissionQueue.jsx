@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, Copy, Clock } from "lucide-react";
+import { AlertTriangle, Copy, Clock, BrainCircuit } from "lucide-react";
+import DenialAnalyzerModal from "./DenialAnalyzerModal";
 
 const DENIAL_TIPS = {
   "CO-97": "Benefit for this service included in payment for another service — check bundling rules",
@@ -20,6 +22,7 @@ function daysSince(dos) {
 
 export default function ResubmissionQueue({ claims, payments }) {
   const navigate = useNavigate();
+  const [analyzingClaim, setAnalyzingClaim] = useState(null);
 
   // Denied claims + claims with denial payments
   const deniedClaimIds = new Set(payments.filter(p => p.payment_type === "Denial").map(p => p.claim_id));
@@ -82,6 +85,9 @@ export default function ResubmissionQueue({ claims, payments }) {
                     </div>
                   </td>
                   <td className="py-2.5 px-4 text-right">
+                    <Button size="sm" className="h-7 text-xs mr-2" onClick={() => setAnalyzingClaim(c)}>
+                      <BrainCircuit className="w-3 h-3 mr-1" />Analyze
+                    </Button>
                     <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => navigate(`/claim-builder?duplicate=${c.id}`)}>
                       <Copy className="w-3 h-3 mr-1" /> Resubmit
                     </Button>
@@ -95,6 +101,7 @@ export default function ResubmissionQueue({ claims, payments }) {
           </tbody>
         </table>
       </div>
+      {analyzingClaim && <DenialAnalyzerModal claim={analyzingClaim} open={Boolean(analyzingClaim)} onOpenChange={(next) => { if (!next) setAnalyzingClaim(null); }} />}
     </div>
   );
 }

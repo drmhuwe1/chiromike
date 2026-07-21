@@ -14,6 +14,7 @@ const empty = {
   name: "", edi_payer_id: "", payer_type: "Other Commercial",
   claims_address_line1: "", claims_address_line2: "",
   claims_city: "", claims_state: "", claims_zip: "",
+  appeals_address_line1: "", appeals_address_line2: "", appeals_city: "", appeals_state: "", appeals_zip: "", appeals_fax: "", appeal_filing_days: "",
   phone: "", fax: "", website: "", provider_portal: "",
   contact_name: "", contact_phone: "", contact_email: "",
   timely_filing_days: "", notes: "", active: true,
@@ -61,7 +62,7 @@ export default function InsurersTab() {
       const result = await base44.integrations.Core.InvokeLLM({
         prompt: `Look up the insurance company billing/claims information for: "${aiQuery}".
 Return accurate, real-world data for this payer as used by chiropractic and medical providers in the United States.
-Include their EDI payer ID (used for electronic claims), primary claims mailing address, provider services phone, fax, website, provider portal URL, and typical timely filing limit in days.
+Include their EDI payer ID (used for electronic claims), primary claims mailing address, provider services phone, fax, website, provider portal URL, typical timely filing limit, appeals mailing address, appeals fax, and appeal filing limit in days.
 ALSO identify and list any alternate/regional plan addresses if this carrier has different claims addresses for different plans or regions.`,
         add_context_from_internet: true,
         model: "gemini_3_flash",
@@ -81,6 +82,13 @@ ALSO identify and list any alternate/regional plan addresses if this carrier has
             website: { type: "string" },
             provider_portal: { type: "string" },
             timely_filing_days: { type: "number" },
+            appeals_address_line1: { type: "string" },
+            appeals_address_line2: { type: "string" },
+            appeals_city: { type: "string" },
+            appeals_state: { type: "string" },
+            appeals_zip: { type: "string" },
+            appeals_fax: { type: "string" },
+            appeal_filing_days: { type: "number" },
             notes: { type: "string" },
             plan_addresses: {
               type: "array",
@@ -200,6 +208,13 @@ ALSO identify and list any alternate/regional plan addresses if this carrier has
                 <Input className="h-8 mt-0.5" value={editing.claims_zip} onChange={e => set("claims_zip", e.target.value)} />
               </div>
             </div>
+          </div>
+
+          {/* Contact */}
+          <div>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Appeals / Reconsideration Delivery</p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3"><div className="col-span-2"><Label className="text-xs">Address Line 1</Label><Input className="h-8 mt-0.5" value={editing.appeals_address_line1 || ""} onChange={e => set("appeals_address_line1", e.target.value)} /></div><div className="col-span-2"><Label className="text-xs">Address Line 2</Label><Input className="h-8 mt-0.5" value={editing.appeals_address_line2 || ""} onChange={e => set("appeals_address_line2", e.target.value)} /></div><div><Label className="text-xs">City</Label><Input className="h-8 mt-0.5" value={editing.appeals_city || ""} onChange={e => set("appeals_city", e.target.value)} /></div><div><Label className="text-xs">State</Label><Input className="h-8 mt-0.5" value={editing.appeals_state || ""} onChange={e => set("appeals_state", e.target.value)} /></div><div><Label className="text-xs">ZIP</Label><Input className="h-8 mt-0.5" value={editing.appeals_zip || ""} onChange={e => set("appeals_zip", e.target.value)} /></div><div><Label className="text-xs">Appeals Fax</Label><Input className="h-8 mt-0.5" value={editing.appeals_fax || ""} onChange={e => set("appeals_fax", e.target.value)} /></div><div><Label className="text-xs">Appeal Filing Limit (days)</Label><Input className="h-8 mt-0.5" type="number" value={editing.appeal_filing_days || ""} onChange={e => set("appeal_filing_days", parseInt(e.target.value) || "")} /></div></div>
+            <p className="text-xs text-amber-700 mt-2">Always verify AI-filled addresses, fax numbers, and deadlines against the patient’s denial notice or payer portal before sending.</p>
           </div>
 
           {/* Contact */}

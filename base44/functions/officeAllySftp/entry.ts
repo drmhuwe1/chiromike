@@ -285,7 +285,7 @@ Deno.serve(async (req) => {
           let content = '';
           try {
             const buf = await sftp.get(remotePath);
-            content = buf.toString().slice(0, 5000);
+            content = buf.toString();
           } catch (_) { content = '[Could not read file]'; }
 
           const rtype = file.name.includes('999') || file.name.includes('997') ? '999'

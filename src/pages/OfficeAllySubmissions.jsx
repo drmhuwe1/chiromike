@@ -1,18 +1,16 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import {
-  Download, Upload, CheckCircle, AlertCircle, Loader2, RefreshCw,
-  ClipboardCheck, Server, FileText, ChevronDown, ChevronUp, ExternalLink
+  Download, CheckCircle, AlertCircle, Loader2, RefreshCw,
+  Server, ChevronDown, ChevronUp, ExternalLink
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import ClaimReadinessCheck, { validateClaimReadiness } from "@/components/officeally/ClaimReadinessCheck";
+import { validateClaimReadiness } from "@/components/officeally/ClaimReadinessCheck";
 import OfficeAllyExportModal from "@/components/officeally/OfficeAllyExportModal";
 import OfficeAllyInstructions from "@/components/officeally/OfficeAllyInstructions";
+import ERA835Posting from "@/components/officeally/ERA835Posting";
 
 const STATUS_COLORS = {
   Draft: "bg-gray-100 text-gray-700",
@@ -40,6 +38,7 @@ export default function OfficeAllySubmissions() {
   const [updatingStatus, setUpdatingStatus] = useState(null);
   const [sftp, setSftp] = useState({ submitting: false, checking: false });
   const [tab, setTab] = useState("claims"); // claims | batches
+  const [reportRefreshKey, setReportRefreshKey] = useState(0);
   const { toast } = useToast();
 
   const load = async () => {
@@ -147,6 +146,7 @@ export default function OfficeAllySubmissions() {
       toast({ title: res.data.error, variant: "destructive" });
     } else {
       toast({ title: `Found ${res.data.reports?.length || 0} report file(s) in SFTP outbound folder` });
+      setReportRefreshKey(key => key + 1);
     }
     setSftp(s => ({ ...s, checking: false }));
   };
@@ -188,10 +188,10 @@ export default function OfficeAllySubmissions() {
 
       {/* Tabs */}
       <div className="flex gap-1 border-b border-border">
-        {["claims", "batches"].map(t => (
+        {["claims", "batches", "835 posting"].map(t => (
           <button key={t} onClick={() => setTab(t)}
             className={`px-4 py-2 text-sm font-medium capitalize border-b-2 transition-colors ${tab === t ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
-            {t === "claims" ? "Insurance Claims" : "Submission History"}
+            {t === "claims" ? "Insurance Claims" : t === "batches" ? "Submission History" : "835 Auto-Posting"}
           </button>
         ))}
       </div>
@@ -357,6 +357,8 @@ export default function OfficeAllySubmissions() {
           </table>
         </div>
       )}
+
+      {tab === "835 posting" && <ERA835Posting refreshKey={reportRefreshKey} onPosted={load} />}
 
       {/* Export Modal */}
       {exportModal && (

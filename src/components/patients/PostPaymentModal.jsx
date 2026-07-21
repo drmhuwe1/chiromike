@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { claimBalance } from "@/utils/claimBalance";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,7 +15,7 @@ export default function PostPaymentModal({ patient, claim, onClose, onSaved }) {
     payment_date: today,
     date_of_service: claim?.date_of_service || today,
     payment_type: "Patient",
-    payment_amount: claim ? ((claim.total_charge || 0) - (claim.amount_paid || 0)).toFixed(2) : "",
+    payment_amount: claim ? claimBalance(claim).toFixed(2) : "",
     check_number: "",
     allowed_amount: "",
     contractual_adjustment: "",

@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { claimBalance } from "@/utils/claimBalance";
 
 const buckets = ["0-30", "31-60", "61-90", "91-120", "120+"];
 
@@ -24,7 +25,7 @@ export default function ARAgingTable({ claims }) {
   const rows = useMemo(() => {
     const map = {};
     for (const c of claims) {
-      const outstanding = (c.total_charge || 0) - (c.amount_paid || 0);
+      const outstanding = claimBalance(c);
       if (outstanding <= 0) continue;
       const key = c.patient_id || c.patient_name;
       if (!map[key]) map[key] = { patient: c.patient_name, buckets: {}, total: 0, claims: [] };

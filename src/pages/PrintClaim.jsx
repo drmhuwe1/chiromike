@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Printer, ArrowLeft, Send, CheckCircle, History, RefreshCw, FileText } from "lucide-react";
-import { Link } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import CMS1500Form from "@/components/claim/CMS1500Form";
 
