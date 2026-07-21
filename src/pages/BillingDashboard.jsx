@@ -7,6 +7,8 @@ import ARAgingTable from "../components/billing/ARAgingTable";
 import OutstandingClaims from "../components/billing/OutstandingClaims";
 import ResubmissionQueue from "../components/billing/ResubmissionQueue";
 import PaymentPosting from "../components/billing/PaymentPosting";
+import BulkWriteOffTool from "../components/billing/BulkWriteOffTool";
+import { claimBalance } from "@/utils/claimBalance";
 
 const tabs = [
   { key: "aging", label: "AR Aging", icon: TrendingUp },
@@ -57,7 +59,7 @@ export default function BillingDashboard() {
   // Summary stats
   const totalAR = claims.reduce((s, c) => {
     if (c.status === "Paid") return s;
-    return s + Math.max(0, (c.total_charge || 0) - (c.amount_paid || 0));
+    return s + claimBalance(c);
   }, 0);
 
   const deniedCount = claims.filter(c => c.status === "Denied").length;
@@ -75,7 +77,8 @@ export default function BillingDashboard() {
           <h1 className="text-xl font-bold">Billing Dashboard</h1>
           <p className="text-sm text-muted-foreground">AR aging, outstanding claims, denials, and payment posting</p>
         </div>
-        <div className="flex flex-col items-end gap-1">
+        <div className="flex flex-col items-end gap-2">
+          <BulkWriteOffTool claims={claims} onComplete={load} />
           <Button
             variant="outline"
             size="sm"

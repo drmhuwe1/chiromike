@@ -11,6 +11,7 @@ import { useToast } from "@/components/ui/use-toast";
 const emptyPayer = {
   name: "", payer_type: "Other Commercial",
   enabled_codes: [], disabled_codes: [],
+  covered_treatment_alternatives: [],
   default_modifiers: "", warning_notes: "",
   billing_notes: "", documentation_reminders: "",
   plan_comments: "", claim_type_default: "", active: true,
@@ -96,6 +97,17 @@ export default function PayerProfilesTab() {
         <div className="md:col-span-2">
           <Label>Plan-Specific Comments</Label>
           <Textarea value={editing.plan_comments} onChange={e => set("plan_comments", e.target.value)} rows={2} />
+        </div>
+        <div className="md:col-span-2 border rounded-lg p-4 space-y-3">
+          <div className="flex items-center justify-between"><div><Label>Covered Treatment Alternatives</Label><p className="text-xs text-muted-foreground">Decision support only. Never substitutes codes automatically.</p></div><Button type="button" size="sm" variant="outline" onClick={() => set("covered_treatment_alternatives", [...(editing.covered_treatment_alternatives || []), { excluded_code: "", alternative_code: "", alternative_description: "", coverage_note: "", verification_source: "" }])}><Plus className="w-4 h-4 mr-1" />Add</Button></div>
+          {(editing.covered_treatment_alternatives || []).map((item, index) => {
+            const updateAlternative = (field, value) => {
+              const next = [...(editing.covered_treatment_alternatives || [])];
+              next[index] = { ...next[index], [field]: value };
+              set("covered_treatment_alternatives", next);
+            };
+            return <div key={index} className="grid md:grid-cols-6 gap-2 border-t pt-3"><Input value={item.excluded_code || ""} onChange={e => updateAlternative("excluded_code", e.target.value.toUpperCase())} placeholder="Non-covered CPT" /><Input value={item.alternative_code || ""} onChange={e => updateAlternative("alternative_code", e.target.value.toUpperCase())} placeholder="Potential CPT" /><Input className="md:col-span-2" value={item.alternative_description || ""} onChange={e => updateAlternative("alternative_description", e.target.value)} placeholder="Alternative treatment" /><Input value={item.coverage_note || ""} onChange={e => updateAlternative("coverage_note", e.target.value)} placeholder="Coverage note" /><Button type="button" variant="ghost" size="sm" onClick={() => set("covered_treatment_alternatives", editing.covered_treatment_alternatives.filter((_, itemIndex) => itemIndex !== index))}>Remove</Button><Input className="md:col-span-6" value={item.verification_source || ""} onChange={e => updateAlternative("verification_source", e.target.value)} placeholder="Required verification source (payer policy, portal, call reference)" /></div>;
+          })}
         </div>
       </div>
       <div className="flex gap-3">

@@ -44,6 +44,25 @@
       "title": "835 Posting Confirmed",
       "default": false
     },
+    "posting_status": {
+      "type": "string",
+      "enum": ["Not Processed", "Previewed", "Partially Posted", "Posted", "Needs Review"],
+      "title": "835 Posting Status",
+      "default": "Not Processed"
+    },
+    "transactions_found": {
+      "type": "number",
+      "title": "835 Transactions Found"
+    },
+    "transactions_posted": {
+      "type": "number",
+      "title": "835 Transactions Posted"
+    },
+    "unmatched_control_numbers": {
+      "type": "array",
+      "items": { "type": "string" },
+      "title": "Unmatched Claim Control Numbers"
+    },
     "raw_content": {
       "type": "string",
       "title": "Raw File Content"

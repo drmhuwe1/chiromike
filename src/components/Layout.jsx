@@ -1,7 +1,7 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { 
   LayoutDashboard, Users, FileText, Settings, BookOpen, 
-  Library, Zap, BarChart3, Menu, Wallet, HelpCircle, ShieldCheck, ClipboardList, Stethoscope, Calendar, LogOut, Activity, Send
+  Library, Zap, BarChart3, Menu, Wallet, HelpCircle, ShieldCheck, ClipboardList, Stethoscope, Calendar, LogOut, Activity, Send, BellRing
 } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/lib/AuthContext";
@@ -19,6 +19,8 @@ const navItems = [
   { path: "/code-library", label: "Code Library", icon: Library },
   { path: "/templates", label: "Quick Templates", icon: Zap },
   { path: "/billing", label: "Billing Dashboard", icon: Wallet },
+  { path: "/task-center", label: "Task Center", icon: BellRing },
+  { path: "/revenue-recovery", label: "Revenue Recovery", icon: BarChart3 },
   { path: "/soap-notes", label: "SOAP Notes", icon: ClipboardList },
   { path: "/reports", label: "Reports", icon: BarChart3 },
   { path: "/financial-reports", label: "Financial Reports", icon: Wallet },

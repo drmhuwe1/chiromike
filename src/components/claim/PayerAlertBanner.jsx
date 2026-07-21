@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { AlertTriangle, FileText, Info, X } from "lucide-react";
 
-export default function PayerAlertBanner({ payerType }) {
+export default function PayerAlertBanner({ payerType, serviceLines = [] }) {
   const [profile, setProfile] = useState(null);
   const [dismissed, setDismissed] = useState(false);
 
@@ -19,8 +19,10 @@ export default function PayerAlertBanner({ payerType }) {
   const hasWarning = profile.warning_notes;
   const hasBilling = profile.billing_notes;
   const hasDoc = profile.documentation_reminders;
+  const usedCodes = new Set(serviceLines.map(line => line.code).filter(Boolean));
+  const alternatives = (profile.covered_treatment_alternatives || []).filter(item => usedCodes.has(item.excluded_code));
 
-  if (!hasWarning && !hasBilling && !hasDoc) return null;
+  if (!hasWarning && !hasBilling && !hasDoc && alternatives.length === 0) return null;
 
   return (
     <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-2 relative">
@@ -57,6 +59,7 @@ export default function PayerAlertBanner({ payerType }) {
           💡 Default modifier for this payer: <strong>{profile.default_modifiers}</strong>
         </div>
       )}
+      {alternatives.length > 0 && <div className="border-t border-amber-200 pt-2 space-y-2"><p className="text-xs font-semibold text-amber-900">Potential covered treatment alternatives — provider and coding review required</p>{alternatives.map((item, index) => <div key={`${item.excluded_code}-${index}`} className="bg-white/70 rounded p-2 text-xs text-amber-950"><p><strong>{item.excluded_code}</strong> may be non-covered. Stored alternative: <strong>{item.alternative_code}</strong> — {item.alternative_description || "No description"}.</p><p>Coverage: {item.coverage_note || "Verify with payer."}</p><p className="mt-1 font-medium text-red-700">Do not swap codes. Use the alternative only if it accurately represents a clinically appropriate service actually provided and documentation supports it. Otherwise keep the service cash-pay or modify the treatment plan.</p>{item.verification_source && <p className="mt-1 text-muted-foreground">Source: {item.verification_source}</p>}</div>)}</div>}
     </div>
   );
 }

@@ -112,6 +112,35 @@
       "type": "number",
       "title": "Amount Paid"
     },
+    "written_off_amount": {
+      "type": "number",
+      "title": "Written-Off Amount",
+      "default": 0
+    },
+    "write_off_date": {
+      "type": "string",
+      "format": "date",
+      "title": "Write-Off Date"
+    },
+    "write_off_reason": {
+      "type": "string",
+      "title": "Write-Off Reason",
+      "maxLength": 1000
+    },
+    "write_off_batch_id": {
+      "type": "string",
+      "title": "Write-Off Batch ID"
+    },
+    "balance_status": {
+      "type": "string",
+      "enum": [
+        "Open",
+        "Paid",
+        "Written Off"
+      ],
+      "title": "Balance Status",
+      "default": "Open"
+    },
     "insurance_company": {
       "type": "string",
       "title": "Insurance Company"
@@ -175,6 +204,54 @@
     "authorization_number": {
       "type": "string",
       "title": "Authorization Number"
+    },
+    "authorization_expiration_date": {
+      "type": "string",
+      "format": "date",
+      "title": "Authorization Expiration Date"
+    },
+    "last_follow_up_date": {
+      "type": "string",
+      "format": "date",
+      "title": "Last Claim Follow-Up Date"
+    },
+    "next_follow_up_date": {
+      "type": "string",
+      "format": "date",
+      "title": "Next Claim Follow-Up Date"
+    },
+    "follow_up_status": {
+      "type": "string",
+      "enum": [
+        "Not Started",
+        "Contacted Payer",
+        "Waiting for Payer",
+        "Resolved"
+      ],
+      "title": "Claim Follow-Up Status",
+      "default": "Not Started"
+    },
+    "follow_up_notes": {
+      "type": "string",
+      "title": "Claim Follow-Up Notes",
+      "maxLength": 2000
+    },
+    "denial_response_status": {
+      "type": "string",
+      "enum": [
+        "Not Started",
+        "Drafted",
+        "Submitted",
+        "Response Received",
+        "Resolved"
+      ],
+      "title": "Denial Response Status",
+      "default": "Not Started"
+    },
+    "denial_response_date": {
+      "type": "string",
+      "format": "date",
+      "title": "Denial Response Submitted Date"
     },
     "place_of_service": {
       "type": "string",

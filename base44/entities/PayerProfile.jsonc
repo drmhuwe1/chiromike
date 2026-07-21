@@ -31,6 +31,20 @@
       },
       "title": "Disabled Codes"
     },
+    "covered_treatment_alternatives": {
+      "type": "array",
+      "title": "Covered Treatment Alternatives",
+      "items": {
+        "type": "object",
+        "properties": {
+          "excluded_code": { "type": "string", "title": "Excluded / Non-Covered CPT" },
+          "alternative_code": { "type": "string", "title": "Potential Covered CPT" },
+          "alternative_description": { "type": "string", "title": "Alternative Treatment" },
+          "coverage_note": { "type": "string", "title": "Coverage Note" },
+          "verification_source": { "type": "string", "title": "Verification Source" }
+        }
+      }
+    },
     "default_modifiers": {
       "type": "string",
       "title": "Default Modifiers"

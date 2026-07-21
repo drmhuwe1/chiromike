@@ -1,0 +1,22 @@
+{
+  "name": "PayerReimbursementRate",
+  "type": "object",
+  "properties": {
+    "payer_name": { "type": "string", "title": "Payer Name" },
+    "plan_name": { "type": "string", "title": "Plan Name" },
+    "procedure_code": { "type": "string", "title": "CPT / HCPCS Code" },
+    "expected_allowed_amount": { "type": "number", "title": "Expected Allowed Amount per Unit" },
+    "effective_date": { "type": "string", "format": "date", "title": "Effective Date" },
+    "end_date": { "type": "string", "format": "date", "title": "End Date" },
+    "source": { "type": "string", "title": "Rate Source" },
+    "active": { "type": "boolean", "title": "Active", "default": true },
+    "notes": { "type": "string", "title": "Notes", "maxLength": 2000 }
+  },
+  "required": ["payer_name", "procedure_code", "expected_allowed_amount"],
+  "rls": {
+    "create": { "user_condition": { "role": "admin" } },
+    "read": { "user_condition": { "role": "admin" } },
+    "update": { "user_condition": { "role": "admin" } },
+    "delete": { "user_condition": { "role": "admin" } }
+  }
+}

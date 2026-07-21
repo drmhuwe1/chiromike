@@ -1,0 +1,36 @@
+{
+  "name": "DenialAppeal",
+  "type": "object",
+  "properties": {
+    "claim_id": { "type": "string", "title": "Claim ID" },
+    "patient_id": { "type": "string", "title": "Patient ID" },
+    "patient_name": { "type": "string", "title": "Patient Name" },
+    "payer_name": { "type": "string", "title": "Payer Name" },
+    "denial_code": { "type": "string", "title": "Denial Code" },
+    "denial_reason": { "type": "string", "title": "Denial Reason" },
+    "analysis_summary": { "type": "string", "title": "Analysis Summary", "maxLength": 4000 },
+    "recommended_action": { "type": "string", "title": "Recommended Action", "maxLength": 4000 },
+    "missing_information": { "type": "array", "items": { "type": "string" }, "title": "Missing Information" },
+    "supporting_documents": { "type": "array", "items": { "type": "string" }, "title": "Supporting Documents" },
+    "appeal_letter": { "type": "string", "title": "Appeal / Rebuttal Letter", "maxLength": 20000 },
+    "delivery_address": { "type": "string", "title": "Appeal Mailing Address" },
+    "delivery_fax": { "type": "string", "title": "Appeal Fax" },
+    "status": {
+      "type": "string",
+      "enum": ["Draft", "Ready for Review", "Submitted", "Response Received", "Approved", "Denied", "Closed"],
+      "default": "Draft",
+      "title": "Appeal Status"
+    },
+    "submitted_date": { "type": "string", "format": "date", "title": "Submitted Date" },
+    "follow_up_date": { "type": "string", "format": "date", "title": "Follow-Up Date" },
+    "reviewed_by": { "type": "string", "title": "Reviewed By" },
+    "notes": { "type": "string", "title": "Notes", "maxLength": 4000 }
+  },
+  "required": ["claim_id", "patient_name", "status"],
+  "rls": {
+    "create": { "user_condition": { "role": "admin" } },
+    "read": { "user_condition": { "role": "admin" } },
+    "update": { "user_condition": { "role": "admin" } },
+    "delete": { "user_condition": { "role": "admin" } }
+  }
+}

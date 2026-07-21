@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Printer, DollarSign, TrendingUp, Users } from "lucide-react";
+import { claimBalance } from "@/utils/claimBalance";
 
 export default function FinancialReports() {
   const [claims, setClaims] = useState([]);
@@ -47,7 +48,8 @@ export default function FinancialReports() {
   const metrics = useMemo(() => {
     const totalCharged = filteredClaims.reduce((sum, c) => sum + (c.total_charge || 0), 0);
     const totalPaid = filteredPayments.reduce((sum, p) => sum + (p.payment_amount || 0), 0);
-    const outstanding = totalCharged - totalPaid;
+    const writtenOff = filteredClaims.reduce((sum, c) => sum + (c.written_off_amount || 0), 0);
+    const outstanding = filteredClaims.reduce((sum, c) => sum + claimBalance(c), 0);
 
     // CM-3: Include Copay/Coinsurance and Deductible as patient-sourced payments
     const cashCollected = filteredPayments
@@ -74,6 +76,7 @@ export default function FinancialReports() {
       totalCharged,
       totalPaid,
       outstanding,
+      writtenOff,
       cashCollected,
       insuranceCollected,
       denials,
@@ -92,9 +95,11 @@ export default function FinancialReports() {
           patient_name: c.patient_name,
           total_charged: 0,
           total_paid: 0,
+          written_off: 0,
         };
       }
       bills[c.patient_id].total_charged += c.total_charge || 0;
+      bills[c.patient_id].written_off += c.written_off_amount || 0;
     });
 
     filteredPayments.forEach(p => {
@@ -105,7 +110,7 @@ export default function FinancialReports() {
 
     return Object.values(bills).map(b => ({
       ...b,
-      outstanding: b.total_charged - b.total_paid,
+      outstanding: Math.max(0, b.total_charged - b.total_paid - b.written_off),
     })).sort((a, b) => b.outstanding - a.outstanding);
   }, [filteredClaims, filteredPayments]);
 
@@ -212,6 +217,7 @@ export default function FinancialReports() {
                 <CollectionBox label="Insurance Collected" amount={metrics.insuranceCollected} color="blue" />
                 <CollectionBox label="Patient/Cash Collected" amount={metrics.cashCollected} color="green" />
                 <CollectionBox label="Denials/Adjustments" amount={metrics.denials} color="red" />
+                <CollectionBox label="Written-Off Balances" amount={metrics.writtenOff} color="amber" />
               </div>
 
               {/* Visit Type Breakdown */}
@@ -253,6 +259,7 @@ export default function FinancialReports() {
                     <th className="text-left py-3 px-4 font-medium">Patient Name</th>
                     <th className="text-right py-3 px-4 font-medium">Amount Charged</th>
                     <th className="text-right py-3 px-4 font-medium">Amount Paid</th>
+                    <th className="text-right py-3 px-4 font-medium">Written Off</th>
                     <th className="text-right py-3 px-4 font-medium">Outstanding</th>
                   </tr>
                 </thead>
@@ -262,6 +269,7 @@ export default function FinancialReports() {
                       <td className="py-3 px-4">{bill.patient_name}</td>
                       <td className="text-right py-3 px-4">${bill.total_charged.toFixed(2)}</td>
                       <td className="text-right py-3 px-4 text-green-600 font-medium">${bill.total_paid.toFixed(2)}</td>
+                      <td className="text-right py-3 px-4 text-amber-600 font-medium">${bill.written_off.toFixed(2)}</td>
                       <td className={`text-right py-3 px-4 font-medium ${bill.outstanding > 0 ? "text-red-600" : "text-green-600"}`}>
                         ${bill.outstanding.toFixed(2)}
                       </td>
@@ -271,6 +279,7 @@ export default function FinancialReports() {
                     <td className="py-3 px-4">TOTAL</td>
                     <td className="text-right py-3 px-4">${patientBills.reduce((s, b) => s + b.total_charged, 0).toFixed(2)}</td>
                     <td className="text-right py-3 px-4">${patientBills.reduce((s, b) => s + b.total_paid, 0).toFixed(2)}</td>
+                    <td className="text-right py-3 px-4">${patientBills.reduce((s, b) => s + b.written_off, 0).toFixed(2)}</td>
                     <td className="text-right py-3 px-4">${patientBills.reduce((s, b) => s + b.outstanding, 0).toFixed(2)}</td>
                   </tr>
                 </tbody>
